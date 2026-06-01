@@ -16,7 +16,7 @@ const port = process.env.PORT || 5000
 
 
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:"https://baatcheet-ueje.onrender.com",
     credentials:true
 }))
 
