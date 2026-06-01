@@ -11,7 +11,7 @@ export const connectSocket = (
     ) return;
 
     socket = io(
-        "http://localhost:8000",
+        "https://realtimechat-backend-97ae.onrender.com",
         {
 
             query: {
