@@ -8,6 +8,8 @@ import {
   Routes
 } from "react-router-dom";
 
+import InstallPrompt from "./components/InstallPrompt";
+
 import {
   useDispatch,
   useSelector
@@ -146,6 +148,10 @@ const App = () => {
 
   return (
 
+    <>
+
+     <InstallPrompt />
+
     <Routes>
       <Route
         path="/login"
@@ -184,6 +190,8 @@ const App = () => {
       />
 
     </Routes>
+
+    </>
 
   );
 
