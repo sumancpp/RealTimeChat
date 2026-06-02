@@ -32,7 +32,7 @@ const getMessages = () => {
         (state) => state.user
     );
 
-    // FETCH CHAT
+    // FETCH MESSAGES
     useEffect(() => {
 
         if (
@@ -58,20 +58,15 @@ const getMessages = () => {
                             `${serverUrl}/message/get/${selectedUser._id}`,
 
                             {
-
-                                withCredentials:
-                                    true
-
+                                withCredentials: true
                             }
 
                         );
 
                     dispatch(
-
                         setMessages(
                             result.data
                         )
-
                     );
 
                 } catch (error) {
@@ -87,14 +82,11 @@ const getMessages = () => {
         fetchMessages();
 
     }, [
-
         selectedUser,
-
         dispatch
-
     ]);
 
-    // MESSAGE SEEN
+    // SEEN EVENT
     useEffect(() => {
 
         const socket =
@@ -105,40 +97,34 @@ const getMessages = () => {
             !selectedUser
         ) return;
 
-        socket.on(
-
-            "messagesSeen",
-
+        const handleSeen =
             () => {
 
                 dispatch(
-
                     updateSeenMessages(
-
                         selectedUser._id
-
                     )
-
                 );
 
-            }
+            };
 
+        socket.on(
+            "messagesSeen",
+            handleSeen
         );
 
         return () => {
 
             socket.off(
-                "messagesSeen"
+                "messagesSeen",
+                handleSeen
             );
 
         };
 
     }, [
-
         dispatch,
-
         selectedUser
-
     ]);
 
     // REALTIME MESSAGE
@@ -156,38 +142,52 @@ const getMessages = () => {
         const handleNewMessage =
             (newMessage) => {
 
-                console.log(
-                    "NEW MESSAGE:",
-                    newMessage
-                );
+                const senderId =
 
-                // SHOW NOTIFICATION ONLY
-                // IF CHAT IS NOT OPEN
+                    typeof newMessage.sender ===
+                    "object"
+
+                        ? newMessage.sender._id
+
+                        : newMessage.sender;
+
+                const receiverId =
+
+                    typeof newMessage.receiver ===
+                    "object"
+
+                        ? newMessage.receiver._id
+
+                        : newMessage.receiver;
+
+                const currentChatId =
+                    selectedUser._id;
+
+                const myId =
+                    userData._id;
 
                 const belongsToCurrentChat =
 
                     (
-                        newMessage.sender?.toString() ===
-                        selectedUser._id?.toString()
+                        senderId?.toString() ===
+                        currentChatId?.toString()
 
                         &&
 
-                        newMessage.receiver?.toString() ===
-                        userData._id?.toString()
+                        receiverId?.toString() ===
+                        myId?.toString()
                     )
 
                     ||
 
                     (
-
-                        newMessage.sender?.toString() ===
-                        userData._id?.toString()
+                        senderId?.toString() ===
+                        myId?.toString()
 
                         &&
 
-                        newMessage.receiver?.toString() ===
-                        selectedUser._id?.toString()
-
+                        receiverId?.toString() ===
+                        currentChatId?.toString()
                     );
 
                 if (
@@ -195,17 +195,16 @@ const getMessages = () => {
                 ) {
 
                     dispatch(
-
                         addMessage(
                             newMessage
                         )
-
                     );
 
                 }
                 else {
 
-                    // NOTIFICATION
+                    // NOTIFICATION ONLY
+
                     if (
 
                         Notification.permission ===
@@ -239,33 +238,23 @@ const getMessages = () => {
             };
 
         socket.on(
-
             "newMessage",
-
             handleNewMessage
-
         );
 
         return () => {
 
             socket.off(
-
                 "newMessage",
-
                 handleNewMessage
-
             );
 
         };
 
     }, [
-
         selectedUser,
-
         userData,
-
         dispatch
-
     ]);
 
 };
