@@ -33,21 +33,13 @@ const InstallPrompt = () => {
         if (isInstalled)
             return;
 
-        setShow(true);
-
-        // HIDE AFTER 5 SECONDS
-        const timer =
-            setTimeout(() => {
-
-                setShow(false);
-
-            }, 5000);
-
         const handler = (e) => {
 
             e.preventDefault();
 
             setDeferredPrompt(e);
+
+            setShow(true);
 
         };
 
@@ -55,6 +47,13 @@ const InstallPrompt = () => {
             "beforeinstallprompt",
             handler
         );
+
+        const timer =
+            setTimeout(() => {
+
+                setShow(false);
+
+            }, 5000);
 
         return () => {
 
@@ -72,37 +71,31 @@ const InstallPrompt = () => {
     const handleInstall =
         async () => {
 
-            try {
+            if (deferredPrompt) {
 
-                if (deferredPrompt) {
+                deferredPrompt.prompt();
 
-                    deferredPrompt.prompt();
+                const result =
+                    await deferredPrompt.userChoice;
 
-                    const result =
-                        await deferredPrompt.userChoice;
+                if (
+                    result.outcome ===
+                    "accepted"
+                ) {
 
-                    if (
-                        result.outcome ===
-                        "accepted"
-                    ) {
-
-                        setShow(false);
-
-                    }
-
-                    return;
+                    setShow(false);
 
                 }
 
-                alert(
-
-                    "To install BaatCheet:\n\nAndroid Chrome:\n⋮ Menu → Add to Home Screen\n\nDesktop Chrome:\n⋮ Menu → Install BaatCheet"
-
+                setDeferredPrompt(
+                    null
                 );
 
-            } catch (error) {
+            } else {
 
-                console.log(error);
+                alert(
+                    "Install option is not ready yet.\n\nOn Android:\nChrome Menu (⋮) → Add to Home Screen"
+                );
 
             }
 
@@ -132,7 +125,7 @@ const InstallPrompt = () => {
                     }}
 
                     transition={{
-                        duration: 0.4
+                        duration: 0.3
                     }}
 
                     className="
@@ -151,7 +144,6 @@ const InstallPrompt = () => {
                     items-center
                     gap-4
                     max-w-[95%]
-                    w-fit
                     "
 
                 >
@@ -174,7 +166,7 @@ const InstallPrompt = () => {
                             "
                         >
 
-                            Add to home screen for faster access
+                            Add BaatCheet to your home screen
 
                         </p>
 
@@ -194,8 +186,6 @@ const InstallPrompt = () => {
                         rounded-xl
                         font-semibold
                         cursor-pointer
-                        hover:bg-orange-100
-                        transition
                         "
 
                     >
