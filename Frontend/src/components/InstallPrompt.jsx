@@ -22,7 +22,6 @@ const InstallPrompt = () => {
 
     useEffect(() => {
 
-        // APP ALREADY INSTALLED
         const isInstalled =
 
             window.matchMedia(
@@ -34,20 +33,22 @@ const InstallPrompt = () => {
         if (isInstalled)
             return;
 
-        // SHOW BANNER
         setShow(true);
 
-        // HIDE AFTER 10 SECONDS
         const timer =
             setTimeout(() => {
 
                 setShow(false);
 
-            }, 10000);
+            }, 5000);
 
         const handler = (e) => {
 
             e.preventDefault();
+
+            console.log(
+                "Install Prompt Ready"
+            );
 
             setDeferredPrompt(e);
 
@@ -74,20 +75,76 @@ const InstallPrompt = () => {
     const handleInstall =
         async () => {
 
-            if (!deferredPrompt)
-                return;
+            try {
 
-            deferredPrompt.prompt();
+                if (deferredPrompt) {
 
-            const choice =
-                await deferredPrompt.userChoice;
+                    deferredPrompt.prompt();
 
-            if (
-                choice.outcome ===
-                "accepted"
-            ) {
+                    const choice =
+                        await deferredPrompt.userChoice;
 
-                setShow(false);
+                    if (
+                        choice.outcome ===
+                        "accepted"
+                    ) {
+
+                        setShow(false);
+
+                    }
+
+                    return;
+
+                }
+
+                const isMobile =
+
+                    /Android|iPhone|iPad|iPod/i
+                        .test(
+                            navigator.userAgent
+                        );
+
+                if (isMobile) {
+
+                    alert(
+
+`Android:
+
+1. Open Chrome Menu (⋮)
+
+2. Tap "Add to Home Screen"
+
+or
+
+3. Tap "Install App"`
+
+                    );
+
+                }
+
+                else {
+
+                    alert(
+
+`Desktop Chrome:
+
+1. Open Chrome Menu (⋮)
+
+2. Click "Install BaatCheet"
+
+or
+
+Look for the Install icon in the address bar.`
+
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.log(error);
 
             }
 
@@ -117,12 +174,12 @@ const InstallPrompt = () => {
                     }}
 
                     transition={{
-                        duration: 0.4
+                        duration: 0.3
                     }}
 
                     className="
                     fixed
-                    top-4
+                    top-2
                     left-1/2
                     -translate-x-1/2
                     z-[9999]
@@ -158,7 +215,7 @@ const InstallPrompt = () => {
                             "
                         >
 
-                            Add to home screen for faster access
+                            Add BaatCheet to your device
 
                         </p>
 
@@ -173,11 +230,13 @@ const InstallPrompt = () => {
                         className="
                         bg-white
                         text-orange-500
-                        px-4
-                        py-2
+                        px-2
+                        py-1
                         rounded-xl
                         font-semibold
                         cursor-pointer
+                        hover:bg-orange-100
+                        transition
                         "
 
                     >
