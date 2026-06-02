@@ -21,7 +21,7 @@ const getMessages = () => {
 
     const dispatch = useDispatch();
 
-    const {
+   const {
     selectedUser,
     socket
 } = useSelector(
@@ -120,13 +120,17 @@ const getMessages = () => {
 
                 const isCurrentChat =
 
-    newMessage.sender?.toString() ===
-    selectedUser._id?.toString()
+    (
+        newMessage.sender?.toString() ===
+        selectedUser._id?.toString()
+    )
 
     ||
 
-    newMessage.receiver?.toString() ===
-    selectedUser._id?.toString();
+    (
+        newMessage.receiver?.toString() ===
+        selectedUser._id?.toString()
+    );
 
                 if (
                     isCurrentChat

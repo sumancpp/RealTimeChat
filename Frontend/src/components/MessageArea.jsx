@@ -495,7 +495,7 @@ const MessageArea = () => {
               onSubmit={
                 handleSendMessage
               }
-              className="w-full bg-white px-2 sm:px-3 py-2 border-t border-gray-300 flex items-end gap-2"
+              className="w-full bg-white px-2 sm:px-3 py-2 border-t border-gray-300 flex items-center gap-2"
             >
 
               {/* EMOJI */}
