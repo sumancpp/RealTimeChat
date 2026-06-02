@@ -525,7 +525,7 @@ const SideBar = () => {
                     scale: 0.92
                 }}
                 onClick={handleLogout}
-                className="absolute bottom-5 left-5 p-3 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-red-50 transition cursor-pointer rotate-180"
+                className="bottom-5 left-5 p-3 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-red-50 transition cursor-pointer rotate-180 sticky border-t"
             >
 
                 <LogOut

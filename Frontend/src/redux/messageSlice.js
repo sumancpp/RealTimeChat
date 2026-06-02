@@ -12,56 +12,52 @@ const messageSlice = createSlice({
 
     reducers: {
 
-        setMessages: (state, action) => {
+    setMessages: (state, action) => {
+        state.messages = action.payload;
+    },
 
-            state.messages =
-                action.payload;
+    addMessage: (state, action) => {
+        state.messages.push(action.payload);
+    },
 
-        },
+    updateSeenMessages: (state, action) => {
 
-        addMessage: (state, action) => {
+        state.messages =
+            state.messages.map(
+                (msg) => {
 
-            state.messages.push(
-                action.payload
+                    if (
+                        msg.sender?.toString() ===
+                        action.payload?.toString()
+                    ) {
+
+                        return {
+                            ...msg,
+                            isSeen: true
+                        };
+
+                    }
+
+                    return msg;
+
+                }
             );
 
-        },
+    },
 
-        markMessagesSeen: (state) => {
-
-            state.messages =
-                state.messages.map(
-                    (msg) => ({
-
-                        ...msg,
-
-                        isSeen: true
-
-                    })
-                );
-
-        },
-
-        clearMessages: (state) => {
-
-            state.messages = [];
-
-        }
-
+    clearMessages: (state) => {
+        state.messages = [];
     }
+
+}
 
 });
 
 export const {
-
     setMessages,
-
     addMessage,
-
-    markMessagesSeen,
-
+    updateSeenMessages,
     clearMessages
-
 } = messageSlice.actions;
 
 export default messageSlice.reducer;

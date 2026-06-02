@@ -64,28 +64,43 @@ io.on(
 
         // MARK MESSAGE SEEN
         socket.on(
-            "markMessagesSeen",
-            ({ senderId }) => {
+    "markMessagesSeen",
+    async ({
+        senderId,
+        receiverId
+    }) => {
 
-                const senderSocketId =
-                    getReceiverSocketId(
-                        senderId
-                    );
-
-                if (
-                    senderSocketId
-                ) {
-
-                    io.to(
-                        senderSocketId
-                    ).emit(
-                        "messagesSeen"
-                    );
-
-                }
-
+        await Message.updateMany(
+            {
+                sender: senderId,
+                receiver: receiverId,
+                isSeen: false
+            },
+            {
+                isSeen: true
             }
         );
+
+        const senderSocketId =
+            getReceiverSocketId(
+                senderId
+            );
+
+        if (senderSocketId) {
+
+            io.to(
+                senderSocketId
+            ).emit(
+                "messagesSeen",
+                {
+                    receiverId
+                }
+            );
+
+        }
+
+    }
+);
 
         // TYPING
         socket.on(

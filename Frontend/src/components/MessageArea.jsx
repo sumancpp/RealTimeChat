@@ -293,7 +293,7 @@ const MessageArea = () => {
         <>
 
           {/* HEADER */}
-          <div className="w-full min-h-[70px] bg-white border-b border-gray-300 flex items-center px-4 shadow-sm">
+          <div className="w-full min-h-[70px] bg-white border-b sticky top-0 z-50 border-gray-300 flex items-center px-4 shadow-sm">
 
             <button
               onClick={() =>
@@ -401,11 +401,18 @@ const MessageArea = () => {
 
                       {msg.message && (
 
-                        <p className="text-gray-800 break-words">
 
+
+                        <p
+                          className="text-gray-800
+                                break-words
+                                whitespace-pre-wrap
+                                "
+                        >
                           {msg.message}
-
                         </p>
+
+
 
                       )}
 
@@ -488,7 +495,7 @@ const MessageArea = () => {
               onSubmit={
                 handleSendMessage
               }
-              className="w-full bg-white px-3 py-3 border-t border-gray-300 flex items-center gap-3"
+              className="w-full bg-white px-3 py-3 border-t border-gray-300 flex items-center gap-3 flex-1 min-w-0"
             >
 
               {/* EMOJI */}
@@ -561,9 +568,10 @@ const MessageArea = () => {
               <button
                 type="submit"
                 disabled={sending}
-                className={`w-11 h-11 rounded-full cursor-pointer flex items-center justify-center text-white transition-all ${sending
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-orange-500"
+                className={`rounded-full cursor-pointer flex items-center justify-center text-white transition-all shrink-0 w-10 h-10 sm:w-12 sm:h-1
+                 ${sending
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-orange-500"
                   }`}
               >
 

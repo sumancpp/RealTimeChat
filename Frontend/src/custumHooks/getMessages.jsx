@@ -12,8 +12,8 @@ import {
 import {
     setMessages,
     addMessage,
-    clearMessages,
-    markMessagesSeen
+    updateSeenMessages,
+    clearMessages
 } from "../redux/messageSlice";
 
 import { socket } from "../socket";
@@ -85,15 +85,17 @@ const getMessages = () => {
     if (!socket) return;
 
     socket.on(
-        "messagesSeen",
-        () => {
+    "messagesSeen",
+    () => {
 
-            dispatch(
-                markMessagesSeen()
-            );
+        dispatch(
+            updateSeenMessages(
+                selectedUser._id
+            )
+        );
 
-        }
-    );
+    }
+);
 
     return () => {
 
