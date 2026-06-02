@@ -22,7 +22,7 @@ const InstallPrompt = () => {
 
     useEffect(() => {
 
-        // APP ALREADY INSTALLED
+        // ALREADY INSTALLED
         const isInstalled =
 
             window.matchMedia(
@@ -34,10 +34,8 @@ const InstallPrompt = () => {
         if (isInstalled)
             return;
 
-        // SHOW BANNER
         setShow(true);
 
-        // HIDE AFTER 10 SECONDS
         const timer =
             setTimeout(() => {
 
@@ -48,6 +46,10 @@ const InstallPrompt = () => {
         const handler = (e) => {
 
             e.preventDefault();
+
+            console.log(
+                "Install Prompt Ready"
+            );
 
             setDeferredPrompt(e);
 
@@ -74,20 +76,45 @@ const InstallPrompt = () => {
     const handleInstall =
         async () => {
 
-            if (!deferredPrompt)
+            if (!deferredPrompt) {
+
+                alert(
+                    "Open browser menu and tap 'Add to Home Screen' or 'Install App'"
+                );
+
                 return;
 
-            deferredPrompt.prompt();
+            }
 
-            const choice =
-                await deferredPrompt.userChoice;
+            try {
 
-            if (
-                choice.outcome ===
-                "accepted"
-            ) {
+                deferredPrompt.prompt();
 
-                setShow(false);
+                const result =
+                    await deferredPrompt.userChoice;
+
+                console.log(
+                    result.outcome
+                );
+
+                if (
+                    result.outcome ===
+                    "accepted"
+                ) {
+
+                    setShow(false);
+
+                }
+
+                setDeferredPrompt(
+                    null
+                );
+
+            } catch (error) {
+
+                console.log(
+                    error
+                );
 
             }
 
@@ -102,7 +129,7 @@ const InstallPrompt = () => {
                 <motion.div
 
                     initial={{
-                        y: -100,
+                        y: -120,
                         opacity: 0
                     }}
 
@@ -112,7 +139,7 @@ const InstallPrompt = () => {
                     }}
 
                     exit={{
-                        y: -100,
+                        y: -120,
                         opacity: 0
                     }}
 
@@ -136,6 +163,7 @@ const InstallPrompt = () => {
                     items-center
                     gap-4
                     max-w-[95%]
+                    w-fit
                     "
 
                 >
@@ -170,19 +198,41 @@ const InstallPrompt = () => {
                             handleInstall
                         }
 
-                        className="
-                        bg-white
-                        text-orange-500
-                        px-4
-                        py-2
-                        rounded-xl
-                        font-semibold
-                        cursor-pointer
-                        "
+                        disabled={
+                            !deferredPrompt
+                        }
+
+                        className={`
+
+                            px-4
+                            py-2
+                            rounded-xl
+                            font-semibold
+                            transition
+
+                            ${
+
+                                deferredPrompt
+
+                                    ? "bg-white text-orange-500"
+
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+
+                            }
+
+                        `}
 
                     >
 
-                        Add
+                        {
+
+                            deferredPrompt
+
+                                ? "Add"
+
+                                : "Preparing..."
+
+                        }
 
                     </button>
 

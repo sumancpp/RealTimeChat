@@ -7,44 +7,67 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   plugins: [react(),tailwindcss(), VitePWA({
 
-      registerType: "autoUpdate",
+  registerType: "autoUpdate",
 
-      manifest: {
+  includeAssets: [
+    "logo.png"
+  ],
 
-        name: "BaatCheet",
+  manifest: {
 
-        short_name: "BaatCheet",
+    name: "BaatCheet",
 
-        description:
-          "Real Time Chat Application",
+    short_name: "BaatCheet",
 
-        theme_color: "#f97316",
+    description:
+      "Real Time Chat Application",
 
-        background_color: "#ffffff",
+    theme_color: "#f97316",
 
-        display: "standalone",
+    background_color: "#ffffff",
 
-        start_url: "/",
+    display: "standalone",
 
-        icons: [
+    orientation: "portrait",
 
-          {
-            src: "/logo.png",
-            sizes: "192x192",
-            type: "image/png"
-          },
+    scope: "/",
 
-          {
-            src: "/logo.png",
-            sizes: "512x512",
-            type: "image/png"
-          }
+    start_url: "/",
 
-        ]
+    icons: [
 
+      {
+        src: "/logo.png",
+        sizes: "192x192",
+        type: "image/png"
+      },
+
+      {
+        src: "/logo.png",
+        sizes: "512x512",
+        type: "image/png"
+      },
+
+      {
+        src: "/logo.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable"
       }
 
-    })
+    ]
+
+  },
+
+  workbox: {
+
+    globPatterns: [
+      "**/*.{js,css,html,png,svg,ico}"
+    ]
+
+  }
+
+})
 
   ]
 
