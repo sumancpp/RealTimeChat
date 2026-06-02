@@ -495,7 +495,7 @@ const MessageArea = () => {
               onSubmit={
                 handleSendMessage
               }
-              className="w-full bg-white px-3 py-3 border-t border-gray-300 flex items-center gap-3 flex-1 min-w-0"
+              className="w-full bg-white px-2 sm:px-3 py-2 border-t border-gray-300 flex items-end gap-2"
             >
 
               {/* EMOJI */}
@@ -534,6 +534,9 @@ const MessageArea = () => {
                 type="text"
                 value={message}
                 rows={1}
+                style={{
+                  height: "44px"
+                }}
                 onChange={(e) => {
 
                   setMessage(
@@ -562,7 +565,9 @@ const MessageArea = () => {
 
                 }}
                 placeholder="Type a message"
-                className="flex-1
+                className="
+flex-1
+min-w-0
 resize-none
 max-h-32
 px-4
@@ -570,33 +575,34 @@ py-3
 rounded-3xl
 bg-slate-100
 outline-none
-overflow-y-auto"
+overflow-y-auto
+text-sm
+"
               />
 
               {/* SEND */}
               <button
                 type="submit"
                 disabled={sending}
-                className={`w-full
-bg-white
-px-2
-py-2
-border-t
-border-gray-300
-flex
-items-center
-gap-2
-min-w-0
-                 ${sending
+                className={`
+    flex-shrink-0
+    w-11
+    h-11
+    sm:w-12
+    sm:h-12
+    rounded-full
+    flex
+    items-center
+    justify-center
+    text-white
+    transition-all
+    ${sending
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-orange-500"
-                  }`}
+                    : "bg-orange-500 hover:bg-orange-600"
+                  }
+  `}
               >
-
-                <SendHorizonal
-                  size={18}
-                />
-
+                <SendHorizonal size={18} />
               </button>
 
             </form>

@@ -13,13 +13,17 @@ import { app, server } from "./socket/socket.js";
 const port = process.env.PORT || 5000;
 
 // TEMPORARY CORS TEST
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://baatcheet-ueje.onrender.com"
+];
+
 app.use(
     cors({
-        origin: true,
+        origin: allowedOrigins,
         credentials: true
     })
 );
-
 app.use(express.json());
 
 app.use(cookieParser());
