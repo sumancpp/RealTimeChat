@@ -8,19 +8,34 @@ const InstallPrompt = () => {
     ] = useState(null);
 
     const [
-        showInstall,
-        setShowInstall
+        isInstalled,
+        setIsInstalled
     ] = useState(false);
 
     useEffect(() => {
+
+        // CHECK IF APP ALREADY INSTALLED
+        if (
+
+            window.matchMedia(
+                "(display-mode: standalone)"
+            ).matches
+
+            ||
+
+            window.navigator.standalone
+
+        ) {
+
+            setIsInstalled(true);
+
+        }
 
         const handler = (e) => {
 
             e.preventDefault();
 
             setDeferredPrompt(e);
-
-            setShowInstall(true);
 
         };
 
@@ -50,11 +65,9 @@ const InstallPrompt = () => {
 
             await deferredPrompt.userChoice;
 
-            setShowInstall(false);
-
         };
 
-    if (!showInstall)
+    if (isInstalled)
         return null;
 
     return (
@@ -65,21 +78,29 @@ const InstallPrompt = () => {
             bottom-5
             left-1/2
             -translate-x-1/2
+            z-[9999]
             bg-orange-500
             text-white
-            px-4
+            px-5
             py-3
-            rounded-xl
-            shadow-lg
-            z-50
+            rounded-2xl
+            shadow-xl
             flex
             items-center
             gap-3
             "
         >
 
-            <span>
-                Add BaatCheet to Home Screen
+            <span
+                className="
+                text-sm
+                font-medium
+                whitespace-nowrap
+                "
+            >
+
+                📱 Add BaatCheet To Home Screen
+
             </span>
 
             <button
@@ -95,6 +116,7 @@ const InstallPrompt = () => {
                 py-1
                 rounded-lg
                 font-semibold
+                cursor-pointer
                 "
             >
 
