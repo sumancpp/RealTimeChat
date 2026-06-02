@@ -568,7 +568,7 @@ const MessageArea = () => {
               <button
                 type="submit"
                 disabled={sending}
-                className={`rounded-full cursor-pointer flex items-center justify-center text-white transition-all shrink-0 w-10 h-10 sm:w-12 sm:h-1
+                className={`rounded-full cursor-pointer flex items-center justify-center text-white transition-all shrink-0 w-10 h-10 sm:w-12 sm:h-12
                  ${sending
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-orange-500"
