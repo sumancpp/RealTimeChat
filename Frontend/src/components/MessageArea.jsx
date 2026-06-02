@@ -378,7 +378,7 @@ const MessageArea = () => {
                 >
 
                   <div
-                    className={`p-2 rounded-2xl max-w-[320px] shadow-sm ${msg.sender?.toString() ===
+                    className={`p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
                       userData?._id?.toString()
                       ? "bg-[#d9fdd3]"
                       : "bg-white"
@@ -530,9 +530,10 @@ const MessageArea = () => {
               </label>
 
               {/* INPUT */}
-              <input
+              <textarea
                 type="text"
                 value={message}
+                rows={1}
                 onChange={(e) => {
 
                   setMessage(
@@ -561,14 +562,31 @@ const MessageArea = () => {
 
                 }}
                 placeholder="Type a message"
-                className="flex-1 px-4 py-3 rounded-full bg-slate-100 outline-none"
+                className="flex-1
+resize-none
+max-h-32
+px-4
+py-3
+rounded-3xl
+bg-slate-100
+outline-none
+overflow-y-auto"
               />
 
               {/* SEND */}
               <button
                 type="submit"
                 disabled={sending}
-                className={`rounded-full cursor-pointer flex items-center justify-center text-white transition-all shrink-0 w-10 h-10 sm:w-12 sm:h-12 mr-4
+                className={`w-full
+bg-white
+px-2
+py-2
+border-t
+border-gray-300
+flex
+items-center
+gap-2
+min-w-0
                  ${sending
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-orange-500"

@@ -16,17 +16,17 @@ import {
     clearMessages
 } from "../redux/messageSlice";
 
-import { socket } from "../socket";
 
 const getMessages = () => {
 
     const dispatch = useDispatch();
 
     const {
-        selectedUser
-    } = useSelector(
-        (state) => state.user
-    );
+    selectedUser,
+    socket
+} = useSelector(
+    (state) => state.user
+);
 
     // FETCH CHAT
     useEffect(() => {
@@ -105,7 +105,7 @@ const getMessages = () => {
 
     };
 
-}, [dispatch]);
+}, [dispatch, socket, selectedUser]);
 
     // SOCKET LISTENER
     useEffect(() => {
@@ -120,11 +120,13 @@ const getMessages = () => {
 
                 const isCurrentChat =
 
-                    newMessage.sender ===
-                    selectedUser._id ||
+    newMessage.sender?.toString() ===
+    selectedUser._id?.toString()
 
-                    newMessage.receiver ===
-                    selectedUser._id;
+    ||
+
+    newMessage.receiver?.toString() ===
+    selectedUser._id?.toString();
 
                 if (
                     isCurrentChat
