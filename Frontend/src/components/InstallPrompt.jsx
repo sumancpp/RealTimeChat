@@ -1,4 +1,12 @@
-import { useEffect, useState } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
+
+import {
+    motion,
+    AnimatePresence
+} from "framer-motion";
 
 const InstallPrompt = () => {
 
@@ -8,28 +16,34 @@ const InstallPrompt = () => {
     ] = useState(null);
 
     const [
-        isInstalled,
-        setIsInstalled
+        show,
+        setShow
     ] = useState(false);
 
     useEffect(() => {
 
-        // CHECK IF APP ALREADY INSTALLED
-        if (
+        // APP ALREADY INSTALLED
+        const isInstalled =
 
             window.matchMedia(
                 "(display-mode: standalone)"
-            ).matches
+            ).matches ||
 
-            ||
+            window.navigator.standalone;
 
-            window.navigator.standalone
+        if (isInstalled)
+            return;
 
-        ) {
+        // SHOW BANNER
+        setShow(true);
 
-            setIsInstalled(true);
+        // HIDE AFTER 10 SECONDS
+        const timer =
+            setTimeout(() => {
 
-        }
+                setShow(false);
+
+            }, 10000);
 
         const handler = (e) => {
 
@@ -45,6 +59,8 @@ const InstallPrompt = () => {
         );
 
         return () => {
+
+            clearTimeout(timer);
 
             window.removeEventListener(
                 "beforeinstallprompt",
@@ -63,68 +79,118 @@ const InstallPrompt = () => {
 
             deferredPrompt.prompt();
 
-            await deferredPrompt.userChoice;
+            const choice =
+                await deferredPrompt.userChoice;
+
+            if (
+                choice.outcome ===
+                "accepted"
+            ) {
+
+                setShow(false);
+
+            }
 
         };
 
-    if (isInstalled)
-        return null;
-
     return (
 
-        <div
-            className="
-            fixed
-            bottom-5
-            left-1/2
-            -translate-x-1/2
-            z-[9999]
-            bg-orange-500
-            text-white
-            px-5
-            py-3
-            rounded-2xl
-            shadow-xl
-            flex
-            items-center
-            gap-3
-            "
-        >
+        <AnimatePresence>
 
-            <span
-                className="
-                text-sm
-                font-medium
-                whitespace-nowrap
-                "
-            >
+            {show && (
 
-                📱 Add BaatCheet To Home Screen
+                <motion.div
 
-            </span>
+                    initial={{
+                        y: -100,
+                        opacity: 0
+                    }}
 
-            <button
+                    animate={{
+                        y: 0,
+                        opacity: 1
+                    }}
 
-                onClick={
-                    handleInstall
-                }
+                    exit={{
+                        y: -100,
+                        opacity: 0
+                    }}
 
-                className="
-                bg-white
-                text-orange-500
-                px-4
-                py-1
-                rounded-lg
-                font-semibold
-                cursor-pointer
-                "
-            >
+                    transition={{
+                        duration: 0.4
+                    }}
 
-                Add
+                    className="
+                    fixed
+                    top-4
+                    left-1/2
+                    -translate-x-1/2
+                    z-[9999]
+                    bg-orange-500
+                    text-white
+                    px-5
+                    py-3
+                    rounded-2xl
+                    shadow-xl
+                    flex
+                    items-center
+                    gap-4
+                    max-w-[95%]
+                    "
 
-            </button>
+                >
 
-        </div>
+                    <div>
+
+                        <h3
+                            className="
+                            font-semibold
+                            "
+                        >
+
+                            📱 Install BaatCheet
+
+                        </h3>
+
+                        <p
+                            className="
+                            text-xs
+                            "
+                        >
+
+                            Add to home screen for faster access
+
+                        </p>
+
+                    </div>
+
+                    <button
+
+                        onClick={
+                            handleInstall
+                        }
+
+                        className="
+                        bg-white
+                        text-orange-500
+                        px-4
+                        py-2
+                        rounded-xl
+                        font-semibold
+                        cursor-pointer
+                        "
+
+                    >
+
+                        Add
+
+                    </button>
+
+                </motion.div>
+
+            )}
+
+        </AnimatePresence>
 
     );
 
