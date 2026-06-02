@@ -22,6 +22,7 @@ const InstallPrompt = () => {
 
     useEffect(() => {
 
+        // APP ALREADY INSTALLED
         const isInstalled =
 
             window.matchMedia(
@@ -33,13 +34,22 @@ const InstallPrompt = () => {
         if (isInstalled)
             return;
 
+        // SHOW BANNER
+        setShow(true);
+
+        // HIDE AFTER 10 SECONDS
+        const timer =
+            setTimeout(() => {
+
+                setShow(false);
+
+            }, 10000);
+
         const handler = (e) => {
 
             e.preventDefault();
 
             setDeferredPrompt(e);
-
-            setShow(true);
 
         };
 
@@ -47,13 +57,6 @@ const InstallPrompt = () => {
             "beforeinstallprompt",
             handler
         );
-
-        const timer =
-            setTimeout(() => {
-
-                setShow(false);
-
-            }, 5000);
 
         return () => {
 
@@ -71,31 +74,20 @@ const InstallPrompt = () => {
     const handleInstall =
         async () => {
 
-            if (deferredPrompt) {
+            if (!deferredPrompt)
+                return;
 
-                deferredPrompt.prompt();
+            deferredPrompt.prompt();
 
-                const result =
-                    await deferredPrompt.userChoice;
+            const choice =
+                await deferredPrompt.userChoice;
 
-                if (
-                    result.outcome ===
-                    "accepted"
-                ) {
+            if (
+                choice.outcome ===
+                "accepted"
+            ) {
 
-                    setShow(false);
-
-                }
-
-                setDeferredPrompt(
-                    null
-                );
-
-            } else {
-
-                alert(
-                    "Install option is not ready yet.\n\nOn Android:\nChrome Menu (⋮) → Add to Home Screen"
-                );
+                setShow(false);
 
             }
 
@@ -125,7 +117,7 @@ const InstallPrompt = () => {
                     }}
 
                     transition={{
-                        duration: 0.3
+                        duration: 0.4
                     }}
 
                     className="
@@ -166,7 +158,7 @@ const InstallPrompt = () => {
                             "
                         >
 
-                            Add BaatCheet to your home screen
+                            Add to home screen for faster access
 
                         </p>
 
