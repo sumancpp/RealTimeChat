@@ -22,7 +22,6 @@ const InstallPrompt = () => {
 
     useEffect(() => {
 
-        // ALREADY INSTALLED
         const isInstalled =
 
             window.matchMedia(
@@ -36,6 +35,7 @@ const InstallPrompt = () => {
 
         setShow(true);
 
+        // HIDE AFTER 5 SECONDS
         const timer =
             setTimeout(() => {
 
@@ -46,10 +46,6 @@ const InstallPrompt = () => {
         const handler = (e) => {
 
             e.preventDefault();
-
-            console.log(
-                "Install Prompt Ready"
-            );
 
             setDeferredPrompt(e);
 
@@ -76,45 +72,37 @@ const InstallPrompt = () => {
     const handleInstall =
         async () => {
 
-            if (!deferredPrompt) {
-
-                alert(
-                    "Open browser menu and tap 'Add to Home Screen' or 'Install App'"
-                );
-
-                return;
-
-            }
-
             try {
 
-                deferredPrompt.prompt();
+                if (deferredPrompt) {
 
-                const result =
-                    await deferredPrompt.userChoice;
+                    deferredPrompt.prompt();
 
-                console.log(
-                    result.outcome
-                );
+                    const result =
+                        await deferredPrompt.userChoice;
 
-                if (
-                    result.outcome ===
-                    "accepted"
-                ) {
+                    if (
+                        result.outcome ===
+                        "accepted"
+                    ) {
 
-                    setShow(false);
+                        setShow(false);
+
+                    }
+
+                    return;
 
                 }
 
-                setDeferredPrompt(
-                    null
+                alert(
+
+                    "To install BaatCheet:\n\nAndroid Chrome:\n⋮ Menu → Add to Home Screen\n\nDesktop Chrome:\n⋮ Menu → Install BaatCheet"
+
                 );
 
             } catch (error) {
 
-                console.log(
-                    error
-                );
+                console.log(error);
 
             }
 
@@ -129,7 +117,7 @@ const InstallPrompt = () => {
                 <motion.div
 
                     initial={{
-                        y: -120,
+                        y: -100,
                         opacity: 0
                     }}
 
@@ -139,7 +127,7 @@ const InstallPrompt = () => {
                     }}
 
                     exit={{
-                        y: -120,
+                        y: -100,
                         opacity: 0
                     }}
 
@@ -198,41 +186,21 @@ const InstallPrompt = () => {
                             handleInstall
                         }
 
-                        disabled={
-                            !deferredPrompt
-                        }
-
-                        className={`
-
-                            px-4
-                            py-2
-                            rounded-xl
-                            font-semibold
-                            transition
-
-                            ${
-
-                                deferredPrompt
-
-                                    ? "bg-white text-orange-500"
-
-                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-
-                            }
-
-                        `}
+                        className="
+                        bg-white
+                        text-orange-500
+                        px-4
+                        py-2
+                        rounded-xl
+                        font-semibold
+                        cursor-pointer
+                        hover:bg-orange-100
+                        transition
+                        "
 
                     >
 
-                        {
-
-                            deferredPrompt
-
-                                ? "Add"
-
-                                : "Preparing..."
-
-                        }
+                        Add
 
                     </button>
 

@@ -1,73 +1,97 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss(), VitePWA({
 
-  registerType: "autoUpdate",
+  plugins: [
 
-  includeAssets: [
-    "logo.png"
-  ],
+    react(),
 
-  manifest: {
+    tailwindcss(),
 
-    name: "BaatCheet",
+    VitePWA({
 
-    short_name: "BaatCheet",
+      registerType: "autoUpdate",
 
-    description:
-      "Real Time Chat Application",
+      injectRegister: "auto",
 
-    theme_color: "#f97316",
+      includeAssets: [
 
-    background_color: "#ffffff",
+        "logo.png",
+        "icon-192.png",
+        "icon-512.png"
 
-    display: "standalone",
+      ],
 
-    orientation: "portrait",
+      manifest: {
 
-    scope: "/",
+        id: "/",
 
-    start_url: "/",
+        name: "BaatCheet",
 
-    icons: [
+        short_name: "BaatCheet",
 
-      {
-        src: "/logo.png",
-        sizes: "192x192",
-        type: "image/png"
+        description:
+          "Real Time Chat Application",
+
+        start_url: "/",
+
+        scope: "/",
+
+        display: "standalone",
+
+        orientation: "portrait",
+
+        theme_color: "#f97316",
+
+        background_color: "#ffffff",
+
+        lang: "en",
+
+        icons: [
+
+          {
+            src: "/icon-192.png",
+            sizes: "192x192",
+            type: "image/png"
+          },
+
+          {
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png"
+          },
+
+          {
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable"
+          }
+
+        ]
+
       },
 
-      {
-        src: "/logo.png",
-        sizes: "512x512",
-        type: "image/png"
-      },
+      workbox: {
 
-      {
-        src: "/logo.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable"
+        globPatterns: [
+
+          "**/*.{js,css,html,png,svg,ico}"
+
+        ],
+
+        cleanupOutdatedCaches: true,
+
+        clientsClaim: true,
+
+        skipWaiting: true
+
       }
 
-    ]
-
-  },
-
-  workbox: {
-
-    globPatterns: [
-      "**/*.{js,css,html,png,svg,ico}"
-    ]
-
-  }
-
-})
+    })
 
   ]
 
