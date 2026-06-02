@@ -154,11 +154,6 @@ const getMessages = () => {
         const handleNewMessage =
             (newMessage) => {
 
-                console.log(
-                    "NEW MESSAGE RECEIVED",
-                    newMessage
-                );
-
                 dispatch(
 
                     addMessage(
