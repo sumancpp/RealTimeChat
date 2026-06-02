@@ -41,7 +41,7 @@ const InstallPrompt = () => {
 
                 setShow(false);
 
-            }, 10000);
+            }, 5000);
 
         const handler = (e) => {
 
