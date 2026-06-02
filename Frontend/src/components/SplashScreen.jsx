@@ -44,8 +44,8 @@ const SplashScreen = () => {
                 className="
     w-52
     h-52
-    md:w-64
-    md:h-64
+    md:w-120
+    md:h-120
     object-contain
     "
             />
