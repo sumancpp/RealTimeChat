@@ -64,6 +64,19 @@ const App = () => {
 
 }, []);
 
+useEffect(() => {
+
+  if (
+    "Notification" in window &&
+    Notification.permission === "default"
+  ) {
+
+    Notification.requestPermission();
+
+  }
+
+}, []);
+
   useEffect(() => {
 
     // USER NOT LOGGED IN

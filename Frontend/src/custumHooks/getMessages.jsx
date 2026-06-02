@@ -154,6 +154,35 @@ const getMessages = () => {
         const handleNewMessage =
             (newMessage) => {
 
+                // BROWSER NOTIFICATION
+                if (
+
+                    Notification.permission ===
+                    "granted"
+
+                ) {
+
+                    new Notification(
+
+                        "BaatCheet",
+
+                        {
+
+                            body:
+
+                                newMessage.message ||
+
+                                "📷 Image Received",
+
+                            icon:
+                                "/logo.png"
+
+                        }
+
+                    );
+
+                }
+
                 dispatch(
 
                     addMessage(
