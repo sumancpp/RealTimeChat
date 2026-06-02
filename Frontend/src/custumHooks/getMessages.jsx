@@ -26,7 +26,8 @@ const getMessages = () => {
         useDispatch();
 
     const {
-        selectedUser
+        selectedUser,
+        userData
     } = useSelector(
         (state) => state.user
     );
@@ -148,48 +149,92 @@ const getMessages = () => {
 
         if (
             !socket ||
-            !selectedUser
+            !selectedUser ||
+            !userData
         ) return;
 
         const handleNewMessage =
             (newMessage) => {
 
-                // BROWSER NOTIFICATION
+                console.log(
+                    "NEW MESSAGE:",
+                    newMessage
+                );
+
+                // SHOW NOTIFICATION ONLY
+                // IF CHAT IS NOT OPEN
+
+                const belongsToCurrentChat =
+
+                    (
+                        newMessage.sender?.toString() ===
+                        selectedUser._id?.toString()
+
+                        &&
+
+                        newMessage.receiver?.toString() ===
+                        userData._id?.toString()
+                    )
+
+                    ||
+
+                    (
+
+                        newMessage.sender?.toString() ===
+                        userData._id?.toString()
+
+                        &&
+
+                        newMessage.receiver?.toString() ===
+                        selectedUser._id?.toString()
+
+                    );
+
                 if (
-
-                    Notification.permission ===
-                    "granted"
-
+                    belongsToCurrentChat
                 ) {
 
-                    new Notification(
+                    dispatch(
 
-                        "BaatCheet",
-
-                        {
-
-                            body:
-
-                                newMessage.message ||
-
-                                "📷 Image Received",
-
-                            icon:
-                                "/logo.png"
-
-                        }
+                        addMessage(
+                            newMessage
+                        )
 
                     );
 
                 }
+                else {
 
-                dispatch(
+                    // NOTIFICATION
+                    if (
 
-                    addMessage(
-                        newMessage
-                    )
+                        Notification.permission ===
+                        "granted"
 
-                );
+                    ) {
+
+                        new Notification(
+
+                            "BaatCheet",
+
+                            {
+
+                                body:
+
+                                    newMessage.message ||
+
+                                    "📷 Image Received",
+
+                                icon:
+                                    "/logo.png"
+
+                            }
+
+                        );
+
+                    }
+
+                }
 
             };
 
@@ -216,6 +261,8 @@ const getMessages = () => {
     }, [
 
         selectedUser,
+
+        userData,
 
         dispatch
 
