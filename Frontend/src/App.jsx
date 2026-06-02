@@ -31,6 +31,9 @@ import {
   getSocket
 } from "./socket";
 
+import { useState } from "react";
+import SplashScreen from "./components/SplashScreen";
+
 const App = () => {
 
   getCurrentUser();
@@ -39,9 +42,25 @@ const App = () => {
 
   const dispatch = useDispatch();
 
+  const [loading, setLoading] = useState(true);
+
   const { userData } = useSelector(
     state => state.user
   );
+
+  useEffect(() => {
+
+    const timer =
+        setTimeout(() => {
+
+            setLoading(false);
+
+        }, 1500);
+
+    return () =>
+        clearTimeout(timer);
+
+}, []);
 
   useEffect(() => {
 
@@ -123,10 +142,11 @@ const App = () => {
     dispatch
   ]);
 
+  if (loading) return <SplashScreen />;
+
   return (
 
     <Routes>
-
       <Route
         path="/login"
         element={

@@ -596,6 +596,7 @@ text-sm
     justify-center
     text-white
     transition-all
+    cursor-pointer
     ${sending
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-orange-500 hover:bg-orange-600"
