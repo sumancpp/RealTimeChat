@@ -1,24 +1,13 @@
-import {
-    useEffect,
-    useState
-} from "react";
-
-import {
-    motion,
-    AnimatePresence
-} from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const InstallPrompt = () => {
 
-    const [
-        deferredPrompt,
-        setDeferredPrompt
-    ] = useState(null);
+    const [deferredPrompt, setDeferredPrompt] =
+        useState(null);
 
-    const [
-        show,
-        setShow
-    ] = useState(false);
+    const [show, setShow] =
+        useState(false);
 
     useEffect(() => {
 
@@ -44,11 +33,11 @@ const InstallPrompt = () => {
 
         const handler = (e) => {
 
-            e.preventDefault();
-
             console.log(
-                "Install Prompt Ready"
+                "beforeinstallprompt fired"
             );
+
+            e.preventDefault();
 
             setDeferredPrompt(e);
 
@@ -75,17 +64,26 @@ const InstallPrompt = () => {
     const handleInstall =
         async () => {
 
-            try {
+            console.log(
+                "Deferred Prompt:",
+                deferredPrompt
+            );
 
-                if (deferredPrompt) {
+            if (deferredPrompt) {
 
-                    deferredPrompt.prompt();
+                try {
 
-                    const choice =
+                    await deferredPrompt.prompt();
+
+                    const result =
                         await deferredPrompt.userChoice;
 
+                    console.log(
+                        result
+                    );
+
                     if (
-                        choice.outcome ===
+                        result.outcome ===
                         "accepted"
                     ) {
 
@@ -93,58 +91,49 @@ const InstallPrompt = () => {
 
                     }
 
-                    return;
+                } catch (error) {
+
+                    console.log(error);
 
                 }
 
-                const isMobile =
+                return;
 
-                    /Android|iPhone|iPad|iPod/i
-                        .test(
-                            navigator.userAgent
-                        );
+            }
 
-                if (isMobile) {
+            const isMobile =
+                /Android|iPhone|iPad|iPod/i.test(
+                    navigator.userAgent
+                );
 
-                    alert(
+            if (isMobile) {
 
-`Android:
+                alert(
+`Install popup is not available.
 
-1. Open Chrome Menu (⋮)
+Android:
 
-2. Tap "Add to Home Screen"
-
+1. Open Chrome
+2. Tap ⋮ menu
+3. Tap "Add to Home Screen"
 or
+4. Tap "Install App"`
+                );
 
-3. Tap "Install App"`
+            } else {
 
-                    );
+                alert(
+`Install popup is not available.
 
-                }
+Desktop Chrome:
 
-                else {
-
-                    alert(
-
-`Desktop Chrome:
-
-1. Open Chrome Menu (⋮)
-
+1. Click ⋮ menu
 2. Click "Install BaatCheet"
 
 or
 
-Look for the Install icon in the address bar.`
-
-                    );
-
-                }
-
-            }
-
-            catch (error) {
-
-                console.log(error);
+Look for the install icon in the address bar.`
+                );
 
             }
 
@@ -179,7 +168,7 @@ Look for the Install icon in the address bar.`
 
                     className="
                     fixed
-                    top-2
+                    top-4
                     left-1/2
                     -translate-x-1/2
                     z-[9999]
@@ -199,24 +188,12 @@ Look for the Install icon in the address bar.`
 
                     <div>
 
-                        <h3
-                            className="
-                            font-semibold
-                            "
-                        >
-
+                        <h3 className="font-semibold">
                             📱 Install BaatCheet
-
                         </h3>
 
-                        <p
-                            className="
-                            text-xs
-                            "
-                        >
-
+                        <p className="text-xs">
                             Add BaatCheet to your device
-
                         </p>
 
                     </div>
@@ -230,13 +207,11 @@ Look for the Install icon in the address bar.`
                         className="
                         bg-white
                         text-orange-500
-                        px-2
-                        py-1
+                        px-4
+                        py-2
                         rounded-xl
                         font-semibold
                         cursor-pointer
-                        hover:bg-orange-100
-                        transition
                         "
 
                     >
