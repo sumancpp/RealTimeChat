@@ -16,22 +16,27 @@ import {
     clearMessages
 } from "../redux/messageSlice";
 
+import {
+    getSocket
+} from "../socket";
 
 const getMessages = () => {
 
-    const dispatch = useDispatch();
+    const dispatch =
+        useDispatch();
 
-   const {
-    selectedUser,
-    socket
-} = useSelector(
-    (state) => state.user
-);
+    const {
+        selectedUser
+    } = useSelector(
+        (state) => state.user
+    );
 
     // FETCH CHAT
     useEffect(() => {
 
-        if (!selectedUser?._id) {
+        if (
+            !selectedUser?._id
+        ) {
 
             dispatch(
                 clearMessages()
@@ -52,15 +57,20 @@ const getMessages = () => {
                             `${serverUrl}/message/get/${selectedUser._id}`,
 
                             {
-                                withCredentials: true
+
+                                withCredentials:
+                                    true
+
                             }
 
                         );
 
                     dispatch(
+
                         setMessages(
                             result.data
                         )
+
                     );
 
                 } catch (error) {
@@ -76,39 +86,65 @@ const getMessages = () => {
         fetchMessages();
 
     }, [
+
         selectedUser,
+
         dispatch
+
     ]);
 
+    // MESSAGE SEEN
     useEffect(() => {
 
-    if (!socket) return;
+        const socket =
+            getSocket();
 
-    socket.on(
-    "messagesSeen",
-    () => {
+        if (
+            !socket ||
+            !selectedUser
+        ) return;
 
-        dispatch(
-            updateSeenMessages(
-                selectedUser._id
-            )
+        socket.on(
+
+            "messagesSeen",
+
+            () => {
+
+                dispatch(
+
+                    updateSeenMessages(
+
+                        selectedUser._id
+
+                    )
+
+                );
+
+            }
+
         );
 
-    }
-);
+        return () => {
 
-    return () => {
+            socket.off(
+                "messagesSeen"
+            );
 
-        socket.off(
-            "messagesSeen"
-        );
+        };
 
-    };
+    }, [
 
-}, [dispatch, socket, selectedUser]);
+        dispatch,
 
-    // SOCKET LISTENER
+        selectedUser
+
+    ]);
+
+    // REALTIME MESSAGE
     useEffect(() => {
+
+        const socket =
+            getSocket();
 
         if (
             !socket ||
@@ -118,51 +154,47 @@ const getMessages = () => {
         const handleNewMessage =
             (newMessage) => {
 
-                const isCurrentChat =
+                console.log(
+                    "NEW MESSAGE RECEIVED",
+                    newMessage
+                );
 
-    (
-        newMessage.sender?.toString() ===
-        selectedUser._id?.toString()
-    )
+                dispatch(
 
-    ||
+                    addMessage(
+                        newMessage
+                    )
 
-    (
-        newMessage.receiver?.toString() ===
-        selectedUser._id?.toString()
-    );
-
-                if (
-                    isCurrentChat
-                ) {
-
-                    dispatch(
-                        addMessage(
-                            newMessage
-                        )
-                    );
-
-                }
+                );
 
             };
 
         socket.on(
+
             "newMessage",
+
             handleNewMessage
+
         );
 
         return () => {
 
             socket.off(
+
                 "newMessage",
+
                 handleNewMessage
+
             );
 
         };
 
     }, [
+
         selectedUser,
+
         dispatch
+
     ]);
 
 };
