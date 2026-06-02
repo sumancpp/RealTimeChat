@@ -12,7 +12,13 @@ const io = new Server(server, {
 
     cors: {
 
-        origin: "https://baatcheet-ueje.onrender.com",
+        origin: [
+
+            "http://localhost:5173",
+
+            "https://baatcheet-ueje.onrender.com"
+
+        ],
 
         credentials: true
 
