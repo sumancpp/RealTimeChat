@@ -27,32 +27,27 @@ const SplashScreen = () => {
         >
 
             <motion.img
-
                 src="/logo.png"
-
                 alt="Logo"
-
                 initial={{
                     scale: 0.8,
                     y: 0
                 }}
-
                 animate={{
                     scale: 1,
-                    y: -120
+                    y: -80
                 }}
-
                 transition={{
                     duration: 1.2,
                     ease: "easeInOut"
                 }}
-
                 className="
-                w-32
-                h-32
-                object-contain
-                "
-
+    w-52
+    h-52
+    md:w-64
+    md:h-64
+    object-contain
+    "
             />
 
         </motion.div>
