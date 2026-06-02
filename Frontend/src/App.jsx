@@ -26,9 +26,9 @@ import {
 } from "./redux/userSlice";
 
 import {
-  socket,
   connectSocket,
-  disconnectSocket
+  disconnectSocket,
+  getSocket
 } from "./socket";
 
 const App = () => {
@@ -45,6 +45,7 @@ const App = () => {
 
   useEffect(() => {
 
+    // USER NOT LOGGED IN
     if (!userData?._id) {
 
       disconnectSocket();
@@ -53,11 +54,19 @@ const App = () => {
 
     }
 
+    // CONNECT SOCKET
     connectSocket(
       userData._id
     );
 
-    socket?.on(
+    const activeSocket =
+      getSocket();
+
+    if (!activeSocket)
+      return;
+
+    // ONLINE USERS
+    activeSocket.on(
       "getOnlineUsers",
       (users) => {
 
@@ -68,19 +77,21 @@ const App = () => {
       }
     );
 
-    socket?.on(
+    // CONNECT EVENT
+    activeSocket.on(
       "connect",
       () => {
 
         console.log(
           "Socket Connected:",
-          socket.id
+          activeSocket.id
         );
 
       }
     );
 
-    socket?.on(
+    // DISCONNECT EVENT
+    activeSocket.on(
       "disconnect",
       () => {
 
@@ -93,15 +104,15 @@ const App = () => {
 
     return () => {
 
-      socket?.off(
+      activeSocket.off(
         "getOnlineUsers"
       );
 
-      socket?.off(
+      activeSocket.off(
         "connect"
       );
 
-      socket?.off(
+      activeSocket.off(
         "disconnect"
       );
 

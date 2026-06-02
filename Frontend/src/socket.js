@@ -1,14 +1,19 @@
 import { io } from "socket.io-client";
 
-export let socket = null;
+let socket = null;
 
+// CONNECT SOCKET
 export const connectSocket = (
     userId
 ) => {
 
     if (
         socket?.connected
-    ) return;
+    ) {
+
+        return socket;
+
+    }
 
     socket = io(
         "https://realtimechat-backend-97ae.onrender.com",
@@ -20,13 +25,25 @@ export const connectSocket = (
 
             transports: [
                 "websocket"
-            ]
+            ],
+
+            withCredentials: true
 
         }
     );
 
+    return socket;
+
 };
 
+// GET CURRENT SOCKET
+export const getSocket = () => {
+
+    return socket;
+
+};
+
+// DISCONNECT SOCKET
 export const disconnectSocket =
     () => {
 
@@ -39,3 +56,7 @@ export const disconnectSocket =
         }
 
     };
+
+export {
+    socket
+};
