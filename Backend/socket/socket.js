@@ -1,8 +1,9 @@
 import http from "http";
 import express from "express";
 import { Server } from "socket.io";
-import Message from "../models/message.model.js";
+
 import User from "../models/user.model.js";
+import Message from "../models/message.model.js";
 
 const app = express();
 
@@ -68,45 +69,71 @@ io.on(
             )
         );
 
-        // MARK MESSAGE SEEN
+        // MARK MESSAGES AS SEEN
         socket.on(
-    "markMessagesSeen",
-    async ({
-        senderId,
-        receiverId
-    }) => {
+            "markMessagesSeen",
+            async ({
+                senderId,
+                receiverId
+            }) => {
 
-        await Message.updateMany(
-            {
-                sender: senderId,
-                receiver: receiverId,
-                isSeen: false
-            },
-            {
-                isSeen: true
+                try {
+
+                    await Message.updateMany(
+
+                        {
+
+                            sender:
+                                senderId,
+
+                            receiver:
+                                receiverId,
+
+                            isSeen:
+                                false
+
+                        },
+
+                        {
+
+                            isSeen:
+                                true
+
+                        }
+
+                    );
+
+                    const senderSocketId =
+                        getReceiverSocketId(
+                            senderId
+                        );
+
+                    if (
+                        senderSocketId
+                    ) {
+
+                        io.to(
+                            senderSocketId
+                        ).emit(
+                            "messagesSeen",
+                            {
+                                receiverId
+                            }
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.log(
+                        "Seen Error:",
+                        error.message
+                    );
+
+                }
+
             }
         );
-
-        const senderSocketId =
-            getReceiverSocketId(
-                senderId
-            );
-
-        if (senderSocketId) {
-
-            io.to(
-                senderSocketId
-            ).emit(
-                "messagesSeen",
-                {
-                    receiverId
-                }
-            );
-
-        }
-
-    }
-);
 
         // TYPING
         socket.on(
