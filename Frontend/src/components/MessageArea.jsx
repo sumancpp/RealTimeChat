@@ -92,6 +92,8 @@ const MessageArea = () => {
 
   const bottomRef = useRef(null);
 
+  const [activeReactionMessage, setActiveReactionMessage] = useState(null);
+
   // AUTO SCROLL
   useEffect(() => {
 
@@ -457,6 +459,11 @@ const MessageArea = () => {
           <div
             ref={messageContainerRef}
             className="flex-1 overflow-y-auto px-4 py-5"
+            onClick={() =>
+              setActiveReactionMessage(
+                null
+              )
+            }
           >
 
             {messages?.map(
@@ -477,16 +484,48 @@ const MessageArea = () => {
 
                     onDoubleClick={() => {
 
-                      console.log(
-                        "Selected Reply:",
-                        msg
-                      );
-
                       setReplyMessage(msg);
 
                     }}
 
-                    className={`p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
+                    onMouseEnter={() =>
+
+                      setActiveReactionMessage(
+                        msg._id
+                      )
+
+                    }
+
+                    onMouseLeave={() =>
+
+                      setActiveReactionMessage(
+                        null
+                      )
+
+                    }
+
+                    onTouchStart={() => {
+
+                      touchTimer.current =
+                        setTimeout(() => {
+
+                          setActiveReactionMessage(
+                            msg._id
+                          );
+
+                        }, 500);
+
+                    }}
+
+                    onTouchEnd={() => {
+
+                      clearTimeout(
+                        touchTimer.current
+                      );
+
+                    }}
+
+                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
                       userData?._id?.toString()
                       ? "bg-[#d9fdd3]"
                       : "bg-white"
@@ -541,6 +580,98 @@ const MessageArea = () => {
 
                     )}
 
+                    {activeReactionMessage ===
+                      msg._id && (
+
+                        <div
+                          className="
+        absolute
+        -top-12
+        left-1/2
+        -translate-x-1/2
+        bg-white
+        shadow-lg
+        rounded-full
+        px-2
+        py-1
+        flex
+        gap-2
+        z-50
+        "
+                        >
+
+                          <button
+                            onClick={() => {
+
+                              reactToMessage(
+                                msg._id,
+                                "❤️"
+                              );
+
+                              setActiveReactionMessage(
+                                null
+                              );
+
+                            }}
+                          >
+                            ❤️
+                          </button>
+
+                          <button
+                            onClick={() => {
+
+                              reactToMessage(
+                                msg._id,
+                                "😂"
+                              );
+
+                              setActiveReactionMessage(
+                                null
+                              );
+
+                            }}
+                          >
+                            😂
+                          </button>
+
+                          <button
+                            onClick={() => {
+
+                              reactToMessage(
+                                msg._id,
+                                "🔥"
+                              );
+
+                              setActiveReactionMessage(
+                                null
+                              );
+
+                            }}
+                          >
+                            🔥
+                          </button>
+
+                          <button
+                            onClick={() => {
+
+                              reactToMessage(
+                                msg._id,
+                                "👍"
+                              );
+
+                              setActiveReactionMessage(
+                                null
+                              );
+
+                            }}
+                          >
+                            👍
+                          </button>
+
+                        </div>
+
+                      )}
+
                     {/* MESSAGE */}
                     <div className="flex items-end gap-1">
 
@@ -561,60 +692,7 @@ const MessageArea = () => {
 
                       )}
 
-                      <div
-                        className="
-    flex
-    gap-1
-    mt-2
-    text-sm
-    "
-                      >
 
-                        <button
-                          onClick={() =>
-                            reactToMessage(
-                              msg._id,
-                              "❤️"
-                            )
-                          }
-                        >
-                          ❤️
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            reactToMessage(
-                              msg._id,
-                              "😂"
-                            )
-                          }
-                        >
-                          😂
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            reactToMessage(
-                              msg._id,
-                              "🔥"
-                            )
-                          }
-                        >
-                          🔥
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            reactToMessage(
-                              msg._id,
-                              "👍"
-                            )
-                          }
-                        >
-                          👍
-                        </button>
-
-                      </div>
 
                       {
                         msg.sender?.toString() ===
