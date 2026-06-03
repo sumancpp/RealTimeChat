@@ -598,20 +598,24 @@ msg._id && (
     e.stopPropagation();
 
   }}
-    className="
-    absolute
-    -top-12
-    left-1/2
-    -translate-x-1/2
-    bg-white
-    shadow-lg
-    rounded-full
-    px-3
-    py-4
-    flex
-    gap-3
-    z-50
-    "
+    className={`
+absolute
+-top-14
+bg-white
+shadow-lg
+rounded-full
+px-3
+py-2
+flex
+gap-3
+z-50
+${
+  msg.sender?.toString() ===
+  userData?._id?.toString()
+    ? "right-4"
+    : "left-4"
+}
+`}
 
   >
 
