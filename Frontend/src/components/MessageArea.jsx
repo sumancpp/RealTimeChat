@@ -33,10 +33,6 @@ import {
   deleteMessageRedux
 } from "../redux/messageSlice";
 
-import {
-  updateReaction
-} from "../redux/messageSlice";
-
 const MessageArea = () => {
 
   const dispatch = useDispatch();
