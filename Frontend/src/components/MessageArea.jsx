@@ -30,6 +30,10 @@ import {
   setSelectedUser
 } from "../redux/userSlice";
 
+import {
+  updateReaction
+} from "../redux/messageSlice";
+
 const MessageArea = () => {
 
   const dispatch = useDispatch();
@@ -54,14 +58,14 @@ const MessageArea = () => {
   const [replyMessage, setReplyMessage] =
     useState(null);
 
-    useEffect(() => {
+  useEffect(() => {
 
     console.log(
-        "Reply State Changed:",
-        replyMessage
+      "Reply State Changed:",
+      replyMessage
     );
 
-}, [replyMessage]);
+  }, [replyMessage]);
 
   const [frontendImage, setFrontendImage] =
     useState(null);
@@ -192,99 +196,99 @@ const MessageArea = () => {
     e.preventDefault();
 
     if (
-        (!message.trim() &&
+      (!message.trim() &&
         !backendImage) ||
-        sending
+      sending
     ) {
-        return;
+      return;
     }
 
     try {
 
-        setSending(true);
+      setSending(true);
 
-        const currentReply =
-            replyMessage;
+      const currentReply =
+        replyMessage;
 
-        const formData =
-            new FormData();
+      const formData =
+        new FormData();
+
+      formData.append(
+        "message",
+        message
+      );
+
+      if (currentReply) {
 
         formData.append(
-            "message",
-            message
+          "replyTo",
+          currentReply._id
         );
 
-        if (currentReply) {
+      }
 
-            formData.append(
-                "replyTo",
-                currentReply._id
-            );
+      if (backendImage) {
 
-        }
-
-        if (backendImage) {
-
-            formData.append(
-                "image",
-                backendImage
-            );
-
-        }
-
-        console.log(
-            "CURRENT REPLY:",
-            currentReply
+        formData.append(
+          "image",
+          backendImage
         );
 
-        await axios.post(
+      }
 
-            `${serverUrl}/message/send/${selectedUser._id}`,
+      console.log(
+        "CURRENT REPLY:",
+        currentReply
+      );
 
-            formData,
+      await axios.post(
 
-            {
-                withCredentials: true,
+        `${serverUrl}/message/send/${selectedUser._id}`,
 
-                headers: {
-                    "Content-Type":
-                        "multipart/form-data"
-                }
-            }
+        formData,
 
-        );
+        {
+          withCredentials: true,
 
-        // CLEAR AFTER SUCCESS
-        setMessage("");
-
-        setReplyMessage(null);
-
-        setFrontendImage(null);
-
-        setBackendImage(null);
-
-        if (fileInputRef.current) {
-
-            fileInputRef.current.value =
-                "";
-
+          headers: {
+            "Content-Type":
+              "multipart/form-data"
+          }
         }
+
+      );
+
+      // CLEAR AFTER SUCCESS
+      setMessage("");
+
+      setReplyMessage(null);
+
+      setFrontendImage(null);
+
+      setBackendImage(null);
+
+      if (fileInputRef.current) {
+
+        fileInputRef.current.value =
+          "";
+
+      }
 
     }
 
     catch (error) {
 
-        console.log(error);
+      console.log(error);
 
     }
 
     finally {
 
-        setSending(false);
+      setSending(false);
 
     }
 
-};
+  };
 
   // FILE CHANGE
   const handleFileChange = (e) => {
@@ -312,6 +316,69 @@ const MessageArea = () => {
     );
 
   };
+
+  useEffect(() => {
+
+    if (!socket)
+      return;
+
+    socket.on(
+      "messageReaction",
+      (updatedMessage) => {
+
+        dispatch(
+          updateReaction(
+            updatedMessage
+          )
+        );
+
+      }
+    );
+
+    return () => {
+
+      socket.off(
+        "messageReaction"
+      );
+
+    };
+
+  }, [dispatch]);
+
+  const reactToMessage =
+    async (
+      messageId,
+      emoji
+    ) => {
+
+      try {
+
+        await axios.post(
+
+          `${serverUrl}/message/react/${messageId}`,
+
+          {
+            emoji
+          },
+
+          {
+            withCredentials:
+              true
+          }
+
+        );
+
+      }
+
+      catch (error) {
+
+        console.log(
+          error
+        );
+
+      }
+
+    };
 
   return (
 
@@ -494,6 +561,61 @@ const MessageArea = () => {
 
                       )}
 
+                      <div
+                        className="
+    flex
+    gap-1
+    mt-2
+    text-sm
+    "
+                      >
+
+                        <button
+                          onClick={() =>
+                            reactToMessage(
+                              msg._id,
+                              "❤️"
+                            )
+                          }
+                        >
+                          ❤️
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            reactToMessage(
+                              msg._id,
+                              "😂"
+                            )
+                          }
+                        >
+                          😂
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            reactToMessage(
+                              msg._id,
+                              "🔥"
+                            )
+                          }
+                        >
+                          🔥
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            reactToMessage(
+                              msg._id,
+                              "👍"
+                            )
+                          }
+                        >
+                          👍
+                        </button>
+
+                      </div>
+
                       {
                         msg.sender?.toString() ===
                         userData?._id?.toString() && (
@@ -521,6 +643,45 @@ const MessageArea = () => {
                       }
 
                     </div>
+
+                    {msg.reactions?.length > 0 && (
+
+                      <div
+                        className="
+    flex
+    gap-1
+    mt-2
+    flex-wrap
+    "
+                      >
+
+                        {msg.reactions.map(
+                          (
+                            reaction,
+                            index
+                          ) => (
+
+                            <span
+                              key={index}
+                              className="
+          bg-gray-100
+          px-2
+          py-1
+          rounded-full
+          text-xs
+          "
+                            >
+
+                              {reaction.emoji}
+
+                            </span>
+
+                          )
+                        )}
+
+                      </div>
+
+                    )}
 
 
                   </div>
@@ -668,6 +829,7 @@ const MessageArea = () => {
                 <Smile size={22} />
 
               </button>
+
 
               {/* IMAGE */}
               <label className="cursor-pointer">

@@ -434,3 +434,95 @@ export const getSortedUsers = async (
     }
 
 };
+
+//reactions
+
+export const reactToMessage = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const userId =
+            req.userId;
+
+        const {
+            messageId
+        } = req.params;
+
+        const {
+            emoji
+        } = req.body;
+
+        const message =
+            await Message.findById(
+                messageId
+            );
+
+        if (!message) {
+
+            return res.status(404)
+                .json({
+
+                    message:
+                        "Message not found"
+
+                });
+
+        }
+
+        const existingReaction =
+            message.reactions.find(
+
+                reaction =>
+
+                    reaction.userId.toString() ===
+                    userId.toString()
+
+            );
+
+        if (existingReaction) {
+
+            existingReaction.emoji =
+                emoji;
+
+        }
+
+        else {
+
+            message.reactions.push({
+
+                userId,
+
+                emoji
+
+            });
+
+        }
+
+        await message.save();
+
+        io.emit(
+            "messageReaction",
+            message
+        );
+
+        return res.status(200)
+            .json(message);
+
+    }
+
+    catch (error) {
+
+        return res.status(500)
+            .json({
+
+                message:
+                    error.message
+
+            });
+
+    }
+
+};

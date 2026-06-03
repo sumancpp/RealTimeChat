@@ -12,52 +12,106 @@ const messageSlice = createSlice({
 
     reducers: {
 
-    setMessages: (state, action) => {
-        state.messages = action.payload;
-    },
+        setMessages: (state, action) => {
 
-    addMessage: (state, action) => {
-        state.messages.push(action.payload);
-    },
+            state.messages =
+                action.payload;
 
-    updateSeenMessages: (state, action) => {
+        },
 
-        state.messages =
-            state.messages.map(
-                (msg) => {
+        addMessage: (state, action) => {
 
-                    if (
-                        msg.sender?.toString() ===
-                        action.payload?.toString()
-                    ) {
-
-                        return {
-                            ...msg,
-                            isSeen: true
-                        };
-
-                    }
-
-                    return msg;
-
-                }
+            state.messages.push(
+                action.payload
             );
 
-    },
+        },
 
-    clearMessages: (state) => {
-        state.messages = [];
+        updateSeenMessages: (
+            state,
+            action
+        ) => {
+
+            state.messages =
+                state.messages.map(
+                    (msg) => {
+
+                        if (
+
+                            msg.sender?.toString() ===
+
+                            action.payload?.toString()
+
+                        ) {
+
+                            return {
+
+                                ...msg,
+
+                                isSeen: true
+
+                            };
+
+                        }
+
+                        return msg;
+
+                    }
+                );
+
+        },
+
+        updateReaction: (
+            state,
+            action
+        ) => {
+
+            state.messages =
+                state.messages.map(
+                    (msg) => {
+
+                        if (
+
+                            msg._id ===
+                            action.payload._id
+
+                        ) {
+
+                            return action.payload;
+
+                        }
+
+                        return msg;
+
+                    }
+                );
+
+        },
+
+        clearMessages: (
+            state
+        ) => {
+
+            state.messages = [];
+
+        }
+
     }
-
-}
 
 });
 
 export const {
+
     setMessages,
+
     addMessage,
+
     updateSeenMessages,
+
+    updateReaction,
+
     clearMessages
+
 } = messageSlice.actions;
 
 export default messageSlice.reducer;

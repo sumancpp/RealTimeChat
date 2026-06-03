@@ -35,6 +35,29 @@ const messageSchema = new mongoose.Schema({
 
     },
 
+    // REACTIONS FEATURE
+    reactions: [
+
+        {
+
+            userId: {
+
+                type: mongoose.Schema.Types.ObjectId,
+
+                ref: "User"
+
+            },
+
+            emoji: {
+
+                type: String
+
+            }
+
+        }
+
+    ],
+
     isSeen: {
         type: Boolean,
         default: false

@@ -7,7 +7,8 @@ import { upload } from "../middlewares/multer.js";
 import {
   getMessage,
   sendMessage,
-  getSortedUsers
+  getSortedUsers,
+  reactToMessage
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -29,6 +30,12 @@ messageRouter.get(
   "/sorted-users",
   isAuth,
   getSortedUsers
+);
+
+messageRouter.post(
+    "/react/:messageId",
+    isAuth,
+    reactToMessage
 );
 
 export default messageRouter;
