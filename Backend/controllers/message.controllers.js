@@ -526,3 +526,101 @@ export const reactToMessage = async (
     }
 
 };
+
+// delete message
+
+export const deleteMessage = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const userId =
+            req.userId;
+
+        const {
+            messageId
+        } = req.params;
+
+        const message =
+            await Message.findById(
+                messageId
+            );
+
+        if (!message) {
+
+            return res.status(404)
+                .json({
+
+                    message:
+                        "Message not found"
+
+                });
+
+        }
+
+        // ONLY SENDER CAN DELETE
+        if (
+
+            message.sender.toString() !==
+            userId.toString()
+
+        ) {
+
+            return res.status(403)
+                .json({
+
+                    message:
+                        "Not allowed"
+
+                });
+
+        }
+
+        message.isDeleted =
+            true;
+
+        message.message =
+            "";
+
+        message.image =
+            "";
+
+        message.replyTo =
+            null;
+
+        message.reactions =
+            [];
+
+        await message.save();
+
+        io.emit(
+            "messageDeleted",
+            {
+                messageId
+            }
+        );
+
+        return res.status(200)
+            .json({
+
+                success: true
+
+            });
+
+    }
+
+    catch (error) {
+
+        return res.status(500)
+            .json({
+
+                message:
+                    error.message
+
+            });
+
+    }
+
+};

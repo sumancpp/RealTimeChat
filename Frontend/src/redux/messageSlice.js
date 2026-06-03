@@ -12,14 +12,20 @@ const messageSlice = createSlice({
 
     reducers: {
 
-        setMessages: (state, action) => {
+        setMessages: (
+            state,
+            action
+        ) => {
 
             state.messages =
                 action.payload;
 
         },
 
-        addMessage: (state, action) => {
+        addMessage: (
+            state,
+            action
+        ) => {
 
             state.messages.push(
                 action.payload
@@ -88,6 +94,47 @@ const messageSlice = createSlice({
 
         },
 
+        deleteMessageRedux: (
+            state,
+            action
+        ) => {
+
+            state.messages =
+                state.messages.map(
+                    (msg) => {
+
+                        if (
+
+                            msg._id ===
+                            action.payload
+
+                        ) {
+
+                            return {
+
+                                ...msg,
+
+                                isDeleted: true,
+
+                                message: "",
+
+                                image: "",
+
+                                replyTo: null,
+
+                                reactions: []
+
+                            };
+
+                        }
+
+                        return msg;
+
+                    }
+                );
+
+        },
+
         clearMessages: (
             state
         ) => {
@@ -109,6 +156,8 @@ export const {
     updateSeenMessages,
 
     updateReaction,
+
+    deleteMessageRedux,
 
     clearMessages
 

@@ -9,7 +9,8 @@ import {
   ArrowLeft,
   Smile,
   ImagePlus,
-  Plus
+  Plus,
+  Trash2
 } from "lucide-react";
 
 import axios from "axios";
@@ -28,8 +29,9 @@ import {
 import { socket } from "../socket";
 
 import {
-  setSelectedUser
-} from "../redux/userSlice";
+  updateReaction,
+  deleteMessageRedux
+} from "../redux/messageSlice";
 
 import {
   updateReaction
@@ -138,30 +140,30 @@ const MessageArea = () => {
 
   useEffect(() => {
 
-  const closeReactionPicker =
-    () => {
+    const closeReactionPicker =
+      () => {
 
-      setActiveReactionMessage(
-        null
-      );
+        setActiveReactionMessage(
+          null
+        );
 
-    };
+      };
 
-  document.addEventListener(
-    "click",
-    closeReactionPicker
-  );
-
-  return () => {
-
-    document.removeEventListener(
+    document.addEventListener(
       "click",
       closeReactionPicker
     );
 
-  };
+    return () => {
 
-}, []);
+      document.removeEventListener(
+        "click",
+        closeReactionPicker
+      );
+
+    };
+
+  }, []);
 
   // CLOSE EMOJI PICKER
   useEffect(() => {
@@ -362,6 +364,19 @@ const MessageArea = () => {
           )
         );
 
+        socket.on(
+          "messageDeleted",
+          ({ messageId }) => {
+
+            dispatch(
+              deleteMessageRedux(
+                messageId
+              )
+            );
+
+          }
+        );
+
       }
     );
 
@@ -369,6 +384,10 @@ const MessageArea = () => {
 
       socket.off(
         "messageReaction"
+      );
+
+      socket.off(
+        "messageDeleted"
       );
 
     };
@@ -405,6 +424,33 @@ const MessageArea = () => {
         console.log(
           error
         );
+
+      }
+
+    };
+
+  const deleteMessageForEveryone =
+    async (
+      messageId
+    ) => {
+
+      try {
+
+        await axios.delete(
+
+          `${serverUrl}/message/delete/${messageId}`,
+
+          {
+            withCredentials: true
+          }
+
+        );
+
+      }
+
+      catch (error) {
+
+        console.log(error);
 
       }
 
@@ -512,27 +558,27 @@ const MessageArea = () => {
 
                     onDoubleClick={() => {
 
-    setReplyMessage(msg);
+                      setReplyMessage(msg);
 
-  }}
+                    }}
 
-  onClick={(e) => {
+                    onClick={(e) => {
 
-    e.stopPropagation();
+                      e.stopPropagation();
 
-    setActiveReactionMessage(
+                      setActiveReactionMessage(
 
-      activeReactionMessage === msg._id
+                        activeReactionMessage === msg._id
 
-        ? null
+                          ? null
 
-        : msg._id
+                          : msg._id
 
-    );
+                      );
 
-  }}
+                    }}
 
-                    
+
 
                     className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
                       userData?._id?.toString()
@@ -590,15 +636,15 @@ const MessageArea = () => {
                     )}
 
                     {activeReactionMessage ===
-msg._id && (
+                      msg._id && (
 
-  <div
-   onClick={(e) => {
+                        <div
+                          onClick={(e) => {
 
-    e.stopPropagation();
+                            e.stopPropagation();
 
-  }}
-    className={`
+                          }}
+                          className={`
 absolute
 -top-14
 bg-white
@@ -609,66 +655,113 @@ py-2
 flex
 gap-3
 z-50
-${
-  msg.sender?.toString() ===
-  userData?._id?.toString()
-    ? "right-4"
-    : "left-4"
-}
+${msg.sender?.toString() ===
+                              userData?._id?.toString()
+                              ? "right-4"
+                              : "left-4"
+                            }
 `}
 
-  >
+                        >
 
-    {["❤️", "😂", "🔥", "👍"].map(
+                          {["❤️", "😂", "🔥", "👍"].map(
 
-      (emoji) => (
+                            (emoji) => (
 
-        <button
+                              <button
 
-          key={emoji}
+                                key={emoji}
 
-          onClick={() => {
+                                onClick={() => {
 
-            reactToMessage(
+                                  reactToMessage(
 
-              msg._id,
+                                    msg._id,
 
-              emoji
+                                    emoji
 
-            );
+                                  );
 
-            setActiveReactionMessage(
-              null
-            );
+                                  setActiveReactionMessage(
+                                    null
+                                  );
 
-          }}
+                                }}
 
-          className="
+                                className="
           text-xl
           hover:scale-125
           transition
           "
 
-        >
+                              >
 
-          {emoji}
+                                {emoji}
 
-        </button>
+                              </button>
 
-      )
+                            )
 
-    )}
 
-  </div>
 
-)}
+                          )}
 
-                     
+                          {msg.sender?.toString() ===
+                            userData?._id?.toString() && (
+
+                              <button
+
+                                onClick={() => {
+
+                                  deleteMessageForEveryone(
+                                    msg._id
+                                  );
+
+                                  setActiveReactionMessage(
+                                    null
+                                  );
+
+                                }}
+
+                                className="
+    text-red-500
+    font-bold
+    px-2
+    "
+
+                              >
+
+                               <Trash2 size={20} />
+
+                              </button>
+
+                            )}
+
+                        </div>
+
+                      )}
+
+
+
+
 
                     {/* MESSAGE */}
                     <div className="flex items-end gap-1">
 
-                      {msg.message && (
+                      {msg.isDeleted ? (
+
+                        <p
+                          className="
+    italic
+    text-gray-500
+    "
+                        >
+
+                          🚫 This message was deleted
+
+                        </p>
+
+                      ) : msg.message && (
 
 
 

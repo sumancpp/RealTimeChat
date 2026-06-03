@@ -61,7 +61,12 @@ const messageSchema = new mongoose.Schema({
     isSeen: {
         type: Boolean,
         default: false
-    }
+    },
+    
+    isDeleted: {
+    type: Boolean,
+    default: false
+}
 
 }, {
     timestamps: true
