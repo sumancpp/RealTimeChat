@@ -8,7 +8,8 @@ import {
   SendHorizonal,
   ArrowLeft,
   Smile,
-  ImagePlus
+  ImagePlus,
+  Plus
 } from "lucide-react";
 
 import axios from "axios";
@@ -134,6 +135,33 @@ const MessageArea = () => {
     };
 
   }, []);
+
+  useEffect(() => {
+
+  const closeReactionPicker =
+    () => {
+
+      setActiveReactionMessage(
+        null
+      );
+
+    };
+
+  document.addEventListener(
+    "click",
+    closeReactionPicker
+  );
+
+  return () => {
+
+    document.removeEventListener(
+      "click",
+      closeReactionPicker
+    );
+
+  };
+
+}, []);
 
   // CLOSE EMOJI PICKER
   useEffect(() => {
@@ -488,35 +516,6 @@ const MessageArea = () => {
 
                     }}
 
-                    onMouseEnter={() =>
-
-                      setActiveReactionMessage(
-                        msg._id
-                      )
-
-                    }
-
-                    onMouseLeave={() =>
-
-                      setActiveReactionMessage(
-                        null
-                      )
-
-                    }
-
-                    onTouchStart={() => {
-
-                      touchTimer.current =
-                        setTimeout(() => {
-
-                          setActiveReactionMessage(
-                            msg._id
-                          );
-
-                        }, 500);
-
-                    }}
-
                     onTouchEnd={() => {
 
                       clearTimeout(
@@ -581,96 +580,111 @@ const MessageArea = () => {
                     )}
 
                     {activeReactionMessage ===
-                      msg._id && (
+msg._id && (
 
-                        <div
-                          className="
-        absolute
-        -top-12
-        left-1/2
-        -translate-x-1/2
-        bg-white
-        shadow-lg
-        rounded-full
-        px-2
-        py-1
-        flex
-        gap-2
-        z-50
-        "
-                        >
+  <div
 
-                          <button
-                            onClick={() => {
+    className="
+    absolute
+    -top-12
+    left-1/2
+    -translate-x-1/2
+    bg-white
+    shadow-lg
+    rounded-full
+    px-3
+    py-2
+    flex
+    gap-3
+    z-50
+    "
 
-                              reactToMessage(
-                                msg._id,
-                                "❤️"
-                              );
+  >
 
-                              setActiveReactionMessage(
-                                null
-                              );
+    {["❤️", "😂", "🔥", "👍"].map(
 
-                            }}
-                          >
-                            ❤️
-                          </button>
+      (emoji) => (
 
-                          <button
-                            onClick={() => {
+        <button
 
-                              reactToMessage(
-                                msg._id,
-                                "😂"
-                              );
+          key={emoji}
 
-                              setActiveReactionMessage(
-                                null
-                              );
+          onClick={() => {
 
-                            }}
-                          >
-                            😂
-                          </button>
+            reactToMessage(
 
-                          <button
-                            onClick={() => {
+              msg._id,
 
-                              reactToMessage(
-                                msg._id,
-                                "🔥"
-                              );
+              emoji
 
-                              setActiveReactionMessage(
-                                null
-                              );
+            );
 
-                            }}
-                          >
-                            🔥
-                          </button>
+            setActiveReactionMessage(
+              null
+            );
 
-                          <button
-                            onClick={() => {
+          }}
 
-                              reactToMessage(
-                                msg._id,
-                                "👍"
-                              );
+          className="
+          text-xl
+          hover:scale-125
+          transition
+          "
 
-                              setActiveReactionMessage(
-                                null
-                              );
+        >
 
-                            }}
-                          >
-                            👍
-                          </button>
+          {emoji}
 
-                        </div>
+        </button>
 
-                      )}
+      )
+
+    )}
+
+  </div>
+
+)}
+
+                      <div className="flex justify-end mb-1">
+
+  <button
+
+    onClick={(e) => {
+
+  e.stopPropagation();
+
+  setActiveReactionMessage(
+
+    activeReactionMessage ===
+    msg._id
+
+      ? null
+
+      : msg._id
+
+  );
+
+}}
+
+    className="
+    w-6
+    h-6
+    rounded-full
+    bg-gray-100
+    hover:bg-gray-200
+    flex
+    items-center
+    justify-center
+    text-xs
+    "
+
+  >
+
+    😊
+
+  </button>
+
+</div>
 
                     {/* MESSAGE */}
                     <div className="flex items-end gap-1">
