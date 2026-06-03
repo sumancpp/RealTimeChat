@@ -10,7 +10,7 @@ import { Provider } from 'react-redux'
 import { store } from './redux/store.js'
 
 export const serverUrl =
-  "https://realtimechat-backend-97ae.onrender.com"
+  "https://realtimechat-backend-97ae.onrender.com" || "http://localhost:8000"
 
 
 const root =

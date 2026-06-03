@@ -51,6 +51,18 @@ const MessageArea = () => {
   const [message, setMessage] =
     useState("");
 
+  const [replyMessage, setReplyMessage] =
+    useState(null);
+
+    useEffect(() => {
+
+    console.log(
+        "Reply State Changed:",
+        replyMessage
+    );
+
+}, [replyMessage]);
+
   const [frontendImage, setFrontendImage] =
     useState(null);
 
@@ -175,87 +187,104 @@ const MessageArea = () => {
   }, [selectedUser]);
 
   // SEND MESSAGE
-  const handleSendMessage = async (
-    e
-  ) => {
+  const handleSendMessage = async (e) => {
 
     e.preventDefault();
 
     if (
-      (!message.trim() &&
+        (!message.trim() &&
         !backendImage) ||
-      sending
+        sending
     ) {
-      return;
+        return;
     }
 
     try {
 
-      setSending(true);
+        setSending(true);
 
-      const formData =
-        new FormData();
+        const currentReply =
+            replyMessage;
 
-      formData.append(
-        "message",
-        message
-      );
-
-      if (backendImage) {
+        const formData =
+            new FormData();
 
         formData.append(
-          "image",
-          backendImage
+            "message",
+            message
         );
 
-      }
+        if (currentReply) {
 
-      // CLEAR UI INSTANTLY
-      setMessage("");
-
-      setFrontendImage(null);
-
-      setBackendImage(null);
-
-      if (fileInputRef.current) {
-
-        fileInputRef.current.value =
-          "";
-
-      }
-
-      await axios.post(
-
-        `${serverUrl}/message/send/${selectedUser._id}`,
-
-        formData,
-
-        {
-
-          withCredentials: true,
-
-          headers: {
-
-            "Content-Type":
-              "multipart/form-data"
-
-          }
+            formData.append(
+                "replyTo",
+                currentReply._id
+            );
 
         }
 
-      );
+        if (backendImage) {
 
-    } catch (error) {
+            formData.append(
+                "image",
+                backendImage
+            );
 
-      console.log(error);
+        }
 
-    } finally {
+        console.log(
+            "CURRENT REPLY:",
+            currentReply
+        );
 
-      setSending(false);
+        await axios.post(
+
+            `${serverUrl}/message/send/${selectedUser._id}`,
+
+            formData,
+
+            {
+                withCredentials: true,
+
+                headers: {
+                    "Content-Type":
+                        "multipart/form-data"
+                }
+            }
+
+        );
+
+        // CLEAR AFTER SUCCESS
+        setMessage("");
+
+        setReplyMessage(null);
+
+        setFrontendImage(null);
+
+        setBackendImage(null);
+
+        if (fileInputRef.current) {
+
+            fileInputRef.current.value =
+                "";
+
+        }
 
     }
 
-  };
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+    finally {
+
+        setSending(false);
+
+    }
+
+};
 
   // FILE CHANGE
   const handleFileChange = (e) => {
@@ -378,12 +407,61 @@ const MessageArea = () => {
                 >
 
                   <div
+
+                    onDoubleClick={() => {
+
+                      console.log(
+                        "Selected Reply:",
+                        msg
+                      );
+
+                      setReplyMessage(msg);
+
+                    }}
+
                     className={`p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
                       userData?._id?.toString()
                       ? "bg-[#d9fdd3]"
                       : "bg-white"
                       }`}
+
                   >
+
+                    {msg.replyTo && (
+
+                      <div
+                        className="
+        border-l-4
+        border-orange-500
+        bg-gray-100
+        rounded-lg
+        px-3
+        py-2
+        mb-2
+        "
+                      >
+
+                        <p className="text-xs text-gray-500">
+
+                          Replying to
+
+                        </p>
+
+                        <p className="text-sm truncate">
+
+                          {
+                            msg.replyTo.message ||
+
+                            (msg.replyTo.image
+                              ? "📷 Image"
+                              : "")
+                          }
+
+                        </p>
+
+                      </div>
+
+                    )}
 
                     {/* IMAGE */}
                     {msg.image && (
@@ -486,6 +564,85 @@ const MessageArea = () => {
                     onEmojiClick
                   }
                 />
+
+              </div>
+
+            )}
+
+            {replyMessage && (
+
+              <div
+                className="
+        bg-white
+        border-t
+        border-gray-300
+        px-4
+        py-2
+        "
+              >
+
+                <div
+                  className="
+            border-l-4
+            border-orange-500
+            pl-3
+            flex
+            justify-between
+            items-center
+            "
+                >
+
+                  <div>
+
+                    <p
+                      className="
+                    text-xs
+                    text-orange-500
+                    font-semibold
+                    "
+                    >
+
+                      Replying
+
+                    </p>
+
+                    <p
+                      className="
+                    text-sm
+                    truncate
+                    "
+                    >
+
+                      {
+                        replyMessage.message ||
+
+                        (replyMessage.image
+                          ? "📷 Image"
+                          : "")
+                      }
+
+                    </p>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setReplyMessage(
+                        null
+                      )
+                    }
+                    className="
+                text-red-500
+                text-lg
+                "
+                  >
+
+                    ✕
+
+                  </button>
+
+                </div>
 
               </div>
 

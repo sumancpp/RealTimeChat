@@ -24,7 +24,17 @@ const messageSchema = new mongoose.Schema({
         default: ""
     },
 
-    // WhatsApp-style Seen Status
+    // REPLY FEATURE
+    replyTo: {
+
+        type: mongoose.Schema.Types.ObjectId,
+
+        ref: "Message",
+
+        default: null
+
+    },
+
     isSeen: {
         type: Boolean,
         default: false

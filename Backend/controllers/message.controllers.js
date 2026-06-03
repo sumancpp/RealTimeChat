@@ -11,21 +11,44 @@ import {
 // SEND MESSAGE
 export const sendMessage = async (req, res) => {
 
+    console.log("SEND MESSAGE API HIT");
+
     try {
 
-        const sender = req.userId;
+        console.log(
+            "REQ BODY:",
+            req.body
+        );
 
-        const { receiver } = req.params;
+        const sender =
+            req.userId;
 
-        const { message } = req.body;
+        const { receiver } =
+            req.params;
+
+        const {
+            message,
+            replyTo
+        } = req.body;
+
+        console.log(
+            "MESSAGE:",
+            message
+        );
+
+        console.log(
+            "REPLY TO:",
+            replyTo
+        );
 
         let image = "";
 
         if (req.file) {
 
-            image = await uploadOnCloudinary(
-                req.file.path
-            );
+            image =
+                await uploadOnCloudinary(
+                    req.file.path
+                );
 
         }
 
@@ -33,28 +56,38 @@ export const sendMessage = async (req, res) => {
             await Conversation.findOne({
 
                 participants: {
+
                     $all: [
                         sender,
                         receiver
                     ]
+
                 }
 
             });
 
         const newMessage =
-            await Message.create({
+    await Message.create({
 
-                sender,
+        sender,
 
-                receiver,
+        receiver,
 
-                message,
+        message,
 
-                image,
+        image,
 
-                isSeen: false
+        replyTo:
+            replyTo || null,
 
-            });
+        isSeen: false
+
+    });
+
+console.log(
+    "SAVED MESSAGE:",
+    newMessage
+);
 
         if (!conversation) {
 
@@ -72,7 +105,9 @@ export const sendMessage = async (req, res) => {
 
                 });
 
-        } else {
+        }
+
+        else {
 
             conversation.messages.push(
                 newMessage._id
@@ -85,7 +120,19 @@ export const sendMessage = async (req, res) => {
 
         }
 
-        // RECEIVER
+        const populatedMessage =
+            await Message.findById(
+                newMessage._id
+            ).populate({
+
+                path: "replyTo",
+
+                select:
+                    "message image sender"
+
+            });
+
+        // RECEIVER SOCKET
         const receiverSocketId =
             getReceiverSocketId(
                 receiver
@@ -97,12 +144,12 @@ export const sendMessage = async (req, res) => {
                 receiverSocketId
             ).emit(
                 "newMessage",
-                newMessage
+                populatedMessage
             );
 
         }
 
-        // SENDER
+        // SENDER SOCKET
         const senderSocketId =
             getReceiverSocketId(
                 sender
@@ -114,16 +161,18 @@ export const sendMessage = async (req, res) => {
                 senderSocketId
             ).emit(
                 "newMessage",
-                newMessage
+                populatedMessage
             );
 
         }
 
         return res.status(201).json(
-            newMessage
+            populatedMessage
         );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.log(error);
 
@@ -137,7 +186,6 @@ export const sendMessage = async (req, res) => {
     }
 
 };
-
 // GET CHAT MESSAGES
 export const getMessage = async (
     req,
@@ -162,7 +210,20 @@ export const getMessage = async (
                     ]
                 }
 
-            }).populate("messages");
+            }).populate({
+
+    path: "messages",
+
+    populate: {
+
+        path: "replyTo",
+
+        select:
+            "message image sender"
+
+    }
+
+});
 
         if (!conversation) {
 
