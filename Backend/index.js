@@ -15,7 +15,7 @@ const port = process.env.PORT || 5000;
 // TEMPORARY CORS TEST
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://baatcheet-ueje.onrender.com"
+    "https://realtimechat-5v8i.onrender.com"
 ];
 
 app.use(

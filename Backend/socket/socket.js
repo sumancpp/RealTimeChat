@@ -17,7 +17,7 @@ const io = new Server(server, {
 
             "http://localhost:5173",
 
-            "https://baatcheet-ueje.onrender.com"
+            "https://realtimechat-5v8i.onrender.com"
 
         ],
 
