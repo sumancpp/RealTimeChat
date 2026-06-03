@@ -512,17 +512,27 @@ const MessageArea = () => {
 
                     onDoubleClick={() => {
 
-                      setReplyMessage(msg);
+    setReplyMessage(msg);
 
-                    }}
+  }}
 
-                    onTouchEnd={() => {
+  onClick={(e) => {
 
-                      clearTimeout(
-                        touchTimer.current
-                      );
+    e.stopPropagation();
 
-                    }}
+    setActiveReactionMessage(
+
+      activeReactionMessage === msg._id
+
+        ? null
+
+        : msg._id
+
+    );
+
+  }}
+
+                    
 
                     className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
                       userData?._id?.toString()
@@ -583,7 +593,11 @@ const MessageArea = () => {
 msg._id && (
 
   <div
+   onClick={(e) => {
 
+    e.stopPropagation();
+
+  }}
     className="
     absolute
     -top-12
@@ -593,7 +607,7 @@ msg._id && (
     shadow-lg
     rounded-full
     px-3
-    py-2
+    py-4
     flex
     gap-3
     z-50
@@ -645,46 +659,7 @@ msg._id && (
 
 )}
 
-                      <div className="flex justify-end mb-1">
-
-  <button
-
-    onClick={(e) => {
-
-  e.stopPropagation();
-
-  setActiveReactionMessage(
-
-    activeReactionMessage ===
-    msg._id
-
-      ? null
-
-      : msg._id
-
-  );
-
-}}
-
-    className="
-    w-6
-    h-6
-    rounded-full
-    bg-gray-100
-    hover:bg-gray-200
-    flex
-    items-center
-    justify-center
-    text-xs
-    "
-
-  >
-
-    😊
-
-  </button>
-
-</div>
+                     
 
                     {/* MESSAGE */}
                     <div className="flex items-end gap-1">
