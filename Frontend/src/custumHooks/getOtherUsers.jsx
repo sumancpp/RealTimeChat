@@ -1,7 +1,5 @@
 import axios from "axios";
-
 import { useEffect } from "react";
-
 import { serverUrl } from "../main";
 
 import {
@@ -17,49 +15,86 @@ const useGetOtherUsers = () => {
 
     const dispatch = useDispatch();
 
-    const { userData } = useSelector(
-        state => state.user
-    );
+    const { userData } =
+        useSelector(
+            state => state.user
+        );
 
     useEffect(() => {
 
-        if (!userData?._id) return;
+        if (!userData?._id)
+            return;
 
-        const fetchUsers = async () => {
+        let retryCount = 0;
 
-            try {
+        const fetchUsers =
+            async () => {
 
-                const result =
-                    await axios.get(
+                try {
 
-                        `${serverUrl}/message/sorted-users`,
-
-                        {
-                            withCredentials: true
-                        }
-
+                    console.log(
+                        "Fetching users..."
                     );
 
-                dispatch(
-                    setOtherUsers(
-                        result.data
-                    )
-                );
+                    const result =
+                        await axios.get(
 
-            } catch (error) {
+                            `${serverUrl}/message/sorted-users`,
 
-                console.log(
-                    error
-                );
+                            {
+                                withCredentials: true,
+                                timeout: 10000
+                            }
 
-            }
+                        );
 
-        };
+                    dispatch(
+                        setOtherUsers(
+                            result.data
+                        )
+                    );
+
+                    console.log(
+                        "Users Loaded:",
+                        result.data.length
+                    );
+
+                }
+
+                catch (error) {
+
+                    console.log(
+                        "Fetch Users Error:",
+                        error.response?.status,
+                        error.response?.data,
+                        error.message
+                    );
+
+                    if (
+                        retryCount < 3
+                    ) {
+
+                        retryCount++;
+
+                        console.log(
+                            `Retry ${retryCount}/3`
+                        );
+
+                        setTimeout(
+                            fetchUsers,
+                            3000
+                        );
+
+                    }
+
+                }
+
+            };
 
         fetchUsers();
 
     }, [
-        userData,
+        userData?._id,
         dispatch
     ]);
 
