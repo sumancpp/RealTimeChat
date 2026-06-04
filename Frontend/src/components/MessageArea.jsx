@@ -334,25 +334,30 @@ const MessageArea = () => {
           };
 
         mediaRecorder.onstop =
-          async () => {
+  async () => {
 
-            const audioBlob =
-              new Blob(
+    const audioBlob =
+      new Blob(
 
-                audioChunksRef.current,
+        audioChunksRef.current,
 
-                {
-                  type:
-                    "audio/webm"
-                }
+        {
+          type:
+            "audio/webm"
+        }
 
-              );
+      );
 
-            await sendVoiceMessage(
-              audioBlob
-            );
+    console.log(
+      "Voice Size:",
+      audioBlob.size
+    );
 
-          };
+    await sendVoiceMessage(
+      audioBlob
+    );
+
+  };
 
         mediaRecorder.start();
 
@@ -372,18 +377,23 @@ const MessageArea = () => {
 
   // stop recording
 
-  const stopRecording =
-    () => {
+  const stopRecording = () => {
 
-      mediaRecorderRef
-        ?.current
-        ?.stop();
+  if (
 
-      setRecordingMode(
-        false
-      );
+    mediaRecorderRef.current &&
 
-    };
+    mediaRecorderRef.current.state === "recording"
+
+  ) {
+
+    mediaRecorderRef.current.stop();
+
+  }
+
+  setRecordingMode(false);
+
+};
 
 
 
@@ -1242,6 +1252,23 @@ ${msg.sender?.toString() ===
 
             )}
 
+            {recordingMode && (
+
+  <div
+    className="
+    px-4
+    py-2
+    text-red-500
+    font-medium
+    "
+  >
+
+    🎤 Recording...
+
+  </div>
+
+)}
+
 
 
             <form
@@ -1337,8 +1364,11 @@ text-sm
               {/* SEND */}
               <button
                 type={
-                  recordingMode
+                  !message.trim() &&
+                    !backendImage
+
                     ? "button"
+
                     : "submit"
                 }
 
@@ -1387,15 +1417,13 @@ text-sm
                   }
   `}
               >
-                {recordingMode ? (
+                {!message.trim() && !backendImage ? (
 
                   <Mic size={20} />
 
                 ) : (
 
-                  <SendHorizonal
-                    size={18}
-                  />
+                  <SendHorizonal size={18} />
 
                 )}
               </button>
