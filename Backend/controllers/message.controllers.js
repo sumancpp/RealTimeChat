@@ -43,14 +43,40 @@ export const sendMessage = async (req, res) => {
 
         let image = "";
 
-        if (req.file) {
+let voice = "";
 
-            image =
-                await uploadOnCloudinary(
-                    req.file.path
-                );
+if (req.file) {
 
-        }
+    const uploadedFile =
+        await uploadOnCloudinary(
+            req.file.path
+        );
+
+    if (
+
+        req.file.mimetype.startsWith(
+            "image"
+        )
+
+    ) {
+
+        image = uploadedFile;
+
+    }
+
+    else if (
+
+        req.file.mimetype.startsWith(
+            "audio"
+        )
+
+    ) {
+
+        voice = uploadedFile;
+
+    }
+
+}
 
         let conversation =
             await Conversation.findOne({
@@ -67,22 +93,24 @@ export const sendMessage = async (req, res) => {
             });
 
         const newMessage =
-    await Message.create({
+await Message.create({
 
-        sender,
+    sender,
 
-        receiver,
+    receiver,
 
-        message,
+    message,
 
-        image,
+    image,
 
-        replyTo:
-            replyTo || null,
+    voice,
 
-        isSeen: false
+    replyTo:
+        replyTo || null,
 
-    });
+    isSeen: false
+
+});
 
 console.log(
     "SAVED MESSAGE:",
@@ -374,8 +402,10 @@ export const getSortedUsers = async (
                                 lastMessage?.message ||
 
                                 (lastMessage?.image
-                                    ? "📷 Image"
-                                    : ""),
+ ? "📷 Image"
+ : lastMessage?.voice
+ ? "🎤 Voice Message"
+ : ""),
 
                             lastMessageTime:
                                 lastMessage?.createdAt ||
@@ -586,6 +616,8 @@ export const deleteMessage = async (
 
         message.image =
             "";
+
+        message.voice = "";
 
         message.replyTo =
             null;

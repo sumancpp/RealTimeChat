@@ -10,7 +10,9 @@ import {
   Smile,
   ImagePlus,
   Plus,
-  Trash2
+  Trash2,
+  Mic,
+  Square
 } from "lucide-react";
 
 import axios from "axios";
@@ -98,6 +100,18 @@ const MessageArea = () => {
   const [activeReactionMessage, setActiveReactionMessage] = useState(null);
 
   const [selectedImage, setSelectedImage] = useState(null);
+
+
+
+  const [recordingMode,
+    setRecordingMode] =
+    useState(false);
+
+  const mediaRecorderRef =
+    useRef(null);
+
+  const audioChunksRef =
+    useRef([]);
 
   // AUTO SCROLL
   useEffect(() => {
@@ -224,6 +238,157 @@ const MessageArea = () => {
 
   }, [selectedUser]);
 
+  const sendVoiceMessage =
+    async (
+      audioBlob
+    ) => {
+
+      try {
+
+        const formData =
+          new FormData();
+
+        formData.append(
+
+          "file",
+
+          new File(
+
+            [audioBlob],
+
+            "voice.webm",
+
+            {
+              type:
+                "audio/webm"
+            }
+
+          )
+
+        );
+
+        await axios.post(
+
+          `${serverUrl}/message/send/${selectedUser._id}`,
+
+          formData,
+
+          {
+
+            withCredentials:
+              true
+
+          }
+
+        );
+
+      }
+
+      catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
+
+  // start recording
+  const startRecording =
+    async () => {
+
+      try {
+
+        const stream =
+          await navigator
+            .mediaDevices
+            .getUserMedia({
+
+              audio: true
+
+            });
+
+        const mediaRecorder =
+          new MediaRecorder(
+            stream
+          );
+
+        mediaRecorderRef.current =
+          mediaRecorder;
+
+        audioChunksRef.current =
+          [];
+
+        mediaRecorder.ondataavailable =
+          (event) => {
+
+            if (
+              event.data.size > 0
+            ) {
+
+              audioChunksRef.current.push(
+                event.data
+              );
+
+            }
+
+          };
+
+        mediaRecorder.onstop =
+          async () => {
+
+            const audioBlob =
+              new Blob(
+
+                audioChunksRef.current,
+
+                {
+                  type:
+                    "audio/webm"
+                }
+
+              );
+
+            await sendVoiceMessage(
+              audioBlob
+            );
+
+          };
+
+        mediaRecorder.start();
+
+        setRecordingMode(
+          true
+        );
+
+      }
+
+      catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
+
+  // stop recording
+
+  const stopRecording =
+    () => {
+
+      mediaRecorderRef
+        ?.current
+        ?.stop();
+
+      setRecordingMode(
+        false
+      );
+
+    };
+
+
+
+
+
   // SEND MESSAGE
   const handleSendMessage = async (e) => {
 
@@ -264,7 +429,7 @@ const MessageArea = () => {
       if (backendImage) {
 
         formData.append(
-          "image",
+          "file",
           backendImage
         );
 
@@ -617,7 +782,9 @@ const MessageArea = () => {
 
                             (msg.replyTo.image
                               ? "📷 Image"
-                              : "")
+                              : msg.replyTo.voice
+                                ? "🎤 Voice Message"
+                                : "")
                           }
 
                         </p>
@@ -629,19 +796,19 @@ const MessageArea = () => {
                     {/* IMAGE */}
                     {msg.image && (
 
-                          <img
+                      <img
 
-                            src={msg.image}
+                        src={msg.image}
 
-                            alt="chat"
+                        alt="chat"
 
-                            onClick={() =>
-                              setSelectedImage(
-                                msg.image
-                              )
-                            }
+                        onClick={() =>
+                          setSelectedImage(
+                            msg.image
+                          )
+                        }
 
-                            className="
+                        className="
     max-w-[200px]
     sm:max-w-[250px]
     max-h-[250px]
@@ -653,10 +820,27 @@ const MessageArea = () => {
     transition
     "
 
-                          />
+                      />
 
-                        )
-                      }
+                    )
+                    }
+
+                    {msg.voice && (
+
+                      <audio
+
+                        controls
+
+                        src={msg.voice}
+
+                        className="
+    w-[250px]
+    mb-2
+    "
+
+                      />
+
+                    )}
 
                     {activeReactionMessage ===
                       msg._id && (
@@ -899,9 +1083,9 @@ ${msg.sender?.toString() ===
 
           {selectedImage && (
 
-  <div
+            <div
 
-    className="
+              className="
     fixed
     inset-0
     bg-black/90
@@ -912,17 +1096,17 @@ ${msg.sender?.toString() ===
     p-4
     "
 
-    onClick={() =>
-      setSelectedImage(
-        null
-      )
-    }
+              onClick={() =>
+                setSelectedImage(
+                  null
+                )
+              }
 
-  >
+            >
 
-    <button
+              <button
 
-      className="
+                className="
       absolute
       top-4
       right-4
@@ -930,34 +1114,34 @@ ${msg.sender?.toString() ===
       text-4xl
       "
 
-    >
+              >
 
-      ×
+                ×
 
-    </button>
+              </button>
 
-    <img
+              <img
 
-      src={selectedImage}
+                src={selectedImage}
 
-      alt="fullscreen"
+                alt="fullscreen"
 
-      className="
+                className="
       max-w-full
       max-h-full
       object-contain
       rounded-lg
       "
 
-      onClick={(e) =>
-        e.stopPropagation()
-      }
+                onClick={(e) =>
+                  e.stopPropagation()
+                }
 
-    />
+              />
 
-  </div>
+            </div>
 
-)}
+          )}
 
           {/* INPUT */}
           <div className="relative">
@@ -1058,6 +1242,8 @@ ${msg.sender?.toString() ===
 
             )}
 
+
+
             <form
               onSubmit={
                 handleSendMessage
@@ -1150,7 +1336,37 @@ text-sm
 
               {/* SEND */}
               <button
-                type="submit"
+                type={
+                  recordingMode
+                    ? "button"
+                    : "submit"
+                }
+
+
+                onTouchStart={() => {
+
+                  if (
+                    !message.trim() &&
+                    !backendImage
+                  ) {
+
+                    startRecording();
+
+                  }
+
+                }}
+
+                onTouchEnd={() => {
+
+                  if (
+                    recordingMode
+                  ) {
+
+                    stopRecording();
+
+                  }
+
+                }}
                 disabled={sending}
                 className={`
     flex-shrink-0
@@ -1171,7 +1387,17 @@ text-sm
                   }
   `}
               >
-                <SendHorizonal size={18} />
+                {recordingMode ? (
+
+                  <Mic size={20} />
+
+                ) : (
+
+                  <SendHorizonal
+                    size={18}
+                  />
+
+                )}
               </button>
 
             </form>

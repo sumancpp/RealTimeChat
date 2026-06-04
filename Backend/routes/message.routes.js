@@ -17,7 +17,7 @@ const messageRouter = express.Router();
 messageRouter.post(
   "/send/:receiver",
   isAuth,
-  upload.single("image"),
+  upload.single("file"),
   sendMessage
 );
 
