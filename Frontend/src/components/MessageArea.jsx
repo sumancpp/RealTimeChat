@@ -33,6 +33,10 @@ import {
   deleteMessageRedux
 } from "../redux/messageSlice";
 
+import {
+  setSelectedUser
+} from "../redux/userSlice";
+
 const MessageArea = () => {
 
   const dispatch = useDispatch();
@@ -626,8 +630,17 @@ const MessageArea = () => {
                       <img
                         src={msg.image}
                         alt="chat"
-                        className="w-full rounded-xl mb-2"
+                        className="
+                                   max-w-[220px]
+                                   sm:max-w-[280px]
+                                   max-h-[300px]
+                                   object-cover
+                                   rounded-xl
+                                   mb-2
+                                   cursor-pointer
+                                   "
                       />
+
 
                     )}
 
@@ -727,7 +740,7 @@ ${msg.sender?.toString() ===
 
                               >
 
-                               <Trash2 size={20} />
+                                <Trash2 size={20} />
 
                               </button>
 
