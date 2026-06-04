@@ -351,48 +351,48 @@ const MessageArea = () => {
 
   useEffect(() => {
 
-    if (!socket)
-      return;
+  if (!socket)
+    return;
 
-    socket.on(
-      "messageReaction",
-      (updatedMessage) => {
+  socket.on(
+    "messageReaction",
+    (updatedMessage) => {
 
-        dispatch(
-          updateReaction(
-            updatedMessage
-          )
-        );
+      dispatch(
+        updateReaction(
+          updatedMessage
+        )
+      );
 
-        socket.on(
-          "messageDeleted",
-          ({ messageId }) => {
+    }
+  );
 
-            dispatch(
-              deleteMessageRedux(
-                messageId
-              )
-            );
+  socket.on(
+    "messageDeleted",
+    ({ messageId }) => {
 
-          }
-        );
+      dispatch(
+        deleteMessageRedux(
+          messageId
+        )
+      );
 
-      }
+    }
+  );
+
+  return () => {
+
+    socket.off(
+      "messageReaction"
     );
 
-    return () => {
+    socket.off(
+      "messageDeleted"
+    );
 
-      socket.off(
-        "messageReaction"
-      );
+  };
 
-      socket.off(
-        "messageDeleted"
-      );
-
-    };
-
-  }, [dispatch]);
+}, [dispatch]);
 
   const reactToMessage =
     async (
