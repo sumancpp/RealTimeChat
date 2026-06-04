@@ -97,6 +97,8 @@ const MessageArea = () => {
 
   const [activeReactionMessage, setActiveReactionMessage] = useState(null);
 
+  const [selectedImage, setSelectedImage] = useState(null);
+
   // AUTO SCROLL
   useEffect(() => {
 
@@ -351,48 +353,48 @@ const MessageArea = () => {
 
   useEffect(() => {
 
-  if (!socket)
-    return;
+    if (!socket)
+      return;
 
-  socket.on(
-    "messageReaction",
-    (updatedMessage) => {
+    socket.on(
+      "messageReaction",
+      (updatedMessage) => {
 
-      dispatch(
-        updateReaction(
-          updatedMessage
-        )
-      );
+        dispatch(
+          updateReaction(
+            updatedMessage
+          )
+        );
 
-    }
-  );
-
-  socket.on(
-    "messageDeleted",
-    ({ messageId }) => {
-
-      dispatch(
-        deleteMessageRedux(
-          messageId
-        )
-      );
-
-    }
-  );
-
-  return () => {
-
-    socket.off(
-      "messageReaction"
+      }
     );
 
-    socket.off(
-      "messageDeleted"
+    socket.on(
+      "messageDeleted",
+      ({ messageId }) => {
+
+        dispatch(
+          deleteMessageRedux(
+            messageId
+          )
+        );
+
+      }
     );
 
-  };
+    return () => {
 
-}, [dispatch]);
+      socket.off(
+        "messageReaction"
+      );
+
+      socket.off(
+        "messageDeleted"
+      );
+
+    };
+
+  }, [dispatch]);
 
   const reactToMessage =
     async (
@@ -627,22 +629,34 @@ const MessageArea = () => {
                     {/* IMAGE */}
                     {msg.image && (
 
-                      <img
-                        src={msg.image}
-                        alt="chat"
-                        className="
-                                   max-w-[220px]
-                                   sm:max-w-[280px]
-                                   max-h-[300px]
-                                   object-cover
-                                   rounded-xl
-                                   mb-2
-                                   cursor-pointer
-                                   "
-                      />
+                          <img
 
+                            src={msg.image}
 
-                    )}
+                            alt="chat"
+
+                            onClick={() =>
+                              setSelectedImage(
+                                msg.image
+                              )
+                            }
+
+                            className="
+    max-w-[200px]
+    sm:max-w-[250px]
+    max-h-[250px]
+    rounded-xl
+    object-cover
+    mb-2
+    cursor-pointer
+    hover:opacity-90
+    transition
+    "
+
+                          />
+
+                        )
+                      }
 
                     {activeReactionMessage ===
                       msg._id && (
@@ -882,6 +896,68 @@ ${msg.sender?.toString() ===
             </div>
 
           )}
+
+          {selectedImage && (
+
+  <div
+
+    className="
+    fixed
+    inset-0
+    bg-black/90
+    z-[9999]
+    flex
+    items-center
+    justify-center
+    p-4
+    "
+
+    onClick={() =>
+      setSelectedImage(
+        null
+      )
+    }
+
+  >
+
+    <button
+
+      className="
+      absolute
+      top-4
+      right-4
+      text-white
+      text-4xl
+      "
+
+    >
+
+      ×
+
+    </button>
+
+    <img
+
+      src={selectedImage}
+
+      alt="fullscreen"
+
+      className="
+      max-w-full
+      max-h-full
+      object-contain
+      rounded-lg
+      "
+
+      onClick={(e) =>
+        e.stopPropagation()
+      }
+
+    />
+
+  </div>
+
+)}
 
           {/* INPUT */}
           <div className="relative">
