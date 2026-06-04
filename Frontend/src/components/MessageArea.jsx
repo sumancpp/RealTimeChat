@@ -293,9 +293,14 @@ const MessageArea = () => {
     };
 
   // start recording
+
+  const recordingRef = useRef(false);
+
   const startRecording =
     async () => {
+ if (recordingRef.current) return;
 
+  recordingRef.current = true;
       try {
 
         const stream =
@@ -373,7 +378,7 @@ const MessageArea = () => {
 
           };
 
-        mediaRecorder.start(100);
+        mediaRecorder.start(1000);
 
         setRecordingMode(
           true
@@ -392,6 +397,8 @@ const MessageArea = () => {
   // stop recording
 
   const stopRecording = () => {
+
+      recordingRef.current = false;
 
     if (
 
