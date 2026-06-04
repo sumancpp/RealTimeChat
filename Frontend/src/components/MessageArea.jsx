@@ -318,8 +318,22 @@ const MessageArea = () => {
         audioChunksRef.current =
           [];
 
+        mediaRecorder.onstart =
+          () => {
+
+            console.log(
+              "Recording Started"
+            );
+
+          };
+
         mediaRecorder.ondataavailable =
           (event) => {
+
+            console.log(
+              "Chunk Size:",
+              event.data.size
+            );
 
             if (
               event.data.size > 0
@@ -334,32 +348,32 @@ const MessageArea = () => {
           };
 
         mediaRecorder.onstop =
-  async () => {
+          async () => {
 
-    const audioBlob =
-      new Blob(
+            const audioBlob =
+              new Blob(
 
-        audioChunksRef.current,
+                audioChunksRef.current,
 
-        {
-          type:
-            "audio/webm"
-        }
+                {
+                  type:
+                    "audio/webm"
+                }
 
-      );
+              );
 
-    console.log(
-      "Voice Size:",
-      audioBlob.size
-    );
+            console.log(
+              "Voice Size:",
+              audioBlob.size
+            );
 
-    await sendVoiceMessage(
-      audioBlob
-    );
+            await sendVoiceMessage(
+              audioBlob
+            );
 
-  };
+          };
 
-        mediaRecorder.start();
+        mediaRecorder.start(100);
 
         setRecordingMode(
           true
@@ -379,21 +393,21 @@ const MessageArea = () => {
 
   const stopRecording = () => {
 
-  if (
+    if (
 
-    mediaRecorderRef.current &&
+      mediaRecorderRef.current &&
 
-    mediaRecorderRef.current.state === "recording"
+      mediaRecorderRef.current.state === "recording"
 
-  ) {
+    ) {
 
-    mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stop();
 
-  }
+    }
 
-  setRecordingMode(false);
+    setRecordingMode(false);
 
-};
+  };
 
 
 
@@ -1254,20 +1268,20 @@ ${msg.sender?.toString() ===
 
             {recordingMode && (
 
-  <div
-    className="
+              <div
+                className="
     px-4
     py-2
     text-red-500
     font-medium
     "
-  >
+              >
 
-    🎤 Recording...
+                🎤 Recording...
 
-  </div>
+              </div>
 
-)}
+            )}
 
 
 
