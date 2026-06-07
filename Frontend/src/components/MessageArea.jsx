@@ -298,9 +298,9 @@ const MessageArea = () => {
 
   const startRecording =
     async () => {
- if (recordingRef.current) return;
+      if (recordingRef.current) return;
 
-  recordingRef.current = true;
+      recordingRef.current = true;
       try {
 
         const stream =
@@ -398,7 +398,7 @@ const MessageArea = () => {
 
   const stopRecording = () => {
 
-      recordingRef.current = false;
+    recordingRef.current = false;
 
     if (
 
@@ -449,27 +449,19 @@ const MessageArea = () => {
       );
 
       if (currentReply) {
-
         formData.append(
           "replyTo",
           currentReply._id
         );
-
+        console.log("CURRENT REPLY:", currentReply);
       }
 
       if (backendImage) {
-
         formData.append(
           "file",
           backendImage
         );
-
       }
-
-      console.log(
-        "CURRENT REPLY:",
-        currentReply
-      );
 
       await axios.post(
 

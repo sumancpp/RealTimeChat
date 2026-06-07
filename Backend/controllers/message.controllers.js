@@ -224,6 +224,9 @@ console.log(
                         ).join("") ||
                         "Sorry, I couldn't generate a response.";
 
+                    if (!response.text) {
+                        console.log("AI RESPONSE FULL:", response);
+                    }
                     console.log("AI RESPONSE:", aiReply);
 
                     let aiUser = await User.findOne({ isAI: true });
@@ -274,7 +277,11 @@ console.log(
                     }
                 }
             } catch (error) {
-                console.log("AI ERROR:", error);
+                console.error("AI ERROR:",
+                    error?.response?.data ||
+                    error?.message ||
+                    error
+                );
             }
         }
 
