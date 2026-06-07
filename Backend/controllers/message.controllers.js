@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import uploadOnCloudinary from "../config/cloudinary.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
@@ -199,12 +200,13 @@ console.log(
 
         let populatedAiMessage;
 
+        const trimmedMessage = message?.trim();
         if (
-            message &&
-            message.trim().startsWith("@ai")
+            trimmedMessage &&
+            trimmedMessage.toLowerCase().startsWith("@ai")
         ) {
             try {
-                const prompt = message.replace("@ai", "").trim();
+                const prompt = trimmedMessage.replace(/^@ai\s*/i, "").trim();
 
                 if (prompt) {
                     console.log("AI BLOCK HIT");
@@ -224,9 +226,22 @@ console.log(
 
                     console.log("AI RESPONSE:", aiReply);
 
-                    const aiUser = await User.findOne({ isAI: true });
+                    let aiUser = await User.findOne({ isAI: true });
                     if (!aiUser) {
-                        throw new Error("AI user not found");
+                        const hashedPassword = await bcrypt.hash(
+                            "baatcheet-ai",
+                            5
+                        );
+                        aiUser = await User.create({
+                            name: "BaatCheet AI",
+                            userName: "ai",
+                            email: "ai@baatcheet.com",
+                            password: hashedPassword,
+                            isAI: true,
+                            profileImage:
+                                "https://cdn-icons-png.flaticon.com/512/4712/4712027.png"
+                        });
+                        console.log("AI user created on demand.");
                     }
 
                     const aiMessage = await Message.create({
