@@ -2,7 +2,7 @@ import uploadOnCloudinary from "../config/cloudinary.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
-import openai from "../config/gemini.js";
+import ai from "../config/gemini.js";
 
 import {
     io,
@@ -195,32 +195,12 @@ console.log(
 
         }
 
-        return res.status(201).json(
-            populatedMessage
-        );
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-        return res.status(500).json({
-
-            message:
-                `send message error ${error.message}`
-
-        });
-
-    }
-
-};
-
-// AI COMMAND
+        // AI COMMAND
 
 if (
 
     message &&
+
     message.trim().startsWith("@ai")
 
 ) {
@@ -252,7 +232,8 @@ if (
                 });
 
             const aiReply =
-                response.text;
+    response.text ||
+    "Sorry, I couldn't generate a response.";
 
             const aiUser =
                 await User.findOne({
@@ -321,6 +302,29 @@ if (
     }
 
 }
+
+        return res.status(201).json(
+            populatedMessage
+        );
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        return res.status(500).json({
+
+            message:
+                `send message error ${error.message}`
+
+        });
+
+    }
+
+};
+
+
 
 // GET CHAT MESSAGES
 export const getMessage = async (
@@ -424,84 +428,6 @@ export const getMessage = async (
 };
 
 
-
-if (
-    receiverUser?.isAI
-) {
-
-    const completion =
-        await openai.chat.completions.create({
-
-            model:
-                "gpt-4o-mini",
-
-            messages: [
-
-                {
-
-                    role: "system",
-
-                    content:
-                        "You are BaatCheet AI, a helpful assistant."
-
-                },
-
-                {
-
-                    role: "user",
-
-                    content:
-                        message
-
-                }
-
-            ]
-
-        });
-
-    const aiReply =
-        completion.choices[0]
-            .message.content;
-
-    const aiMessage =
-        await Message.create({
-
-            sender:
-                receiverUser._id,
-
-            receiver:
-                sender,
-
-            message:
-                aiReply
-
-        });
-
-    conversation.messages.push(
-        aiMessage._id
-    );
-
-    await conversation.save();
-
-    const senderSocketId =
-        getReceiverSocketId(
-            sender
-        );
-
-    if (
-        senderSocketId
-    ) {
-
-        io.to(
-            senderSocketId
-        ).emit(
-            "newMessage",
-            aiMessage
-        );
-
-    }
-
-}
 
 // SIDEBAR USERS
 export const getSortedUsers = async (
