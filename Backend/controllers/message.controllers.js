@@ -3,7 +3,7 @@ import uploadOnCloudinary from "../config/cloudinary.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
-import ai from "../config/gemini.js";
+import generateGeminiReply from "../config/gemini.js";
 
 import {
     io,
@@ -218,21 +218,7 @@ console.log(
                     console.log("AI BLOCK HIT");
                     console.log("PROMPT:", prompt);
 
-                    const response = await ai.models.generateContent({
-                        model: "gemini-2.5-flash",
-                        contents: prompt
-                    });
-
-                    const aiReply =
-                        response.text ||
-                        response.candidates?.[0]?.content?.parts?.map(
-                            (part) => part?.text || ""
-                        ).join("") ||
-                        "Sorry, I couldn't generate a response.";
-
-                    if (!response.text) {
-                        console.log("AI RESPONSE FULL:", response);
-                    }
+                    const aiReply = await generateGeminiReply(prompt);
                     console.log("AI RESPONSE:", aiReply);
 
                     let aiUser = receiverUser?.isAI ? receiverUser : await User.findOne({ isAI: true });
@@ -283,11 +269,57 @@ console.log(
                     }
                 }
             } catch (error) {
-                console.error("AI ERROR:",
-                    error?.response?.data ||
-                    error?.message ||
-                    error
-                );
+                console.error("AI ERROR:", error?.message || error);
+
+                const fallbackAiReply =
+                    "Sorry, I couldn't generate a response right now. Please try again later.";
+
+                let aiUser = receiverUser?.isAI ? receiverUser : await User.findOne({ isAI: true });
+                if (!aiUser) {
+                    const hashedPassword = await bcrypt.hash(
+                        "baatcheet-ai",
+                        5
+                    );
+                    aiUser = await User.create({
+                        name: "BaatCheet AI",
+                        userName: "ai",
+                        email: "ai@baatcheet.com",
+                        password: hashedPassword,
+                        isAI: true,
+                        profileImage:
+                            "https://cdn-icons-png.flaticon.com/512/4712/4712027.png"
+                    });
+                    console.log("AI user created on demand.");
+                }
+
+                const aiMessage = await Message.create({
+                    sender: aiUser._id,
+                    receiver: sender,
+                    message: fallbackAiReply,
+                    isSeen: false
+                });
+
+                populatedAiMessage = await Message.findById(
+                    aiMessage._id
+                ).populate({
+                    path: "replyTo",
+                    select: "message image sender"
+                });
+
+                conversation.messages.push(aiMessage._id);
+                await conversation.save();
+
+                if (senderSocketId) {
+                    io.to(senderSocketId).emit(
+                        "newMessage",
+                        populatedAiMessage
+                    );
+                } else {
+                    console.log(
+                        "AI fallback message not emitted: sender socket not connected",
+                        sender
+                    );
+                }
             }
         }
 
