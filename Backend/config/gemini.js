@@ -7,10 +7,10 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || null;
 if (!GEMINI_API_KEY) {
-    throw new Error(
-        "Missing GEMINI_API_KEY in Backend/.env. Add your Gemini Developer API key and restart the backend."
+    console.warn(
+        "Warning: GEMINI_API_KEY is not configured. AI replies will use fallback text until the key is provided."
     );
 }
 
@@ -42,6 +42,10 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL) => {
             }
         ]
     };
+
+    if (!GEMINI_API_KEY) {
+        return "Sorry, I couldn't generate a response because the Gemini API key is not configured.";
+    }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
     const response = await getFetch()(url, {
