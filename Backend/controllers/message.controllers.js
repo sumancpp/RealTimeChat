@@ -201,12 +201,18 @@ console.log(
         let populatedAiMessage;
 
         const trimmedMessage = message?.trim();
-        if (
-            trimmedMessage &&
-            trimmedMessage.toLowerCase().startsWith("@ai")
-        ) {
+        const receiverUser = receiver
+            ? await User.findById(receiver)
+            : null;
+        const isAiChat =
+            trimmedMessage?.toLowerCase().startsWith("@ai") ||
+            receiverUser?.isAI;
+
+        if (trimmedMessage && isAiChat) {
             try {
-                const prompt = trimmedMessage.replace(/^@ai\s*/i, "").trim();
+                const prompt = trimmedMessage
+                    .replace(/^@ai\s*/i, "")
+                    .trim();
 
                 if (prompt) {
                     console.log("AI BLOCK HIT");
@@ -229,7 +235,7 @@ console.log(
                     }
                     console.log("AI RESPONSE:", aiReply);
 
-                    let aiUser = await User.findOne({ isAI: true });
+                    let aiUser = receiverUser?.isAI ? receiverUser : await User.findOne({ isAI: true });
                     if (!aiUser) {
                         const hashedPassword = await bcrypt.hash(
                             "baatcheet-ai",
