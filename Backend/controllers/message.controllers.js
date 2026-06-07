@@ -197,115 +197,78 @@ console.log(
 
         // AI COMMAND
 
-if (
+        let populatedAiMessage;
 
-    message &&
+        if (
+            message &&
+            message.trim().startsWith("@ai")
+        ) {
+            try {
+                const prompt = message.replace("@ai", "").trim();
 
-    message.trim().startsWith("@ai")
+                if (prompt) {
+                    console.log("AI BLOCK HIT");
+                    console.log("PROMPT:", prompt);
 
-) {
+                    const response = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: prompt
+                    });
 
-    try {
+                    const aiReply =
+                        response.text ||
+                        response.candidates?.[0]?.content?.parts?.map(
+                            (part) => part?.text || ""
+                        ).join("") ||
+                        "Sorry, I couldn't generate a response.";
 
-        const prompt =
+                    console.log("AI RESPONSE:", aiReply);
 
-            message
+                    const aiUser = await User.findOne({ isAI: true });
+                    if (!aiUser) {
+                        throw new Error("AI user not found");
+                    }
 
-                .replace(
-                    "@ai",
-                    ""
-                )
+                    const aiMessage = await Message.create({
+                        sender: aiUser._id,
+                        receiver: sender,
+                        message: aiReply,
+                        isSeen: false
+                    });
 
-                .trim();
+                    populatedAiMessage = await Message.findById(
+                        aiMessage._id
+                    ).populate({
+                        path: "replyTo",
+                        select: "message image sender"
+                    });
 
-        if (prompt) {
+                    conversation.messages.push(aiMessage._id);
+                    await conversation.save();
 
-            const response =
-                await ai.models.generateContent({
-
-                    model:
-                        "gemini-2.5-flash",
-
-                    contents:
-                        prompt
-
-                });
-
-            const aiReply =
-    response.text ||
-    "Sorry, I couldn't generate a response.";
-
-            const aiUser =
-                await User.findOne({
-
-                    isAI: true
-
-                });
-
-            const aiMessage =
-                await Message.create({
-
-                    sender:
-                        aiUser._id,
-
-                    receiver:
-                        sender,
-
-                    message:
-                        aiReply,
-
-                    isSeen:
-                        false
-
-                });
-
-            conversation.messages.push(
-
-                aiMessage._id
-
-            );
-
-            await conversation.save();
-
-            if (
-
-                senderSocketId
-
-            ) {
-
-                io.to(
-                    senderSocketId
-                ).emit(
-
-                    "newMessage",
-
-                    aiMessage
-
-                );
-
+                    if (senderSocketId) {
+                        io.to(senderSocketId).emit(
+                            "newMessage",
+                            populatedAiMessage
+                        );
+                    } else {
+                        console.log(
+                            "AI message not emitted: sender socket not connected",
+                            sender
+                        );
+                    }
+                }
+            } catch (error) {
+                console.log("AI ERROR:", error);
             }
-
         }
 
-    }
+        const responsePayload =
+            populatedAiMessage ?
+                { message: populatedMessage, aiMessage: populatedAiMessage } :
+                populatedMessage;
 
-    catch (error) {
-
-        console.log(
-
-            "AI ERROR:",
-
-            error.message
-
-        );
-
-    }
-
-}
-
-        return res.status(201).json(
-            populatedMessage
-        );
+        return res.status(201).json(responsePayload);
 
     }
 
