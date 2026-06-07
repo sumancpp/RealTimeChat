@@ -2,6 +2,7 @@ import uploadOnCloudinary from "../config/cloudinary.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
+import openai from "../config/gemini.js";
 
 import {
     io,
@@ -214,6 +215,113 @@ console.log(
     }
 
 };
+
+// AI COMMAND
+
+if (
+
+    message &&
+    message.trim().startsWith("@ai")
+
+) {
+
+    try {
+
+        const prompt =
+
+            message
+
+                .replace(
+                    "@ai",
+                    ""
+                )
+
+                .trim();
+
+        if (prompt) {
+
+            const response =
+                await ai.models.generateContent({
+
+                    model:
+                        "gemini-2.5-flash",
+
+                    contents:
+                        prompt
+
+                });
+
+            const aiReply =
+                response.text;
+
+            const aiUser =
+                await User.findOne({
+
+                    isAI: true
+
+                });
+
+            const aiMessage =
+                await Message.create({
+
+                    sender:
+                        aiUser._id,
+
+                    receiver:
+                        sender,
+
+                    message:
+                        aiReply,
+
+                    isSeen:
+                        false
+
+                });
+
+            conversation.messages.push(
+
+                aiMessage._id
+
+            );
+
+            await conversation.save();
+
+            if (
+
+                senderSocketId
+
+            ) {
+
+                io.to(
+                    senderSocketId
+                ).emit(
+
+                    "newMessage",
+
+                    aiMessage
+
+                );
+
+            }
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(
+
+            "AI ERROR:",
+
+            error.message
+
+        );
+
+    }
+
+}
+
 // GET CHAT MESSAGES
 export const getMessage = async (
     req,
@@ -314,6 +422,86 @@ export const getMessage = async (
     }
 
 };
+
+
+
+if (
+    receiverUser?.isAI
+) {
+
+    const completion =
+        await openai.chat.completions.create({
+
+            model:
+                "gpt-4o-mini",
+
+            messages: [
+
+                {
+
+                    role: "system",
+
+                    content:
+                        "You are BaatCheet AI, a helpful assistant."
+
+                },
+
+                {
+
+                    role: "user",
+
+                    content:
+                        message
+
+                }
+
+            ]
+
+        });
+
+    const aiReply =
+        completion.choices[0]
+            .message.content;
+
+    const aiMessage =
+        await Message.create({
+
+            sender:
+                receiverUser._id,
+
+            receiver:
+                sender,
+
+            message:
+                aiReply
+
+        });
+
+    conversation.messages.push(
+        aiMessage._id
+    );
+
+    await conversation.save();
+
+    const senderSocketId =
+        getReceiverSocketId(
+            sender
+        );
+
+    if (
+        senderSocketId
+    ) {
+
+        io.to(
+            senderSocketId
+        ).emit(
+            "newMessage",
+            aiMessage
+        );
+
+    }
+
+}
 
 // SIDEBAR USERS
 export const getSortedUsers = async (

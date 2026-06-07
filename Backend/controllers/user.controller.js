@@ -95,18 +95,32 @@ export const getOtherUser = async (
                     $ne: req.userId
                 }
 
-            }).select("-password");
+            })
 
-        return res.status(200).json(
-            users
-        );
+            .select("-password")
 
-    } catch (error) {
+            .sort({
 
-        return res.status(500).json({
-            message:
-                `Get Other User error ${error.message}`
-        });
+                isAI: -1
+
+            });
+
+        return res
+            .status(200)
+            .json(users);
+
+    }
+
+    catch (error) {
+
+        return res
+            .status(500)
+            .json({
+
+                message:
+                    `Get Other User error ${error.message}`
+
+            });
 
     }
 
@@ -133,34 +147,56 @@ export const searchUsers = async (
                 $or: [
 
                     {
+
                         name: {
+
                             $regex: query,
+
                             $options: "i"
+
                         }
+
                     },
 
                     {
+
                         userName: {
+
                             $regex: query,
+
                             $options: "i"
+
                         }
+
                     }
 
                 ]
 
-            }).select(
-                "-password"
-            );
+            })
 
-        return res.status(200)
+            .select("-password")
+
+            .sort({
+
+                isAI: -1
+
+            });
+
+        return res
+            .status(200)
             .json(users);
 
-    } catch (error) {
+    }
 
-        return res.status(500)
+    catch (error) {
+
+        return res
+            .status(500)
             .json({
+
                 message:
                     error.message
+
             });
 
     }

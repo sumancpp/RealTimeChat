@@ -28,7 +28,11 @@ const userSchema = new mongoose.Schema({
         default: ""
     },
 
-    // WhatsApp-style Last Seen
+    isAI: {
+    type: Boolean,
+    default: false
+},
+
     lastSeen: {
         type: Date,
         default: Date.now
