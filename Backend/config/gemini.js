@@ -43,10 +43,6 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL) => {
         ]
     };
 
-    if (!GEMINI_API_KEY) {
-        return "Sorry, I couldn't generate a response because the Gemini API key is not configured.";
-    }
-
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
     const response = await getFetch()(url, {
         method: "POST",
