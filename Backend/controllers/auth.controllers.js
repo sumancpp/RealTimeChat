@@ -105,13 +105,15 @@ export const editProfile = async (req, res) => {
 
     try {
 
-        console.log("BODY:", req.body);
-
-        console.log("FILE:", req.file);
-
         let { name } = req.body;
 
         let profileImage = "";
+
+        const updateData = {};
+
+        if (name && name.trim()) {
+            updateData.name = name.trim();
+        }
 
         if (req.file) {
 
@@ -121,10 +123,6 @@ export const editProfile = async (req, res) => {
                 );
 
         }
-
-        const updateData = {
-            name
-        };
 
         if (profileImage) {
 
@@ -141,7 +139,7 @@ export const editProfile = async (req, res) => {
                 updateData,
 
                 {
-                    new: true
+                    returnDocument: 'after'
                 }
 
             ).select("-password");
@@ -430,4 +428,4 @@ export const verifyOtp =
 
     };
 
-    
+

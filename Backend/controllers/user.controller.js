@@ -18,7 +18,7 @@ export const updateProfile = async (req, res) => {
                 },
 
                 {
-                    new: true
+                    returnDocument: 'after'
                 }
 
             ).select("-password");
