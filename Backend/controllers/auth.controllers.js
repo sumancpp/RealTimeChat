@@ -215,6 +215,8 @@ export const forgotPassword =
 
                 ).toString();
 
+            console.log("Generated OTP:", otp, "for email:", email);
+
             user.resetOtp =
                 otp;
 
