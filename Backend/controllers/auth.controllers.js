@@ -224,21 +224,34 @@ export const forgotPassword =
 
             await user.save();
 
-            await transporter.sendMail({
+            try {
+                await transporter.sendMail({
 
-                from:
-                    process.env.EMAIL_USER,
+                    from:
+                        process.env.EMAIL_USER,
 
-                to:
-                    email,
+                    to:
+                        email,
 
-                subject:
-                    "BaatCheet Password Reset OTP",
+                    subject:
+                        "BaatCheet Password Reset OTP",
 
-                text:
-                    `Your OTP is ${otp}`
+                    text:
+                        `Your OTP is ${otp}`,
 
-            });
+                    html:
+                        `<p>Your OTP for password reset is: <strong>${otp}</strong></p><p>This OTP will expire in 10 minutes.</p>`
+
+                });
+
+                console.log("OTP sent successfully to:", email);
+
+            } catch (mailError) {
+                console.error("Email sending failed:", mailError);
+                return res.status(500).json({
+                    message: "Failed to send OTP. Check email configuration."
+                });
+            }
 
             return res.status(200)
                 .json({
@@ -251,6 +264,8 @@ export const forgotPassword =
         }
 
         catch (error) {
+
+            console.error("Forgot password error:", error);
 
             return res.status(500)
                 .json({
@@ -427,5 +442,39 @@ export const verifyOtp =
         }
 
     };
+
+export const testEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required"
+            });
+        }
+
+        console.log("Testing email with:", {
+            from: process.env.EMAIL_USER,
+            to: email
+        });
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "BaatCheet - Test Email",
+            html: "<h1>Test Email</h1><p>If you received this, your email configuration is working correctly!</p>"
+        });
+
+        return res.status(200).json({
+            message: "Test email sent successfully"
+        });
+
+    } catch (error) {
+        console.error("Test email error:", error);
+        return res.status(500).json({
+            message: "Email test failed: " + error.message
+        });
+    }
+};
 
 
