@@ -1,22 +1,27 @@
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from "resend";
 
-// Force IPv4 resolution to prevent IPv6 ENETUNREACH errors on cloud providers like Render
-dns.setDefaultResultOrder("ipv4first");
+// You need to add RESEND_API_KEY to your .env file on Render!
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    // This is the correct way to force IPv4 in Node 18+ for tls.connect
-    family: 4, 
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000
-});
+const transporter = {
+    sendMail: async (options) => {
+        // Resend's free tier requires you to use onboarding@resend.dev as the sender.
+        // It also ONLY allows you to send emails to the email address you used to sign up for Resend!
+        const { data, error } = await resend.emails.send({
+            from: "onboarding@resend.dev",
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+            text: options.text,
+        });
+
+        if (error) {
+            console.error("Resend API Error:", error);
+            throw new Error(error.message);
+        }
+        
+        return data;
+    }
+};
 
 export default transporter;
