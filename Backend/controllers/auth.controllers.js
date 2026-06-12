@@ -3,6 +3,8 @@ import genToken from "../config/token.js"
 import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
 import uploadOnCloudinary from "../config/cloudinary.js"
+import transporter from "../config/mail.js";
+import crypto from "crypto";
 
 export const signUp = async (req, res) => {
      try {
@@ -176,3 +178,256 @@ export const editProfile = async (req, res) => {
     }
 
 };
+
+
+//forget password
+export const forgotPassword =
+    async (req, res) => {
+
+        try {
+
+            const { email } =
+                req.body;
+
+            const user =
+                await User.findOne({
+                    email
+                });
+
+            if (!user) {
+
+                return res.status(404)
+                    .json({
+
+                        message:
+                            "User not found"
+
+                    });
+
+            }
+
+            const otp =
+                Math.floor(
+
+                    100000 +
+
+                    Math.random() *
+
+                    900000
+
+                ).toString();
+
+            user.resetOtp =
+                otp;
+
+            user.resetOtpExpiry =
+                Date.now() +
+                10 * 60 * 1000;
+
+            await user.save();
+
+            await transporter.sendMail({
+
+                from:
+                    process.env.EMAIL_USER,
+
+                to:
+                    email,
+
+                subject:
+                    "BaatCheet Password Reset OTP",
+
+                text:
+                    `Your OTP is ${otp}`
+
+            });
+
+            return res.status(200)
+                .json({
+
+                    message:
+                        "OTP sent successfully"
+
+                });
+
+        }
+
+        catch (error) {
+
+            return res.status(500)
+                .json({
+
+                    message:
+                        error.message
+
+                });
+
+        }
+
+    };
+
+
+// Verify OTP API
+
+export const verifyOtp =
+    async (req, res) => {
+
+        try {
+
+            const {
+
+                email,
+
+                otp
+
+            } = req.body;
+
+            const user =
+                await User.findOne({
+
+                    email
+
+                });
+
+            if (
+
+                !user ||
+
+                user.resetOtp !== otp
+
+            ) {
+
+                return res.status(400)
+                    .json({
+
+                        message:
+                            "Invalid OTP"
+
+                    });
+
+            }
+
+            if (
+
+                user.resetOtpExpiry <
+                Date.now()
+
+            ) {
+
+                return res.status(400)
+                    .json({
+
+                        message:
+                            "OTP Expired"
+
+                    });
+
+            }
+
+            return res.status(200)
+                .json({
+
+                    success: true
+
+                });
+
+        }
+
+        catch (error) {
+
+            return res.status(500)
+                .json({
+
+                    message:
+                        error.message
+
+                });
+
+        }
+
+    };
+
+ // Reset Password API
+ 
+ export const resetPassword =
+    async (req, res) => {
+
+        try {
+
+            const {
+
+                email,
+
+                otp,
+
+                password
+
+            } = req.body;
+
+            const user =
+                await User.findOne({
+
+                    email
+
+                });
+
+            if (
+
+                !user ||
+
+                user.resetOtp !== otp
+
+            ) {
+
+                return res.status(400)
+                    .json({
+
+                        message:
+                            "Invalid OTP"
+
+                    });
+
+            }
+
+            const hashedPassword =
+                await bcrypt.hash(
+                    password,
+                    5
+                );
+
+            user.password =
+                hashedPassword;
+
+            user.resetOtp =
+                null;
+
+            user.resetOtpExpiry =
+                null;
+
+            await user.save();
+
+            return res.status(200)
+                .json({
+
+                    message:
+                        "Password updated"
+
+                });
+
+        }
+
+        catch (error) {
+
+            return res.status(500)
+                .json({
+
+                    message:
+                        error.message
+
+                });
+
+        }
+
+    };
+
+    

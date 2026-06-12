@@ -36,6 +36,10 @@ import {
 import { useState } from "react";
 import SplashScreen from "./components/SplashScreen";
 
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOtp from "./pages/VerifyOtp";
+import ResetPassword from "./pages/ResetPassword";
+
 const App = () => {
 
   getCurrentUser();
@@ -53,29 +57,29 @@ const App = () => {
   useEffect(() => {
 
     const timer =
-        setTimeout(() => {
+      setTimeout(() => {
 
-            setLoading(false);
+        setLoading(false);
 
-        }, 1500);
+      }, 1500);
 
     return () =>
-        clearTimeout(timer);
+      clearTimeout(timer);
 
-}, []);
+  }, []);
 
-useEffect(() => {
+  useEffect(() => {
 
-  if (
-    "Notification" in window &&
-    Notification.permission === "default"
-  ) {
+    if (
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
 
-    Notification.requestPermission();
+      Notification.requestPermission();
 
-  }
+    }
 
-}, []);
+  }, []);
 
   useEffect(() => {
 
@@ -163,46 +167,61 @@ useEffect(() => {
 
     <>
 
-     <InstallPrompt />
+      <InstallPrompt />
 
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          !userData
-            ? <Login />
-            : <Navigate to="/" />
-        }
-      />
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            !userData
+              ? <Login />
+              : <Navigate to="/" />
+          }
+        />
 
-      <Route
-        path="/signup"
-        element={
-          !userData
-            ? <Signup />
-            : <Navigate to="/profile" />
-        }
-      />
+        <Route
+          path="/signup"
+          element={
+            !userData
+              ? <Signup />
+              : <Navigate to="/profile" />
+          }
+        />
 
-      <Route
-        path="/"
-        element={
-          userData
-            ? <Home />
-            : <Navigate to="/login" />
-        }
-      />
+        <Route
+          path="/"
+          element={
+            userData
+              ? <Home />
+              : <Navigate to="/login" />
+          }
+        />
 
-      <Route
-        path="/profile"
-        element={
-          userData
-            ? <Profile />
-            : <Navigate to="/signup" />
-        }
-      />
+        <Route
+          path="/profile"
+          element={
+            userData
+              ? <Profile />
+              : <Navigate to="/signup" />
+          }
+        />
 
-    </Routes>
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/verify-otp"
+          element={<VerifyOtp />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
+      </Routes>
 
     </>
 

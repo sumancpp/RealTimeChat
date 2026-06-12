@@ -157,6 +157,49 @@ const Login = () => {
             {loading ? "Loading..." : "Login"}
           </motion.button>
 
+          <motion.p
+
+            initial={{
+              opacity: 0,
+              y: 10
+            }}
+
+            animate={{
+              opacity: 1,
+              y: 0
+            }}
+
+            transition={{
+              delay: 0.3,
+              duration: 0.4
+            }}
+
+            whileHover={{
+              scale: 1.05
+            }}
+
+            onClick={() =>
+              navigate(
+                "/forgot-password"
+              )
+            }
+
+            className="
+    text-sm
+    text-orange-500
+    font-medium
+    cursor-pointer
+    text-center
+    w-full
+    hover:underline
+  "
+
+          >
+
+            Forgot Password?
+
+          </motion.p>
+
           {/* Switch to Signup */}
           <motion.p
             initial={{ opacity: 0, y: 10 }}
