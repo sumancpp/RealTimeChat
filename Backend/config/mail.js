@@ -1,4 +1,8 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+// Force IPv4 resolution to prevent IPv6 ENETUNREACH errors on cloud providers like Render
+dns.setDefaultResultOrder("ipv4first");
 
 const transporter =
     nodemailer.createTransport({
