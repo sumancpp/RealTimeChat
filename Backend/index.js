@@ -1,4 +1,10 @@
 import "dotenv/config";
+import crypto from "crypto";
+
+// Polyfill Web Crypto API for Node.js 18 to support Mongoose 9+
+if (!globalThis.crypto) {
+    globalThis.crypto = crypto.webcrypto;
+}
 
 import express from "express";
 import connectDb from "./config/db.js";
