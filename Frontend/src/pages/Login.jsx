@@ -157,7 +157,7 @@ const Login = () => {
             {loading ? "Loading..." : "Login"}
           </motion.button>
 
-          <motion.p
+          {/* <motion.p
 
             initial={{
               opacity: 0,
@@ -198,7 +198,7 @@ const Login = () => {
 
             {/* Forgot Password? */}
 
-          </motion.p>
+          </motion.p> */}
 
           {/* Switch to Signup */}
           <motion.p
