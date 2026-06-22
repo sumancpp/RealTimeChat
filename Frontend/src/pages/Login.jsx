@@ -196,7 +196,7 @@ const Login = () => {
 
           >
 
-            Forgot Password?
+            {/* Forgot Password? */}
 
           </motion.p>
 
