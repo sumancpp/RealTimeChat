@@ -792,9 +792,9 @@ const MessageArea = () => {
         "
                       >
 
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-orange-500 font-semibold mb-1">
 
-                          Replying to
+                          {msg.replyTo.sender?.toString() === userData?._id?.toString() ? "You" : (selectedUser?.name || selectedUser?.userName || "Someone")}
 
                         </p>
 
@@ -1219,7 +1219,7 @@ ${msg.sender?.toString() ===
                     "
                     >
 
-                      Replying
+                      {replyMessage.sender?.toString() === userData?._id?.toString() ? "You" : (selectedUser?.name || selectedUser?.userName || "Someone")}
 
                     </p>
 
