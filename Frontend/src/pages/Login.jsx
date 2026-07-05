@@ -144,6 +144,22 @@ const Login = () => {
             </div>
           </motion.div>
 
+          {/* Forgot Password Link */}
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            className="w-full flex justify-end mt-[-10px]"
+          >
+            <span 
+              className="text-sm text-gray-500 hover:text-orange-500 cursor-pointer transition font-medium hover:underline"
+              onClick={() => navigate('/forgot-password')}
+            >
+              Forgot Password?
+            </span>
+          </motion.div>
+
           {/* Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
