@@ -1008,9 +1008,9 @@ ${msg.sender?.toString() ===
 
 
                     {/* MESSAGE AND TIME */}
-                    <div className="flex items-end gap-1 justify-between w-full">
+                    <div className="flex flex-wrap items-end gap-x-3 mt-1">
 
-                      <div>
+                      <div className="flex-1 min-w-0">
                         {msg.isDeleted ? (
                           <p className="italic text-gray-500">
                             🚫 This message was deleted
@@ -1023,14 +1023,14 @@ ${msg.sender?.toString() ===
                       </div>
 
                       {/* TIME AND SEEN STATUS */}
-                      <div className="flex items-center gap-1 ml-2 text-[10px] text-gray-500 min-w-max pb-[2px]">
+                      <div className="flex items-center gap-[2px] ml-auto text-[11px] text-gray-500">
                         <span>
                           {new Date(msg.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                         </span>
                         
                         {msg.sender?.toString() === userData?._id?.toString() && (
                           <span
-                            className={`font-bold ${msg.isSeen ? "text-blue-500" : "text-gray-500"}`}
+                            className={`font-bold ml-1 text-sm ${msg.isSeen ? "text-blue-500" : "text-gray-500"}`}
                           >
                             {msg.isSeen ? "✓✓" : "✓"}
                           </span>
