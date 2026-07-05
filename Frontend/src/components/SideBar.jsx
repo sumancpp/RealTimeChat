@@ -31,30 +31,16 @@ import {
 } from '../redux/userSlice';
 
 const formatLastSeen = (date) => {
-
     if (!date) return "Offline";
-
     const now = new Date();
-
     const lastSeen = new Date(date);
-
-    const diff =
-        Math.floor(
-            (now - lastSeen) /
-            60000
-        );
-
-    if (diff < 1)
-        return "Just now";
-
-    if (diff < 60)
-        return `Last seen ${diff}m ago`;
-
-    if (diff < 1440)
-        return `Last seen ${Math.floor(diff / 60)}h ago`;
-
-    return lastSeen.toLocaleDateString();
-
+    const diff = Math.floor((now - lastSeen) / 60000);
+    if (diff < 1) return "Just now";
+    if (diff < 60) return `Last seen ${diff}m ago`;
+    const timeString = lastSeen.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    if (diff < 1440) return `Last seen today at ${timeString}`;
+    const dateString = lastSeen.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `Last seen ${dateString} at ${timeString}`;
 };
 
 const SideBar = () => {
@@ -300,9 +286,7 @@ const SideBar = () => {
                                 {
                                     otherUsers
                                         ?.filter(user =>
-                                            onlineUsers.includes(
-                                                user._id
-                                            )
+                                            (onlineUsers.includes(user._id) || user.isAI)
                                         )
                                         ?.map((user) => (
 
@@ -442,9 +426,7 @@ const SideBar = () => {
                                     />
 
                                     {
-                                        onlineUsers.includes(
-                                            user._id
-                                        ) && (
+                                        (onlineUsers.includes(user._id) || user.isAI) && (
 
                                             <span
                                                 className='absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full'
@@ -491,9 +473,7 @@ const SideBar = () => {
                                     <p className='text-sm text-gray-500 truncate ml-2'>
 
                                         {
-                                            onlineUsers.includes(
-                                                user._id
-                                            )
+                                            (onlineUsers.includes(user._id) || user.isAI)
                                                 ? "Online"
                                                 : (
                                                     user.lastMessage ||

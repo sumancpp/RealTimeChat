@@ -40,6 +40,19 @@ import {
   setSelectedUser
 } from "../redux/userSlice";
 
+const formatLastSeen = (date) => {
+    if (!date) return "Offline";
+    const now = new Date();
+    const lastSeen = new Date(date);
+    const diff = Math.floor((now - lastSeen) / 60000);
+    if (diff < 1) return "Just now";
+    if (diff < 60) return `Last seen ${diff}m ago`;
+    const timeString = lastSeen.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    if (diff < 1440) return `Last seen today at ${timeString}`;
+    const dateString = lastSeen.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `Last seen ${dateString} at ${timeString}`;
+};
+
 const MessageArea = () => {
 
   const dispatch = useDispatch();
@@ -719,21 +732,13 @@ const MessageArea = () => {
               <p className="text-xs text-gray-500">
 
                 {
-                  onlineUsers.includes(
-                    selectedUser._id
-                  )
+                  (onlineUsers.includes(selectedUser._id) || selectedUser.isAI)
 
                     ? isTyping
                       ? "Typing..."
                       : "Online"
 
-                    : selectedUser.lastSeen
-
-                      ? `Last seen ${new Date(
-                        selectedUser.lastSeen
-                      ).toLocaleTimeString()}`
-
-                      : "Offline"
+                    : formatLastSeen(selectedUser.lastSeen)
                 }
 
               </p>
