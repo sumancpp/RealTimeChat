@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import SideBar from '../components/SideBar';
 import MessageArea from '../components/MessageArea';
@@ -23,6 +23,22 @@ const Home = () => {
   );
 
   useGetMessages();
+
+  useEffect(() => {
+    if (selectedUser && !window.history.state?.chatOpen) {
+      window.history.pushState({ chatOpen: true }, "");
+    }
+  }, [selectedUser]);
+
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (selectedUser && !e.state?.chatOpen) {
+        dispatch(setSelectedUser(null));
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [selectedUser, dispatch]);
 
   return (
 

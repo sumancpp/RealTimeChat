@@ -679,11 +679,13 @@ const MessageArea = () => {
           <div className="w-full min-h-[70px] bg-white border-b sticky top-0 z-50 border-gray-300 flex items-center px-4 shadow-sm">
 
             <button
-              onClick={() =>
-                dispatch(
-                  setSelectedUser(null)
-                )
-              }
+              onClick={() => {
+                if (window.history.state?.chatOpen) {
+                  window.history.back();
+                } else {
+                  dispatch(setSelectedUser(null));
+                }
+              }}
               className="lg:hidden mr-3"
             >
 
