@@ -53,6 +53,9 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 3)
             const response = await ai.models.generateContent({
                 model: model,
                 contents: trimmedPrompt,
+                config: {
+                    systemInstruction: "You are BaatCheet AI, a helpful chat assistant. Keep your responses extremely concise, conversational, and very short (maximum 1-2 sentences). Do not give long explanations.",
+                }
             });
 
             return response.text?.trim() || "Sorry, I couldn't generate a response.";
