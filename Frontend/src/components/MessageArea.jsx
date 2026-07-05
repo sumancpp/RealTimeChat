@@ -32,7 +32,8 @@ import { socket } from "../socket";
 
 import {
   updateReaction,
-  deleteMessageRedux
+  deleteMessageRedux,
+  addMessage
 } from "../redux/messageSlice";
 
 import {
@@ -463,7 +464,7 @@ const MessageArea = () => {
         );
       }
 
-      await axios.post(
+      const res = await axios.post(
 
         `${serverUrl}/message/send/${selectedUser._id}`,
 
@@ -479,6 +480,15 @@ const MessageArea = () => {
         }
 
       );
+
+      if (res.data) {
+        if (res.data.aiMessage) {
+          dispatch(addMessage(res.data.message));
+          dispatch(addMessage(res.data.aiMessage));
+        } else if (res.data._id) {
+          dispatch(addMessage(res.data));
+        }
+      }
 
       // CLEAR AFTER SUCCESS
       setMessage("");
