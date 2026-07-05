@@ -24,15 +24,11 @@ const userSchema = new mongoose.Schema({
     },
 
     securityQuestion: {
-        type: String,
-        required: true,
-        default: "What is your favorite color?"
+        type: String
     },
 
     securityAnswer: {
-        type: String,
-        required: true,
-        default: "black"
+        type: String
     },
 
     profileImage: {
