@@ -123,6 +123,17 @@ const MessageArea = () => {
 
   }, [messages]);
 
+  // CLEAR INPUTS ON USER SWITCH
+  useEffect(() => {
+    setMessage("");
+    setReplyMessage(null);
+    setFrontendImage(null);
+    setBackendImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [selectedUser]);
+
   useEffect(() => {
 
     if (!socket) return;
@@ -1101,17 +1112,18 @@ ${msg.sender?.toString() ===
 
           {/* IMAGE PREVIEW */}
           {frontendImage && (
-
-            <div className="px-4 py-2">
-
+            <div className="px-4 py-2 relative w-max">
               <img
                 src={frontendImage}
                 alt="preview"
-                className="w-32 h-32 rounded-lg object-cover"
+                className={`w-32 h-32 rounded-lg object-cover ${sending ? 'opacity-50' : ''}`}
               />
-
+              {sending && (
+                <div className="absolute inset-0 flex items-center justify-center ml-4 mt-2 w-32 h-32">
+                  <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
             </div>
-
           )}
 
           {selectedImage && (
