@@ -1,9 +1,9 @@
 import express from "express";
 
-import {
     getCurrentUser,
     getOtherUser,
-    searchUsers
+    searchUsers,
+    subscribeToNotifications
 } from "../controllers/user.controller.js";
 
 import isAuth from "../middlewares/isAuth.js";
@@ -42,6 +42,13 @@ userRouter.put(
     isAuth,
     upload.single("profileImage"),
     editProfile
+);
+
+// SUBSCRIBE TO NOTIFICATIONS
+userRouter.post(
+    "/subscribe",
+    isAuth,
+    subscribeToNotifications
 );
 
 export default userRouter;

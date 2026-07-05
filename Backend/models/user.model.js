@@ -46,6 +46,11 @@ resetOtpExpiry: {
     lastSeen: {
         type: Date,
         default: Date.now
+    },
+
+    pushSubscriptions: {
+        type: Array,
+        default: []
     }
 
 }, {

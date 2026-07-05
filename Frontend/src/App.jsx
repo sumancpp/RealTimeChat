@@ -39,6 +39,24 @@ import SplashScreen from "./components/SplashScreen";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOtp from "./pages/VerifyOtp";
 import ResetPassword from "./pages/ResetPassword";
+import axios from "axios";
+import { serverUrl } from "./main";
+
+function urlBase64ToUint8Array(base64String) {
+  if (!base64String) return new Uint8Array();
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 const App = () => {
 
@@ -70,16 +88,29 @@ const App = () => {
 
   useEffect(() => {
 
-    if (
-      "Notification" in window &&
-      Notification.permission === "default"
-    ) {
-
-      Notification.requestPermission();
-
+    if (userData?._id && "serviceWorker" in navigator && "PushManager" in window) {
+      navigator.serviceWorker.register("/sw.js").then(async (registration) => {
+        await navigator.serviceWorker.ready;
+        if (Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+        if (Notification.permission === "granted") {
+          let subscription = await registration.pushManager.getSubscription();
+          if (!subscription) {
+            const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: convertedVapidKey
+            });
+          }
+          axios.post(`${serverUrl}/user/subscribe`, { subscription }, { withCredentials: true })
+            .catch(err => console.log("Failed to subscribe push:", err));
+        }
+      }).catch(err => console.log("SW error:", err));
     }
 
-  }, []);
+  }, [userData?._id]);
 
   useEffect(() => {
 

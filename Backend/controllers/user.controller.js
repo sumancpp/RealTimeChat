@@ -202,3 +202,19 @@ export const searchUsers = async (
     }
 
 };
+
+// SUBSCRIBE TO NOTIFICATIONS
+export const subscribeToNotifications = async (req, res) => {
+    try {
+        const { subscription } = req.body;
+        if (!subscription) return res.status(400).json({ message: "Subscription is required" });
+        
+        await User.findByIdAndUpdate(
+            req.userId,
+            { $addToSet: { pushSubscriptions: subscription } }
+        );
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};

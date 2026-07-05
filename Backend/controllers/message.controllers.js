@@ -4,6 +4,7 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import generateGeminiReply from "../config/gemini.js";
+import webpush from "../config/webpush.js";
 
 import {
     io,
@@ -177,6 +178,23 @@ console.log(
                 populatedMessage
             );
 
+        } else {
+            const rUser = await User.findById(receiver);
+            if (rUser && rUser.pushSubscriptions?.length > 0) {
+                const senderUser = await User.findById(sender).select("name userName profileImage");
+                const senderName = senderUser?.name || senderUser?.userName || "Someone";
+                const notificationPayload = JSON.stringify({
+                    title: `New message from ${senderName}`,
+                    body: message || "Sent an attachment",
+                    icon: senderUser?.profileImage || "/vite.svg"
+                });
+
+                rUser.pushSubscriptions.forEach(sub => {
+                    webpush.sendNotification(sub, notificationPayload).catch(err => {
+                        console.error("Push error", err);
+                    });
+                });
+            }
         }
 
         // SENDER SOCKET
