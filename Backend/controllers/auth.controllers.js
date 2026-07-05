@@ -8,9 +8,9 @@ import crypto from "crypto";
 
 export const signUp = async (req, res) => {
      try {
-        const {userName,email,password}=req.body
+        const {userName,email,password, securityQuestion, securityAnswer}=req.body
 
-         if (!userName || !email || !password) {
+         if (!userName || !email || !password || !securityQuestion || !securityAnswer) {
          return res.status(400).json({ message: "All fields are required" })
         }
 
@@ -33,7 +33,9 @@ export const signUp = async (req, res) => {
         const user = await User.create({
             userName,
             email,
-            password:hashedPassword
+            password:hashedPassword,
+            securityQuestion,
+            securityAnswer: securityAnswer.toLowerCase().trim()
         })
 
         const token = await genToken(user._id)
@@ -478,5 +480,45 @@ export const testEmail = async (req, res) => {
         });
     }
 };
+export const getSecurityQuestion = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (!user.securityQuestion) {
+            return res.status(400).json({ message: "No security question set for this user" });
+        }
+        return res.status(200).json({ securityQuestion: user.securityQuestion });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
 
+export const resetPasswordWithQuestion = async (req, res) => {
+    try {
+        const { email, securityAnswer, newPassword } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (!user.securityAnswer || user.securityAnswer.toLowerCase() !== securityAnswer.toLowerCase().trim()) {
+            return res.status(400).json({ message: "Incorrect security answer" });
+        }
 
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 5);
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};

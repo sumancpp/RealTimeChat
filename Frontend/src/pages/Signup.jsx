@@ -21,8 +21,28 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
-    password: ""
+    password: "",
+    securityQuestion: "",
+    securityAnswer: ""
   })
+
+  const securityQuestionsList = [
+    "What is your mother's maiden name?",
+    "What was the name of your first pet?",
+    "What was the name of your first school?",
+    "In what city were you born?",
+    "What is your favorite book?",
+    "What is your favorite movie?",
+    "What was your childhood nickname?",
+    "What is the name of your favorite teacher?",
+    "What is your favorite food?",
+    "What is your favorite sports team?",
+    "What is your dream job?",
+    "Who was your childhood hero?",
+    "What is the name of the street you grew up on?",
+    "What is the make of your first car?",
+    "What is your favorite color?"
+  ]
 
   
   const [error, setError] = useState("")
@@ -57,6 +77,20 @@ const Signup = () => {
   // Password validation
   if (!formData.password || formData.password.length < 6) {
     setError("Password must be at least 6 characters ❌")
+    setLoading(false)
+    return
+  }
+
+  // Security Question validation
+  if (!formData.securityQuestion) {
+    setError("Please select a security question ❌")
+    setLoading(false)
+    return
+  }
+
+  // Security Answer validation
+  if (!formData.securityAnswer) {
+    setError("Please provide an answer to your security question ❌")
     setLoading(false)
     return
   }
@@ -179,6 +213,35 @@ const Signup = () => {
               />
             )
           })}
+
+          <motion.select
+            name="securityQuestion"
+            value={formData.securityQuestion}
+            onChange={handleChange}
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            className='w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-[#f0fdfa] transition'
+          >
+            <option value="" disabled>Select a Security Question</option>
+            {securityQuestionsList.map((q, idx) => (
+              <option key={idx} value={q}>{q}</option>
+            ))}
+          </motion.select>
+
+          <motion.input
+            name="securityAnswer"
+            type="text"
+            placeholder="Security Answer"
+            value={formData.securityAnswer}
+            onChange={handleChange}
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            className='w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-[#f0fdfa] transition'
+          />
 
 
           {/* Button */}

@@ -23,6 +23,18 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
+    securityQuestion: {
+        type: String,
+        required: true,
+        default: "What is your favorite color?"
+    },
+
+    securityAnswer: {
+        type: String,
+        required: true,
+        default: "black"
+    },
+
     profileImage: {
         type: String,
         default: ""
