@@ -1007,66 +1007,35 @@ ${msg.sender?.toString() ===
 
 
 
-                    {/* MESSAGE */}
-                    <div className="flex items-end gap-1">
+                    {/* MESSAGE AND TIME */}
+                    <div className="flex items-end gap-1 justify-between w-full">
 
-                      {msg.isDeleted ? (
+                      <div>
+                        {msg.isDeleted ? (
+                          <p className="italic text-gray-500">
+                            🚫 This message was deleted
+                          </p>
+                        ) : msg.message && (
+                          <p className="text-gray-800 break-words whitespace-pre-wrap">
+                            {msg.message}
+                          </p>
+                        )}
+                      </div>
 
-                        <p
-                          className="
-    italic
-    text-gray-500
-    "
-                        >
-
-                          🚫 This message was deleted
-
-                        </p>
-
-                      ) : msg.message && (
-
-
-
-                        <p
-                          className="text-gray-800
-                                break-words
-                                whitespace-pre-wrap
-                                "
-                        >
-                          {msg.message}
-                        </p>
-
-
-
-                      )}
-
-
-
-                      {
-                        msg.sender?.toString() ===
-                        userData?._id?.toString() && (
-
+                      {/* TIME AND SEEN STATUS */}
+                      <div className="flex items-center gap-1 ml-2 text-[10px] text-gray-500 min-w-max pb-[2px]">
+                        <span>
+                          {new Date(msg.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                        </span>
+                        
+                        {msg.sender?.toString() === userData?._id?.toString() && (
                           <span
-                            className={`text-xs font-bold mb-[2px]
-
-                ${msg.isSeen
-
-                                ? "text-blue-500"
-
-                                : "text-gray-500"
-                              }`}
+                            className={`font-bold ${msg.isSeen ? "text-blue-500" : "text-gray-500"}`}
                           >
-
-                            {
-                              msg.isSeen
-                                ? "✓✓"
-                                : "✓"
-                            }
-
+                            {msg.isSeen ? "✓✓" : "✓"}
                           </span>
-
-                        )
-                      }
+                        )}
+                      </div>
 
                     </div>
 
