@@ -12,6 +12,7 @@ import connectDb from "./config/db.js";
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
 import messageRouter from "./routes/message.routes.js";
+import statusRouter from "./routes/status.routes.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -60,6 +61,11 @@ app.get(
 app.use(
     "/",
     authRouter
+);
+
+app.use(
+    "/status",
+    statusRouter
 );
 
 app.use(

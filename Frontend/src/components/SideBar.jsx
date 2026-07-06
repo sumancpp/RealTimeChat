@@ -8,8 +8,14 @@ import { motion } from "framer-motion";
 import {
     Search,
     X,
-    LogOut
+    LogOut,
+    MessageCircle,
+    Users,
+    CircleDashed,
+    Phone
 } from "lucide-react";
+
+import StatusSection from "./StatusSection";
 
 import {
     useDispatch,
@@ -67,6 +73,9 @@ const SideBar = () => {
 
     const [search, setSearch] =
         useState("");
+
+    const [activeTab, setActiveTab] = 
+        useState("chats");
 
     // SEARCH USERS
     const handleSearch = async (
@@ -391,113 +400,149 @@ const SideBar = () => {
             </motion.div>
 
             {/* USER LIST */}
-            <div className='flex-1 overflow-y-auto scrollbar-hide bg-slate-100 px-3 py-4 mt-1'>
+            {/* MAIN CONTENT AREA */}
+            <div className='flex-1 overflow-y-auto scrollbar-hide bg-slate-100 mt-1 pb-16'>
+                {activeTab === "chats" && (
+                    <div className='flex flex-col gap-2 px-3 py-4'>
+                        {
+                            otherUsers?.map((user) => (
 
-                <div className='flex flex-col gap-2'>
-
-                    {
-                        otherUsers?.map((user) => (
-
-                            <div
-                                key={user._id}
-                                onClick={() =>
-                                    dispatch(
-                                        setSelectedUser(
-                                            user
-                                        )
-                                    )
-                                }
-                                className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-lg
-
-                                ${selectedUser?._id ===
-                                        user._id
-
-                                        ? "bg-blue-100"
-
-                                        : "hover:bg-slate-200"
-                                    }`}
-                            >
-
-                                <div className='relative'>
-
-                                    <img
-                                        src={
-                                            user?.profileImage ||
-                                            defaultProfile
-                                        }
-                                        alt="profile"
-                                        className='w-14 h-14 rounded-full object-cover'
-                                    />
-
-                                    {
-                                        (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai") && (
-
-                                            <span
-                                                className='absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full'
-                                            />
-
+                                <div
+                                    key={user._id}
+                                    onClick={() =>
+                                        dispatch(
+                                            setSelectedUser(
+                                                user
+                                            )
                                         )
                                     }
+                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-lg
 
-                                    {
-                                        user.unreadCount > 0 && (
+                                    ${selectedUser?._id ===
+                                            user._id
 
-                                            <span
-                                                className='absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold'
-                                            >
+                                            ? "bg-blue-100"
 
-                                                {
-                                                    user.unreadCount > 99
-                                                        ? "99+"
-                                                        : user.unreadCount
-                                                }
+                                            : "hover:bg-slate-200"
+                                        }`}
+                                >
 
-                                            </span>
+                                    <div className='relative'>
 
-                                        )
-                                    }
-
-                                </div>
-
-                                <div className='flex-1 overflow-hidden rounded-2xl'>
-
-                                    <h2 className='font-semibold text-[#0b2a5b] truncate ml-2'>
+                                        <img
+                                            src={
+                                                user?.profileImage ||
+                                                defaultProfile
+                                            }
+                                            alt="profile"
+                                            className='w-14 h-14 rounded-full object-cover'
+                                        />
 
                                         {
-                                            user.unreadCount > 0
-                                                ? `${user.unreadCount} new`
-                                                : (
-                                                    user?.name ||
-                                                    user?.userName
-                                                )
+                                            (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai") && (
+
+                                                <span
+                                                    className='absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full'
+                                                />
+
+                                            )
                                         }
 
-                                    </h2>
-
-                                    <p className='text-sm text-gray-500 truncate ml-2'>
-
                                         {
-                                            (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai")
-                                                ? "Online"
-                                                : (
-                                                    user.lastMessage ||
-                                                    formatLastSeen(
-                                                        user.lastSeen
+                                            user.unreadCount > 0 && (
+
+                                                <span
+                                                    className='absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold'
+                                                >
+
+                                                    {
+                                                        user.unreadCount > 99
+                                                            ? "99+"
+                                                            : user.unreadCount
+                                                    }
+
+                                                </span>
+
+                                            )
+                                        }
+
+                                    </div>
+
+                                    <div className='flex-1 overflow-hidden rounded-2xl'>
+
+                                        <h2 className='font-semibold text-[#0b2a5b] truncate ml-2'>
+
+                                            {
+                                                user.unreadCount > 0
+                                                    ? `${user.unreadCount} new`
+                                                    : (
+                                                        user?.name ||
+                                                        user?.userName
                                                     )
-                                                )
-                                        }
+                                            }
 
-                                    </p>
+                                        </h2>
+
+                                        <p className='text-sm text-gray-500 truncate ml-2'>
+
+                                            {
+                                                (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai")
+                                                    ? "Online"
+                                                    : (
+                                                        user.lastMessage ||
+                                                        formatLastSeen(
+                                                            user.lastSeen
+                                                        )
+                                                    )
+                                            }
+
+                                        </p>
+
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            ))
+                        }
 
-                        ))
-                    }
+                    </div>
+                )}
 
+                {activeTab === "groups" && (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500 text-lg">Groups feature coming soon...</p>
+                    </div>
+                )}
+
+                {activeTab === "status" && (
+                    <StatusSection />
+                )}
+
+                {activeTab === "calls" && (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500 text-lg">Calls feature coming soon...</p>
+                    </div>
+                )}
+            </div>
+
+            {/* BOTTOM NAV BAR */}
+            <div className="absolute bottom-0 w-full bg-white border-t border-gray-300 flex justify-around items-center p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 rounded-br-none sm:rounded-br-3xl sm:rounded-bl-3xl lg:rounded-none">
+                <div onClick={() => setActiveTab("chats")} className={`flex flex-col items-center cursor-pointer transition-colors ${activeTab === 'chats' ? 'text-green-500' : 'text-gray-500'}`}>
+                    <MessageCircle size={24} />
+                    <span className="text-[10px] font-semibold mt-1">Chats</span>
                 </div>
-
+                <div onClick={() => setActiveTab("groups")} className={`flex flex-col items-center cursor-pointer transition-colors ${activeTab === 'groups' ? 'text-green-500' : 'text-gray-500'}`}>
+                    <Users size={24} />
+                    <span className="text-[10px] font-semibold mt-1">Groups</span>
+                </div>
+                <div onClick={() => setActiveTab("status")} className={`flex flex-col items-center cursor-pointer transition-colors ${activeTab === 'status' ? 'text-green-500' : 'text-gray-500'}`}>
+                    <CircleDashed size={24} />
+                    <span className="text-[10px] font-semibold mt-1">Status</span>
+                </div>
+                <div onClick={() => setActiveTab("calls")} className={`flex flex-col items-center cursor-pointer transition-colors ${activeTab === 'calls' ? 'text-green-500' : 'text-gray-500'}`}>
+                    <Phone size={24} />
+                    <span className="text-[10px] font-semibold mt-1">Calls</span>
+                </div>
             </div>
 
             {/* LOGOUT */}
@@ -509,7 +554,7 @@ const SideBar = () => {
                     scale: 0.92
                 }}
                 onClick={handleLogout}
-                className="absolute bottom-5 left-5 p-3 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-red-50 transition cursor-pointer rotate-180"
+                className="absolute bottom-20 right-5 p-3 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-red-50 transition cursor-pointer rotate-180 z-20"
             >
 
                 <LogOut
