@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { serverUrl } from '../main';
-import { Plus, X, Eye, Send, Smile } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Plus, X, Eye, Send, Smile, ChevronUp } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker from 'emoji-picker-react';
 import defaultProfile from '../assets/profile.png';
+import { setSelectedUser } from '../redux/userSlice';
 
 const StatusSection = () => {
+    const dispatch = useDispatch();
     const { userData } = useSelector(state => state.user);
     const [statuses, setStatuses] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -29,6 +31,8 @@ const StatusSection = () => {
     // Reply state
     const [replyText, setReplyText] = useState("");
     const [replying, setReplying] = useState(false);
+    const [showReplySheet, setShowReplySheet] = useState(false);
+    const [showReplyEmoji, setShowReplyEmoji] = useState(false);
 
     const fetchStatuses = async () => {
         try {
@@ -103,6 +107,7 @@ const StatusSection = () => {
         setActiveGroupIndex(0);
         setStatusViewTimer(0);
         setShowViewers(false);
+        setShowReplySheet(false);
         markStatusAsViewed(group.statuses[0]);
     };
 
@@ -111,6 +116,7 @@ const StatusSection = () => {
             setActiveGroupIndex(prev => prev + 1);
             setStatusViewTimer(0);
             setShowViewers(false);
+            setShowReplySheet(false);
             markStatusAsViewed(activeGroup.statuses[activeGroupIndex + 1]);
         } else {
             setActiveGroup(null);
@@ -122,13 +128,14 @@ const StatusSection = () => {
             setActiveGroupIndex(prev => prev - 1);
             setStatusViewTimer(0);
             setShowViewers(false);
+            setShowReplySheet(false);
             markStatusAsViewed(activeGroup.statuses[activeGroupIndex - 1]);
         }
     };
 
     useEffect(() => {
         let timer;
-        if (activeGroup !== null && !showViewers && !replyText) {
+        if (activeGroup !== null && !showViewers && !showReplySheet) {
             timer = setInterval(() => {
                 setStatusViewTimer(prev => {
                     if (prev >= 15) {
@@ -140,7 +147,7 @@ const StatusSection = () => {
             }, 1000);
         }
         return () => clearInterval(timer);
-    }, [activeGroup, activeGroupIndex, showViewers, replyText]);
+    }, [activeGroup, activeGroupIndex, showViewers, showReplySheet]);
 
     const handleReplySubmit = async (e) => {
         e.stopPropagation();
@@ -154,7 +161,9 @@ const StatusSection = () => {
                 headers: { "Content-Type": "multipart/form-data" }
             });
             setReplyText("");
-            setActiveGroup(null);
+            setShowReplySheet(false);
+            dispatch(setSelectedUser(activeGroup.user)); // Navigate to chat
+            setActiveGroup(null); // Close status viewer
         } catch (error) {
             console.log("Reply error:", error);
         } finally {
@@ -356,28 +365,63 @@ const StatusSection = () => {
                                 </div>
                             )}
 
-                            {/* Reply Input (Only if someone else's status) */}
-                            {activeGroup.user._id !== userData._id && (
-                                <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Reply..." 
-                                        value={replyText}
-                                        onChange={(e) => setReplyText(e.target.value)}
-                                        className="flex-1 bg-black/50 text-white placeholder-gray-300 border border-gray-500 p-3 rounded-full outline-none backdrop-blur-md"
-                                        onClick={(e) => e.stopPropagation()}
-                                        onFocus={() => {}} // Could pause timer, handled by replyText dependency
-                                    />
-                                    {replyText.trim() && (
+                            {/* Reply Button Trigger (Only if someone else's status) */}
+                            {activeGroup.user._id !== userData._id && !showReplySheet && (
+                                <div 
+                                    className="absolute bottom-4 w-full flex flex-col items-center justify-center text-white z-30 cursor-pointer drop-shadow-lg"
+                                    onClick={(e) => { e.stopPropagation(); setShowReplySheet(true); }}
+                                >
+                                    <ChevronUp size={28} className="animate-bounce" />
+                                    <span className="text-sm font-semibold tracking-wide">Reply</span>
+                                </div>
+                            )}
+
+                            {/* Reply Sheet */}
+                            {activeGroup.user._id !== userData._id && showReplySheet && (
+                                <motion.div 
+                                    initial={{ y: "100%" }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: "100%" }}
+                                    className="absolute bottom-0 w-full bg-gray-900 p-4 z-40 rounded-t-3xl shadow-2xl flex flex-col gap-3 pb-6"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="flex justify-between items-center mb-2 px-2">
+                                        <span className="text-white font-semibold">Reply to {activeGroup.user.name || activeGroup.user.userName}</span>
+                                        <button onClick={() => setShowReplySheet(false)} className="text-gray-400 p-1 bg-gray-800 rounded-full hover:bg-gray-700"><X size={20}/></button>
+                                    </div>
+                                    
+                                    <div className="relative flex items-center gap-2">
+                                        {showReplyEmoji && (
+                                            <div className="absolute bottom-full left-0 mb-2 z-50">
+                                                <EmojiPicker 
+                                                    onEmojiClick={(emojiData) => setReplyText(prev => prev + emojiData.emoji)}
+                                                    theme="dark"
+                                                />
+                                            </div>
+                                        )}
+                                        <button 
+                                            onClick={() => setShowReplyEmoji(!showReplyEmoji)}
+                                            className="text-gray-400 hover:text-white p-2"
+                                        >
+                                            <Smile size={24} />
+                                        </button>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Type a reply..." 
+                                            value={replyText}
+                                            onChange={(e) => setReplyText(e.target.value)}
+                                            className="flex-1 bg-gray-800 text-white placeholder-gray-400 p-3 rounded-full outline-none focus:ring-2 focus:ring-green-500"
+                                            autoFocus
+                                        />
                                         <button 
                                             onClick={handleReplySubmit}
-                                            disabled={replying}
+                                            disabled={replying || !replyText.trim()}
                                             className="bg-green-500 p-3 rounded-full text-white hover:bg-green-600 disabled:opacity-50 shrink-0"
                                         >
-                                            <Send size={20} />
+                                            {replying ? <span className="animate-pulse">...</span> : <Send size={20} />}
                                         </button>
-                                    )}
-                                </div>
+                                    </div>
+                                </motion.div>
                             )}
                         </div>
 
