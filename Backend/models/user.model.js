@@ -59,6 +59,16 @@ resetOtpExpiry: {
     pushSubscriptions: {
         type: Array,
         default: []
+    },
+
+    aiChatCount: {
+        type: Number,
+        default: 0
+    },
+
+    aiChatDate: {
+        type: Date,
+        default: null
     }
 
 }, {

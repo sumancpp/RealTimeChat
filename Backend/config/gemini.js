@@ -12,7 +12,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || null;
 
 // Initialize the client
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-1.5-flash";
 
 // Helper function to pause execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

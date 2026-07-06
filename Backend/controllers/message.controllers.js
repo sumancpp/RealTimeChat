@@ -236,7 +236,36 @@ console.log(
                     console.log("AI BLOCK HIT");
                     console.log("PROMPT:", prompt);
 
-                    const aiReply = await generateGeminiReply(prompt);
+                    const senderUser = await User.findById(sender);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    let isAiAllowed = true;
+                    let aiReply = "";
+
+                    if (senderUser) {
+                        const lastAiDate = senderUser.aiChatDate ? new Date(senderUser.aiChatDate) : null;
+                        if (lastAiDate) lastAiDate.setHours(0, 0, 0, 0);
+
+                        if (lastAiDate && lastAiDate.getTime() === today.getTime()) {
+                            if (senderUser.aiChatCount >= 50) {
+                                isAiAllowed = false;
+                                aiReply = "You have reached your daily limit of 50 AI chats. Please try again tomorrow.";
+                            } else {
+                                senderUser.aiChatCount += 1;
+                                await senderUser.save();
+                            }
+                        } else {
+                            senderUser.aiChatCount = 1;
+                            senderUser.aiChatDate = new Date();
+                            await senderUser.save();
+                        }
+                    }
+
+                    if (isAiAllowed) {
+                        aiReply = await generateGeminiReply(prompt);
+                    }
+
                     console.log("AI RESPONSE:", aiReply);
 
                     let aiUser = receiverUser?.isAI ? receiverUser : await User.findOne({ isAI: true });
