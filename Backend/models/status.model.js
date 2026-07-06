@@ -10,6 +10,10 @@ const statusSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    caption: {
+        type: String,
+        default: ""
+    },
     viewers: [{
         user: {
             type: mongoose.Schema.Types.ObjectId,

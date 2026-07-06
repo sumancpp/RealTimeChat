@@ -15,9 +15,12 @@ export const uploadStatus = async (req, res) => {
             return res.status(500).json({ message: "Failed to upload image" });
         }
 
+        const { caption } = req.body;
+
         const newStatus = await Status.create({
             user: req.userId,
-            image: imageUrl
+            image: imageUrl,
+            caption: caption || ""
         });
 
         const populatedStatus = await Status.findById(newStatus._id).populate("user", "name userName profileImage");
