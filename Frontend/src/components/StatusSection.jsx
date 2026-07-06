@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { serverUrl } from '../main';
-import { Plus, X, Eye, Send } from 'lucide-react';
+import { Plus, X, Eye, Send, Smile } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
+import EmojiPicker from 'emoji-picker-react';
 import defaultProfile from '../assets/profile.png';
 
 const StatusSection = () => {
@@ -13,15 +14,21 @@ const StatusSection = () => {
     
     // Upload state
     const fileInputRef = useRef(null);
+    const pickerRef = useRef(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [caption, setCaption] = useState("");
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     // Viewer state
     const [activeGroup, setActiveGroup] = useState(null); // The user's statuses being viewed
     const [activeGroupIndex, setActiveGroupIndex] = useState(0); // Which status in the group
     const [statusViewTimer, setStatusViewTimer] = useState(0);
     const [showViewers, setShowViewers] = useState(false);
+    
+    // Reply state
+    const [replyText, setReplyText] = useState("");
+    const [replying, setReplying] = useState(false);
 
     const fetchStatuses = async () => {
         try {
@@ -38,6 +45,16 @@ const StatusSection = () => {
         fetchStatuses();
         const interval = setInterval(fetchStatuses, 60000);
         return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+                setShowEmojiPicker(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleFileSelect = (e) => {
@@ -111,7 +128,7 @@ const StatusSection = () => {
 
     useEffect(() => {
         let timer;
-        if (activeGroup !== null && !showViewers) {
+        if (activeGroup !== null && !showViewers && !replyText) {
             timer = setInterval(() => {
                 setStatusViewTimer(prev => {
                     if (prev >= 15) {
@@ -123,7 +140,27 @@ const StatusSection = () => {
             }, 1000);
         }
         return () => clearInterval(timer);
-    }, [activeGroup, activeGroupIndex, showViewers]);
+    }, [activeGroup, activeGroupIndex, showViewers, replyText]);
+
+    const handleReplySubmit = async (e) => {
+        e.stopPropagation();
+        if (!replyText.trim() || replying) return;
+        setReplying(true);
+        const formData = new FormData();
+        formData.append("message", `*Replying to status:* \n${replyText}`);
+        try {
+            await axios.post(`${serverUrl}/message/send/${activeGroup.user._id}`, formData, {
+                withCredentials: true,
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            setReplyText("");
+            setActiveGroup(null);
+        } catch (error) {
+            console.log("Reply error:", error);
+        } finally {
+            setReplying(false);
+        }
+    };
 
     // Group statuses by user
     const groupedStatuses = statuses.reduce((acc, status) => {
@@ -226,21 +263,37 @@ const StatusSection = () => {
                         <div className="flex-1 flex items-center justify-center p-0 bg-black overflow-hidden min-h-0 relative">
                             <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" />
                         </div>
-                        <div className="p-4 bg-gray-900 flex items-center gap-3 shrink-0">
-                            <input 
-                                type="text" 
-                                placeholder="Add a caption..." 
-                                value={caption}
-                                onChange={(e) => setCaption(e.target.value)}
-                                className="flex-1 bg-gray-800 text-white p-3 rounded-full outline-none"
-                            />
-                            <button 
-                                onClick={handleUpload}
-                                disabled={loading}
-                                className="bg-green-500 p-3 rounded-full text-white hover:bg-green-600 disabled:opacity-50"
-                            >
-                                {loading ? <span className="animate-pulse">...</span> : <Send size={20} />}
-                            </button>
+                        <div className="p-4 bg-gray-900 flex flex-col gap-3 shrink-0 relative">
+                            {showEmojiPicker && (
+                                <div className="absolute bottom-full left-4 mb-2 z-50" ref={pickerRef}>
+                                    <EmojiPicker 
+                                        onEmojiClick={(emojiData) => setCaption(prev => prev + emojiData.emoji)}
+                                        theme="dark"
+                                    />
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3 w-full">
+                                <button 
+                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                    className="text-gray-400 hover:text-white p-2"
+                                >
+                                    <Smile size={24} />
+                                </button>
+                                <input 
+                                    type="text" 
+                                    placeholder="Add a caption..." 
+                                    value={caption}
+                                    onChange={(e) => setCaption(e.target.value)}
+                                    className="flex-1 bg-gray-800 text-white p-3 rounded-full outline-none"
+                                />
+                                <button 
+                                    onClick={handleUpload}
+                                    disabled={loading}
+                                    className="bg-green-500 p-3 rounded-full text-white hover:bg-green-600 disabled:opacity-50 shrink-0"
+                                >
+                                    {loading ? <span className="animate-pulse">...</span> : <Send size={20} />}
+                                </button>
+                            </div>
                         </div>
                     </motion.div>
                 )}
@@ -296,10 +349,34 @@ const StatusSection = () => {
 
                             {/* Caption */}
                             {activeGroup.statuses[activeGroupIndex].caption && (
-                                <div className="absolute bottom-16 w-full p-4 text-center z-10 pointer-events-none">
+                                <div className="absolute bottom-24 w-full p-4 text-center z-10 pointer-events-none">
                                     <div className="inline-block bg-black/60 text-white px-4 py-2 rounded-xl backdrop-blur-sm mx-auto pointer-events-auto">
                                         {activeGroup.statuses[activeGroupIndex].caption}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Reply Input (Only if someone else's status) */}
+                            {activeGroup.user._id !== userData._id && (
+                                <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Reply..." 
+                                        value={replyText}
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                        className="flex-1 bg-black/50 text-white placeholder-gray-300 border border-gray-500 p-3 rounded-full outline-none backdrop-blur-md"
+                                        onClick={(e) => e.stopPropagation()}
+                                        onFocus={() => {}} // Could pause timer, handled by replyText dependency
+                                    />
+                                    {replyText.trim() && (
+                                        <button 
+                                            onClick={handleReplySubmit}
+                                            disabled={replying}
+                                            className="bg-green-500 p-3 rounded-full text-white hover:bg-green-600 disabled:opacity-50 shrink-0"
+                                        >
+                                            <Send size={20} />
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
