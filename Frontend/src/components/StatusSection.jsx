@@ -223,10 +223,10 @@ const StatusSection = () => {
                         <div className="flex justify-between p-4 text-white bg-black/50 absolute top-0 w-full z-10">
                             <button onClick={() => { setPreviewUrl(null); setSelectedFile(null); setCaption(""); }} className="p-2 bg-gray-800/80 rounded-full"><X size={24} /></button>
                         </div>
-                        <div className="flex-1 flex items-center justify-center p-0 bg-black">
+                        <div className="flex-1 flex items-center justify-center p-0 bg-black overflow-hidden min-h-0 relative">
                             <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" />
                         </div>
-                        <div className="p-4 bg-gray-900 flex items-center gap-3">
+                        <div className="p-4 bg-gray-900 flex items-center gap-3 shrink-0">
                             <input 
                                 type="text" 
                                 placeholder="Add a caption..." 
@@ -284,7 +284,7 @@ const StatusSection = () => {
                         </div>
 
                         {/* Image & Navigation Areas */}
-                        <div className="flex-1 relative flex flex-col justify-center bg-black">
+                        <div className="flex-1 relative flex flex-col justify-center bg-black overflow-hidden min-h-0">
                             {/* Left tap area for previous */}
                             <div className="absolute left-0 top-0 bottom-0 w-1/3 z-20 cursor-pointer" onClick={prevStatus}></div>
                             {/* Right tap area for next */}
