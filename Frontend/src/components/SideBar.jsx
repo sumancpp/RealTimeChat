@@ -530,7 +530,7 @@ const SideBar = () => {
                     </div>
                 )}
 
-                {activeTab === "groups" && (
+                {/* {activeTab === "groups" && (
                     <div className="flex flex-col h-full relative">
                         <div className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
                             <h2 className="font-semibold text-gray-700">My Groups</h2>
@@ -570,7 +570,7 @@ const SideBar = () => {
                             }}
                         />
                     </div>
-                )}
+                )} */}
 
                 {activeTab === "status" && (
                     <StatusSection />
