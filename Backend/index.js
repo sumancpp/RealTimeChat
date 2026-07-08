@@ -13,6 +13,7 @@ import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
 import messageRouter from "./routes/message.routes.js";
 import statusRouter from "./routes/status.routes.js";
+import groupRouter from "./routes/group.routes.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -76,6 +77,11 @@ app.use(
 app.use(
     "/message",
     messageRouter
+);
+
+app.use(
+    "/group",
+    groupRouter
 );
 
 // START SERVER

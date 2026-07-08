@@ -14,6 +14,33 @@ const conversationSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "Message"
         }
+    ],
+
+    isGroup: {
+        type: Boolean,
+        default: false
+    },
+
+    groupName: {
+        type: String,
+        default: ""
+    },
+
+    groupProfileImage: {
+        type: String,
+        default: ""
+    },
+
+    groupDescription: {
+        type: String,
+        default: ""
+    },
+
+    admins: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
     ]
 
 }, {

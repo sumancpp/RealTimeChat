@@ -40,6 +40,8 @@ import {
   setSelectedUser
 } from "../redux/userSlice";
 
+import GroupInfoModal from "./GroupInfoModal";
+
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
     const now = new Date();
@@ -101,6 +103,8 @@ const MessageArea = () => {
 
   const [isTyping, setIsTyping] =
     useState(false);
+
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
 
   const { onlineUsers } =
     useSelector(
@@ -296,9 +300,10 @@ const MessageArea = () => {
 
         );
 
+        const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
         await axios.post(
 
-          `${serverUrl}/message/send/${selectedUser._id}`,
+          endpoint,
 
           formData,
 
@@ -492,9 +497,10 @@ const MessageArea = () => {
         );
       }
 
+      const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
       const res = await axios.post(
 
-        `${serverUrl}/message/send/${selectedUser._id}`,
+        endpoint,
 
         formData,
 
@@ -715,20 +721,28 @@ const MessageArea = () => {
 
             <img
               src={
-                selectedUser?.profileImage ||
+                (selectedUser?.isGroup ? selectedUser?.groupProfileImage : selectedUser?.profileImage) ||
                 defaultProfile
               }
               alt="profile"
               className="w-12 h-12 rounded-full object-cover"
             />
 
-            <div className="ml-3">
+            <div 
+              className={`ml-3 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors' : ''}`}
+              onClick={() => {
+                  if (selectedUser?.isGroup) {
+                      setShowGroupInfo(true);
+                  }
+              }}
+            >
 
               <h2 className="text-lg font-semibold text-[#0b2a5b]">
 
                 {
-                  selectedUser?.name ||
-                  selectedUser?.userName
+                  selectedUser?.isGroup 
+                    ? selectedUser.groupName 
+                    : (selectedUser?.name || selectedUser?.userName)
                 }
 
               </h2>
@@ -736,13 +750,13 @@ const MessageArea = () => {
               <p className="text-xs text-gray-500">
 
                 {
-                  (onlineUsers.includes(selectedUser._id) || selectedUser.isAI || selectedUser.userName === "ai")
-
-                    ? isTyping
-                      ? "Typing..."
-                      : "Online"
-
-                    : formatLastSeen(selectedUser.lastSeen)
+                  selectedUser?.isGroup 
+                    ? `${selectedUser.participants?.length || 0} participants`
+                    : (onlineUsers.includes(selectedUser._id) || selectedUser.isAI || selectedUser.userName === "ai")
+                      ? isTyping
+                        ? "Typing..."
+                        : "Online"
+                      : formatLastSeen(selectedUser.lastSeen)
                 }
 
               </p>
@@ -750,6 +764,12 @@ const MessageArea = () => {
             </div>
 
           </div>
+
+          <GroupInfoModal 
+             isOpen={showGroupInfo}
+             onClose={() => setShowGroupInfo(false)}
+             group={selectedUser}
+          />
 
           {/* MESSAGES */}
           <div
@@ -769,7 +789,7 @@ const MessageArea = () => {
                   key={
                     msg._id || index
                   }
-                  className={`flex mb-4 ${msg.sender?.toString() ===
+                  className={`flex mb-4 ${(msg.sender?._id || msg.sender)?.toString() ===
                     userData?._id?.toString()
                     ? "justify-end"
                     : "justify-start"
@@ -802,13 +822,19 @@ const MessageArea = () => {
 
 
 
-                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${msg.sender?.toString() ===
+                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${(msg.sender?._id || msg.sender)?.toString() ===
                       userData?._id?.toString()
                       ? "bg-[#d9fdd3]"
                       : "bg-white"
                       }`}
 
                   >
+                  
+                  {selectedUser?.isGroup && (msg.sender?._id || msg.sender)?.toString() !== userData?._id?.toString() && (
+                      <p className="text-xs font-bold text-orange-500 mb-1">
+                          {msg.sender?.name || msg.sender?.userName || "Someone"}
+                      </p>
+                  )}
 
                     {msg.replyTo && (
 

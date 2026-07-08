@@ -52,10 +52,11 @@ const getMessages = () => {
 
                 try {
 
+                    const endpoint = selectedUser.isGroup ? `${serverUrl}/group/messages/${selectedUser._id}` : `${serverUrl}/message/get/${selectedUser._id}`;
                     const result =
                         await axios.get(
 
-                            `${serverUrl}/message/get/${selectedUser._id}`,
+                            endpoint,
 
                             {
                                 withCredentials: true
@@ -241,12 +242,32 @@ const getMessages = () => {
             "newMessage",
             handleNewMessage
         );
+        
+        const handleNewGroupMessage = (newMessage) => {
+             if (selectedUser.isGroup && newMessage.groupId === selectedUser._id) {
+                 dispatch(addMessage(newMessage));
+             } else {
+                 if (Notification.permission === "granted") {
+                     new Notification("BaatCheet Group", {
+                         body: newMessage.message || "📷 Image Received",
+                         icon: "/logo.png"
+                     });
+                 }
+             }
+        };
+
+        socket.on("newGroupMessage", handleNewGroupMessage);
 
         return () => {
 
             socket.off(
                 "newMessage",
                 handleNewMessage
+            );
+            
+            socket.off(
+                "newGroupMessage",
+                handleNewGroupMessage
             );
 
         };

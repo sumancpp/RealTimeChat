@@ -12,10 +12,12 @@ import {
     MessageCircle,
     Users,
     CircleDashed,
-    Phone
+    Phone,
+    Plus
 } from "lucide-react";
 
 import StatusSection from "./StatusSection";
+import CreateGroupModal from "./CreateGroupModal";
 
 import {
     useDispatch,
@@ -76,6 +78,24 @@ const SideBar = () => {
 
     const [activeTab, setActiveTab] = 
         useState("chats");
+        
+    const [groups, setGroups] = useState([]);
+    const [showGroupModal, setShowGroupModal] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === "groups") {
+            fetchGroups();
+        }
+    }, [activeTab]);
+
+    const fetchGroups = async () => {
+        try {
+            const res = await axios.get(`${serverUrl}/group/all`, { withCredentials: true });
+            setGroups(res.data);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     // SEARCH USERS
     const handleSearch = async (
@@ -509,8 +529,44 @@ const SideBar = () => {
                 )}
 
                 {activeTab === "groups" && (
-                    <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500 text-lg">Groups feature coming soon...</p>
+                    <div className="flex flex-col h-full relative">
+                        <div className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
+                            <h2 className="font-semibold text-gray-700">My Groups</h2>
+                            <button onClick={() => setShowGroupModal(true)} className="flex items-center gap-1 text-sm bg-green-100 text-green-600 px-3 py-1 rounded-full font-medium hover:bg-green-200">
+                                <Plus size={16} /> New Group
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-2">
+                            {groups.map((group) => (
+                                <div
+                                    key={group._id}
+                                    onClick={() => dispatch(setSelectedUser(group))}
+                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm border border-gray-100
+                                    ${selectedUser?._id === group._id ? "bg-blue-100 border-blue-300" : "bg-white hover:bg-slate-50"}`}
+                                >
+                                    <img
+                                        src={group.groupProfileImage || defaultProfile}
+                                        alt="group"
+                                        className="w-14 h-14 rounded-full object-cover shadow-sm"
+                                    />
+                                    <div className="flex-1 overflow-hidden">
+                                        <h2 className="font-semibold text-[#0b2a5b] truncate">{group.groupName}</h2>
+                                        <p className="text-sm text-gray-500 truncate">{group.lastMessage || "No messages yet"}</p>
+                                    </div>
+                                </div>
+                            ))}
+                            {groups.length === 0 && (
+                                <div className="text-center text-gray-500 mt-10">You are not in any groups yet.</div>
+                            )}
+                        </div>
+                        <CreateGroupModal 
+                            isOpen={showGroupModal} 
+                            onClose={() => setShowGroupModal(false)} 
+                            otherUsers={otherUsers}
+                            onGroupCreated={(newGroup) => {
+                                setGroups([newGroup, ...groups]);
+                            }}
+                        />
                     </div>
                 )}
 
