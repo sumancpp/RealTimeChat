@@ -789,8 +789,18 @@ const MessageArea = () => {
           >
 
             {messages?.map(
-              (msg, index) => (
+              (msg, index) => {
+                  if (msg.isSystemMessage) {
+                      return (
+                          <div key={msg._id || index} className="flex justify-center my-3">
+                              <span className="text-xs font-medium bg-gray-100 border border-gray-200 text-gray-500 px-4 py-1.5 rounded-full text-center shadow-sm">
+                                  {msg.message}
+                              </span>
+                          </div>
+                      );
+                  }
 
+                return (
                 <div
                   key={
                     msg._id || index
@@ -1115,7 +1125,7 @@ ${msg.sender?.toString() ===
 
                 </div>
 
-              )
+              );
             )}
 
             <div ref={bottomRef}></div>

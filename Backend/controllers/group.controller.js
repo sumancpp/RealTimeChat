@@ -216,6 +216,25 @@ export const leaveGroup = async (req, res) => {
         group.participants = group.participants.filter(p => p.toString() !== req.userId.toString());
         group.admins = group.admins.filter(a => a.toString() !== req.userId.toString());
         
+        const leaver = await User.findById(req.userId);
+        if (leaver) {
+            const systemMsg = await Message.create({
+                sender: req.userId,
+                conversationId: groupId,
+                message: `${leaver.name || leaver.userName} left the group`,
+                isSystemMessage: true
+            });
+            group.messages.push(systemMsg._id);
+            
+            const populatedMessage = await Message.findById(systemMsg._id).populate("sender", "name userName profileImage");
+            group.participants.forEach(participantId => {
+                const socketId = getReceiverSocketId(participantId.toString());
+                if(socketId) {
+                    io.to(socketId).emit("newGroupMessage", { ...populatedMessage.toObject(), groupId });
+                }
+            });
+        }
+        
         await group.save();
         return res.status(200).json({ message: "Left group successfully", groupId });
     } catch (error) {
@@ -236,6 +255,34 @@ export const removeUserFromGroup = async (req, res) => {
 
         group.participants = group.participants.filter(p => p.toString() !== userIdToRemove.toString());
         group.admins = group.admins.filter(a => a.toString() !== userIdToRemove.toString());
+        
+        const adminUser = await User.findById(req.userId);
+        const removedUser = await User.findById(userIdToRemove);
+        
+        if (adminUser && removedUser) {
+            const systemMsg = await Message.create({
+                sender: req.userId,
+                conversationId: groupId,
+                message: `${adminUser.name || adminUser.userName} removed ${removedUser.name || removedUser.userName}`,
+                isSystemMessage: true
+            });
+            group.messages.push(systemMsg._id);
+            
+            const populatedMessage = await Message.findById(systemMsg._id).populate("sender", "name userName profileImage");
+            // emit to remaining participants
+            group.participants.forEach(participantId => {
+                const socketId = getReceiverSocketId(participantId.toString());
+                if(socketId) {
+                    io.to(socketId).emit("newGroupMessage", { ...populatedMessage.toObject(), groupId });
+                }
+            });
+            
+            // also emit to the removed user so they know
+            const removedSocketId = getReceiverSocketId(userIdToRemove);
+            if(removedSocketId) {
+                io.to(removedSocketId).emit("newGroupMessage", { ...populatedMessage.toObject(), groupId });
+            }
+        }
         
         await group.save();
         const updatedGroup = await Conversation.findById(groupId).populate("participants", "-password").populate("admins", "-password");

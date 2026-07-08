@@ -77,7 +77,12 @@ const messageSchema = new mongoose.Schema({
     isDeleted: {
     type: Boolean,
     default: false
-}
+    },
+    
+    isSystemMessage: {
+        type: Boolean,
+        default: false
+    }
 
 }, {
     timestamps: true
