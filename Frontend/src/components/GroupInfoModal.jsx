@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { X, Shield, UserPlus, Check } from 'lucide-react';
+import { X, Shield, UserPlus, Check, LogOut, UserMinus, Trash2 } from 'lucide-react';
 import { serverUrl } from '../main';
 import defaultProfile from "../assets/profile.png";
 import { useSelector, useDispatch } from 'react-redux';
@@ -26,6 +26,43 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
         } catch (error) {
             console.log(error);
             alert('Error making admin');
+        }
+    };
+
+    const handleLeaveGroup = async () => {
+        if (!window.confirm("Are you sure you want to leave this group?")) return;
+        try {
+            await axios.put(`${serverUrl}/group/leave/${group._id}`, {}, { withCredentials: true });
+            dispatch(setSelectedUser(null));
+            onClose();
+        } catch (error) {
+            console.log(error);
+            alert('Error leaving group');
+        }
+    };
+
+    const handleRemoveUser = async (userId) => {
+        if (!window.confirm("Are you sure you want to remove this user?")) return;
+        try {
+            const res = await axios.put(`${serverUrl}/group/remove-user/${group._id}/${userId}`, {}, { withCredentials: true });
+            if (res.data) {
+                dispatch(setSelectedUser(res.data));
+            }
+        } catch (error) {
+            console.log(error);
+            alert('Error removing user');
+        }
+    };
+
+    const handleDeleteGroup = async () => {
+        if (!window.confirm("Are you sure you want to delete this group for everyone?")) return;
+        try {
+            await axios.delete(`${serverUrl}/group/delete/${group._id}`, { withCredentials: true });
+            dispatch(setSelectedUser(null));
+            onClose();
+        } catch (error) {
+            console.log(error);
+            alert('Error deleting group');
         }
     };
 
@@ -102,17 +139,42 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
                                                 {isParticipantAdmin && <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">Admin</span>}
                                             </div>
                                         </div>
-                                        {isAdmin && !isParticipantAdmin && participant._id !== userData._id && (
-                                            <button 
-                                                onClick={() => handleMakeAdmin(participant._id)}
-                                                className="text-xs text-blue-500 font-medium hover:underline flex items-center gap-1"
-                                            >
-                                                <Shield size={14} /> Make Admin
-                                            </button>
+                                        {isAdmin && participant._id !== userData._id && (
+                                            <div className="flex flex-col gap-2 items-end">
+                                                {!isParticipantAdmin && (
+                                                    <button 
+                                                        onClick={() => handleMakeAdmin(participant._id)}
+                                                        className="text-[11px] text-blue-500 font-medium hover:underline flex items-center gap-1"
+                                                    >
+                                                        <Shield size={12} /> Make Admin
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={() => handleRemoveUser(participant._id)}
+                                                    className="text-[11px] text-red-500 font-medium hover:underline flex items-center gap-1"
+                                                >
+                                                    <UserMinus size={12} /> Remove
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 );
                             })}
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                            <button 
+                                onClick={handleLeaveGroup}
+                                className="w-full flex justify-center items-center gap-2 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-semibold transition-colors"
+                            >
+                                <LogOut size={18} /> Leave Group
+                            </button>
+                            <button 
+                                onClick={handleDeleteGroup}
+                                className="w-full flex justify-center items-center gap-2 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-semibold transition-colors"
+                            >
+                                <Trash2 size={18} /> Delete Group
+                            </button>
                         </div>
                     </>
                 ) : (

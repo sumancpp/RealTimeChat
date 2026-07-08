@@ -205,3 +205,63 @@ export const getGroupMessages = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 }
+
+// LEAVE GROUP
+export const leaveGroup = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const group = await Conversation.findById(groupId);
+        if(!group) return res.status(404).json({ message: "Group not found" });
+
+        group.participants = group.participants.filter(p => p.toString() !== req.userId.toString());
+        group.admins = group.admins.filter(a => a.toString() !== req.userId.toString());
+        
+        await group.save();
+        return res.status(200).json({ message: "Left group successfully", groupId });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// REMOVE USER FROM GROUP (admin only)
+export const removeUserFromGroup = async (req, res) => {
+    try {
+        const { groupId, userIdToRemove } = req.params;
+        const group = await Conversation.findById(groupId);
+        if(!group) return res.status(404).json({ message: "Group not found" });
+
+        if(!group.admins.some(admin => admin.toString() === req.userId.toString())) {
+            return res.status(403).json({ message: "Only admins can remove users" });
+        }
+
+        group.participants = group.participants.filter(p => p.toString() !== userIdToRemove.toString());
+        group.admins = group.admins.filter(a => a.toString() !== userIdToRemove.toString());
+        
+        await group.save();
+        const updatedGroup = await Conversation.findById(groupId).populate("participants", "-password").populate("admins", "-password");
+        return res.status(200).json(updatedGroup);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// DELETE GROUP
+export const deleteGroup = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const group = await Conversation.findById(groupId);
+        if(!group) return res.status(404).json({ message: "Group not found" });
+
+        if(!group.participants.some(p => p.toString() === req.userId.toString())) {
+            return res.status(403).json({ message: "Only participants can delete the group" });
+        }
+
+        await Message.deleteMany({ conversationId: groupId });
+        
+        await Conversation.findByIdAndDelete(groupId);
+
+        return res.status(200).json({ message: "Group deleted successfully", groupId });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};

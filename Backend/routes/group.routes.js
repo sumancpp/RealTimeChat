@@ -1,5 +1,5 @@
 import express from "express";
-import verifyUser from "../middlewares/verifyUser.js";
+import isAuth from "../middlewares/isAuth.js";
 import upload from "../config/multer.js";
 import {
     createGroup,
@@ -7,16 +7,22 @@ import {
     addUsersToGroup,
     makeAdmin,
     sendGroupMessage,
-    getGroupMessages
+    getGroupMessages,
+    leaveGroup,
+    removeUserFromGroup,
+    deleteGroup
 } from "../controllers/group.controller.js";
 
 const router = express.Router();
 
-router.post("/create", verifyUser, upload.single("groupProfileImage"), createGroup);
-router.get("/all", verifyUser, getGroups);
-router.put("/add-users/:groupId", verifyUser, addUsersToGroup);
-router.put("/make-admin/:groupId", verifyUser, makeAdmin);
-router.post("/send/:groupId", verifyUser, upload.single("file"), sendGroupMessage);
-router.get("/messages/:groupId", verifyUser, getGroupMessages);
+router.post("/create", isAuth, upload.single("groupProfileImage"), createGroup);
+router.get("/all", isAuth, getGroups);
+router.put("/add-users/:groupId", isAuth, addUsersToGroup);
+router.put("/make-admin/:groupId", isAuth, makeAdmin);
+router.post("/send/:groupId", isAuth, upload.single("file"), sendGroupMessage);
+router.get("/messages/:groupId", isAuth, getGroupMessages);
+router.put("/leave/:groupId", isAuth, leaveGroup);
+router.put("/remove-user/:groupId/:userIdToRemove", isAuth, removeUserFromGroup);
+router.delete("/delete/:groupId", isAuth, deleteGroup);
 
 export default router;
