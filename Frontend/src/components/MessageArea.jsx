@@ -316,6 +316,12 @@ const MessageArea = () => {
 
         );
 
+        if (res.data) {
+          if (res.data._id) {
+            dispatch(addMessage(res.data));
+          }
+        }
+
       }
 
       catch (error) {

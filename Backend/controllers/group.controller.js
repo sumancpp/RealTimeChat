@@ -265,3 +265,28 @@ export const deleteGroup = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// EDIT GROUP INFO
+export const editGroupInfo = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { groupName, groupDescription } = req.body;
+        
+        const group = await Conversation.findById(groupId);
+        if(!group) return res.status(404).json({ message: "Group not found" });
+
+        if(!group.admins.some(admin => admin.toString() === req.userId.toString())) {
+            return res.status(403).json({ message: "Only admins can edit group info" });
+        }
+
+        if (groupName) group.groupName = groupName;
+        if (groupDescription !== undefined) group.groupDescription = groupDescription;
+        
+        await group.save();
+        
+        const updatedGroup = await Conversation.findById(groupId).populate("participants", "-password").populate("admins", "-password");
+        return res.status(200).json(updatedGroup);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};

@@ -10,7 +10,8 @@ import {
     getGroupMessages,
     leaveGroup,
     removeUserFromGroup,
-    deleteGroup
+    deleteGroup,
+    editGroupInfo
 } from "../controllers/group.controller.js";
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.get("/messages/:groupId", isAuth, getGroupMessages);
 router.put("/leave/:groupId", isAuth, leaveGroup);
 router.put("/remove-user/:groupId/:userIdToRemove", isAuth, removeUserFromGroup);
 router.delete("/delete/:groupId", isAuth, deleteGroup);
+router.put("/edit/:groupId", isAuth, editGroupInfo);
 
 export default router;

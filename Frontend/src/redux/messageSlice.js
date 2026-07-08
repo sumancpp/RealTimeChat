@@ -46,21 +46,13 @@ const messageSlice = createSlice({
                     (msg) => {
 
                         if (
-
-                            msg.sender?.toString() ===
-
+                            msg.sender?.toString() !==
                             action.payload?.toString()
-
                         ) {
-
                             return {
-
                                 ...msg,
-
                                 isSeen: true
-
                             };
-
                         }
 
                         return msg;

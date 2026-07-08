@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { X, Shield, UserPlus, Check, LogOut, UserMinus, Trash2 } from 'lucide-react';
+import { X, Shield, UserPlus, Check, LogOut, UserMinus, Trash2, Edit2 } from 'lucide-react';
 import { serverUrl } from '../main';
 import defaultProfile from "../assets/profile.png";
 import { useSelector, useDispatch } from 'react-redux';
@@ -12,6 +12,10 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
     const [showAddUsers, setShowAddUsers] = useState(false);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [loading, setLoading] = useState(false);
+    
+    const [isEditingInfo, setIsEditingInfo] = useState(false);
+    const [editGroupName, setEditGroupName] = useState("");
+    const [editGroupDesc, setEditGroupDesc] = useState("");
 
     if (!isOpen || !group) return null;
 
@@ -66,6 +70,28 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
         }
     };
 
+    const handleEditClick = () => {
+        setEditGroupName(group.groupName);
+        setEditGroupDesc(group.groupDescription || "");
+        setIsEditingInfo(true);
+    };
+
+    const handleSaveInfo = async () => {
+        try {
+            setLoading(true);
+            const res = await axios.put(`${serverUrl}/group/edit/${group._id}`, { groupName: editGroupName, groupDescription: editGroupDesc }, { withCredentials: true });
+            if (res.data) {
+                dispatch(setSelectedUser(res.data));
+                setIsEditingInfo(false);
+            }
+        } catch (error) {
+            console.log(error);
+            alert('Error updating group info');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleAddUsers = async () => {
         if (selectedUsers.length === 0) return;
         try {
@@ -112,8 +138,52 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
                         alt="Group" 
                         className="w-24 h-24 rounded-full object-cover border-4 border-gray-100 shadow-md mb-3"
                     />
-                    <h3 className="text-xl font-bold text-gray-800">{group.groupName}</h3>
-                    {group.groupDescription && <p className="text-gray-500 text-sm mt-1 text-center">{group.groupDescription}</p>}
+                    
+                    {!isEditingInfo ? (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-gray-800">{group.groupName}</h3>
+                                {isAdmin && (
+                                    <button onClick={handleEditClick} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                        <Edit2 size={16} />
+                                    </button>
+                                )}
+                            </div>
+                            {group.groupDescription && <p className="text-gray-500 text-sm mt-1 text-center max-w-full break-words">{group.groupDescription}</p>}
+                        </>
+                    ) : (
+                        <div className="w-full flex flex-col gap-2 mt-2 px-2">
+                            <input 
+                                type="text" 
+                                value={editGroupName}
+                                onChange={(e) => setEditGroupName(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-center text-gray-800 font-semibold"
+                                placeholder="Group Name"
+                            />
+                            <textarea 
+                                value={editGroupDesc}
+                                onChange={(e) => setEditGroupDesc(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-center text-sm text-gray-600 resize-none"
+                                placeholder="Group Description"
+                                rows="2"
+                            />
+                            <div className="flex gap-2 justify-center mt-2">
+                                <button 
+                                    onClick={() => setIsEditingInfo(false)}
+                                    className="px-4 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleSaveInfo}
+                                    disabled={loading || !editGroupName.trim()}
+                                    className="px-4 py-1.5 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:opacity-50"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {!showAddUsers ? (
