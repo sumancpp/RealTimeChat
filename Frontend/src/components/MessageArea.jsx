@@ -1126,7 +1126,7 @@ ${msg.sender?.toString() ===
                 </div>
 
               );
-            )}
+            })}
 
             <div ref={bottomRef}></div>
 
