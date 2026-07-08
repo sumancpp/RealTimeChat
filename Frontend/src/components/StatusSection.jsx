@@ -224,6 +224,7 @@ const StatusSection = () => {
                 )}
                 <input 
                     type="file" 
+                    id="status-file-input"
                     accept="image/*" 
                     className="hidden" 
                     ref={fileInputRef} 
