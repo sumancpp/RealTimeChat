@@ -530,13 +530,10 @@ const SideBar = () => {
                     </div>
                 )}
 
-                {/* {activeTab === "groups" && (
+                {activeTab === "groups" && (
                     <div className="flex flex-col h-full relative">
                         <div className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
                             <h2 className="font-semibold text-gray-700">My Groups</h2>
-                            <button onClick={() => setShowGroupModal(true)} className="flex items-center gap-1 text-sm bg-green-100 text-green-600 px-3 py-1 rounded-full font-medium hover:bg-green-200">
-                                <Plus size={16} /> New Group
-                            </button>
                         </div>
                         <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-2">
                             {groups.map((group) => (
@@ -570,7 +567,7 @@ const SideBar = () => {
                             }}
                         />
                     </div>
-                )} */}
+                )}
 
                 {activeTab === "status" && (
                     <StatusSection />
