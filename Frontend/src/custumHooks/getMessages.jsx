@@ -83,7 +83,7 @@ const getMessages = () => {
         fetchMessages();
 
     }, [
-        selectedUser,
+        selectedUser?._id,
         dispatch
     ]);
 
@@ -125,7 +125,7 @@ const getMessages = () => {
 
     }, [
         dispatch,
-        selectedUser
+        selectedUser?._id
     ]);
 
     // REALTIME MESSAGE
@@ -273,8 +273,8 @@ const getMessages = () => {
         };
 
     }, [
-        selectedUser,
-        userData,
+        selectedUser?._id,
+        userData?._id,
         dispatch
     ]);
 
