@@ -23,6 +23,7 @@ const CallManager = () => {
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
     const peerConnectionRef = useRef(null);
+    const localStreamRef = useRef(null);
 
     useEffect(() => {
         const socket = getSocket();
@@ -128,6 +129,7 @@ const CallManager = () => {
                 audio: true 
             });
             setLocalStream(stream);
+            localStreamRef.current = stream;
             return stream;
         } catch (err) {
             console.error("Failed to get local stream", err);
@@ -143,9 +145,9 @@ const CallManager = () => {
         peerConnectionRef.current = peerConnection;
 
         // Add local stream tracks
-        if (localStream) {
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStreamRef.current);
             });
         }
 
@@ -194,9 +196,10 @@ const CallManager = () => {
         setCallState('idle');
         setRemoteUser(null);
         setRemoteStream(null);
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
             setLocalStream(null);
+            localStreamRef.current = null;
         }
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();

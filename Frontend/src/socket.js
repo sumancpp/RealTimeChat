@@ -15,8 +15,9 @@ export const connectSocket = (
 
     }
 
+    const socketUrl = import.meta.env.MODE === "development" ? "http://localhost:5000" : undefined;
     socket = io(
-        "http://localhost:8000",
+        socketUrl,
         {
 
             query: {
