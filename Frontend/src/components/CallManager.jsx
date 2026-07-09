@@ -6,7 +6,7 @@ import { serverUrl } from '../main';
 import { getSocket } from '../socket'; 
 import defaultProfile from '../assets/profile.png';
 const CallManager = () => {
-    const { userData, otherUsers } = useSelector(state => state.user);
+    const { userData, otherUsers, onlineUsers } = useSelector(state => state.user);
     
     // Call States
     const [callState, setCallState] = useState('idle'); // idle, ringing, calling, connected
@@ -104,7 +104,7 @@ const CallManager = () => {
             socket.off("webrtcSignal");
             socket.off("callEnded");
         };
-    }, [callState, otherUsers]);
+    }, [callState, otherUsers, onlineUsers]);
 
     // Attach streams to video elements
     useEffect(() => {
