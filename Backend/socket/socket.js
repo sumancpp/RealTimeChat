@@ -187,9 +187,13 @@ io.on(
 
         // WEBRTC CALLING SIGNALING
         socket.on("callUser", ({ userToCall, callType }) => {
+            console.log(`[WebRTC] callUser from ${userId} to ${userToCall}, type: ${callType}`);
             const receiverSocketId = getReceiverSocketId(userToCall);
             if (receiverSocketId) {
+                console.log(`[WebRTC] Emitting incomingCall to socket ${receiverSocketId}`);
                 io.to(receiverSocketId).emit("incomingCall", { from: userId, callType });
+            } else {
+                console.log(`[WebRTC] User ${userToCall} is offline.`);
             }
         });
 

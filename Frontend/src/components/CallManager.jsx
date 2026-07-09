@@ -26,6 +26,7 @@ const CallManager = () => {
 
     useEffect(() => {
         const socket = getSocket();
+        console.log("[WebRTC] CallManager useEffect evaluating. Socket available:", !!socket);
         if (!socket) return;
 
         // Custom Event from MessageArea to start a call
@@ -48,6 +49,7 @@ const CallManager = () => {
         if (!socket) return;
 
         socket.on("incomingCall", async ({ from, callType }) => {
+            console.log(`[WebRTC] incomingCall received from ${from}, current callState: ${callState}`);
             if (callState !== 'idle') {
                 // Already in a call, reject
                 socket.emit("rejectCall", { to: from });
