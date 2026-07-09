@@ -12,7 +12,9 @@ import {
   Plus,
   Trash2,
   Mic,
-  Square
+  Square,
+  Phone,
+  Video
 } from "lucide-react";
 
 import axios from "axios";
@@ -768,6 +770,24 @@ const MessageArea = () => {
               </p>
 
             </div>
+
+            {/* CALL BUTTONS (Only for 1-on-1 for now) */}
+            {!selectedUser?.isGroup && (
+              <div className="ml-auto flex items-center gap-4 text-gray-500">
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
+                  className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                >
+                  <Video size={24} />
+                </button>
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'voice' } }))}
+                  className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                >
+                  <Phone size={22} />
+                </button>
+              </div>
+            )}
 
           </div>
 
