@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 
 import SideBar from '../components/SideBar';
 import MessageArea from '../components/MessageArea';
-import CallManager from '../components/CallManager';
 
 import useGetMessages from '../custumHooks/getMessages';
 
@@ -42,9 +41,7 @@ const Home = () => {
   }, [selectedUser, dispatch]);
 
   return (
-
     <div className='w-full h-screen flex overflow-hidden'>
-      <CallManager />
 
       {/* Sidebar */}
       <div

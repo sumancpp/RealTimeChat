@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 
 import InstallPrompt from "./components/InstallPrompt";
+import CallManager from "./components/CallManager";
 
 import {
   useDispatch,
@@ -199,6 +200,7 @@ const App = () => {
     <>
 
       <InstallPrompt />
+      <CallManager />
 
       <Routes>
         <Route
