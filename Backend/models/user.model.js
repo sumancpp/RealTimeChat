@@ -41,16 +41,6 @@ const userSchema = new mongoose.Schema({
     default: false
 },
 
-    resetOtp: {
-    type: String,
-    default: null
-},
-
-resetOtpExpiry: {
-    type: Date,
-    default: null
-},
-
     lastSeen: {
         type: Date,
         default: Date.now

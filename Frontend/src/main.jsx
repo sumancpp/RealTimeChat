@@ -9,9 +9,7 @@ import { Provider } from 'react-redux'
 
 import { store } from './redux/store.js'
 
-export const serverUrl = import.meta.env.MODE === "development" 
-  ? "http://localhost:5000" 
-  : "";
+
 
 
 const root =

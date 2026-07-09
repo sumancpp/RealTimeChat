@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { serverUrl } from '../main';
+import { serverUrl } from '../config';
 import { Plus, X, Eye, Send, Smile, ChevronUp } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';

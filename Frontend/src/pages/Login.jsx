@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from "lucide-react"
 import axios from 'axios'
-import { serverUrl } from '../main'
+import { serverUrl } from '../config'
 import { useDispatch } from 'react-redux'
 import { setUserData } from '../redux/userSlice'
 

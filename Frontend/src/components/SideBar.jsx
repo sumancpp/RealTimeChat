@@ -32,7 +32,7 @@ import defaultProfile from "../assets/profile.png";
 
 import axios from 'axios';
 
-import { serverUrl } from '../main';
+import { serverUrl } from '../config';
 
 import {
     setOtherUsers,

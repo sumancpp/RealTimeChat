@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { X, Shield, UserPlus, Check, LogOut, UserMinus, Trash2, Edit2 } from 'lucide-react';
-import { serverUrl } from '../main';
+import { serverUrl } from '../config';
 import defaultProfile from "../assets/profile.png";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSelectedUser } from '../redux/userSlice';

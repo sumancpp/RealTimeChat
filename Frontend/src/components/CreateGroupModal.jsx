@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { X, Camera, Check } from 'lucide-react';
-import { serverUrl } from '../main';
+import { serverUrl } from '../config';
 import defaultProfile from "../assets/profile.png";
 
 const CreateGroupModal = ({ isOpen, onClose, otherUsers, onGroupCreated }) => {

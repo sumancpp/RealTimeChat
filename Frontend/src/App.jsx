@@ -38,10 +38,8 @@ import { useState } from "react";
 import SplashScreen from "./components/SplashScreen";
 
 import ForgotPassword from "./pages/ForgotPassword";
-import VerifyOtp from "./pages/VerifyOtp";
-import ResetPassword from "./pages/ResetPassword";
 import axios from "axios";
-import { serverUrl } from "./main";
+import { serverUrl } from "./config";
 
 function urlBase64ToUint8Array(base64String) {
   if (!base64String) return new Uint8Array();
@@ -242,16 +240,6 @@ const App = () => {
         <Route
           path="/forgot-password"
           element={<ForgotPassword />}
-        />
-
-        <Route
-          path="/verify-otp"
-          element={<VerifyOtp />}
-        />
-
-        <Route
-          path="/reset-password"
-          element={<ResetPassword />}
         />
 
       </Routes>

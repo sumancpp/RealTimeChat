@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Video, PhoneOff, Mic, MicOff, Camera as CameraIcon, CameraOff } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { serverUrl } from '../main';
+import { serverUrl } from '../config';
 import { getSocket } from '../socket'; 
 import defaultProfile from '../assets/profile.png';
 const CallManager = () => {

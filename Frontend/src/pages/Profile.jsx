@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import defaultProfile from "../assets/profile.png"
-import { serverUrl } from "../main"
+import { serverUrl } from "../config"
 import { setUserData } from "../redux/userSlice"
 
 const Profile = () => {

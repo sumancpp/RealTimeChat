@@ -23,7 +23,7 @@ import EmojiPicker from "emoji-picker-react";
 
 import defaultProfile from "../assets/profile.png";
 
-import { serverUrl } from "../main";
+import { serverUrl } from "../config";
 
 import {
   useDispatch,
