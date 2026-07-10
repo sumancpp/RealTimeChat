@@ -371,11 +371,6 @@ const StatusSection = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                {activeGroup.user._id === userData?._id && (
-                                    <button onClick={() => handleDeleteStatus(activeGroup.statuses[activeGroupIndex]._id)} className="text-red-500 p-2 rounded-full hover:bg-gray-700/50">
-                                        <Trash2 size={24} />
-                                    </button>
-                                )}
                                 <button onClick={() => setActiveGroup(null)} className="text-white p-2 rounded-full hover:bg-gray-700/50">
                                     <X size={24} />
                                 </button>

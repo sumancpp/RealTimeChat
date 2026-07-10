@@ -268,11 +268,11 @@ const CallManager = () => {
             {/* Incoming Call Overlay */}
             {callState === 'ringing' && (
                 <motion.div 
-                    initial={{ y: "-200%", x: "-50%", opacity: 0 }} 
-                    animate={{ y: 0, x: "-50%", opacity: 1 }}
-                    exit={{ y: "-200%", x: "-50%", opacity: 0 }}
+                    initial={{ top: -300, opacity: 0 }} 
+                    animate={{ top: 40, opacity: 1 }}
+                    exit={{ top: -300, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="fixed top-10 left-1/2 bg-gray-900 text-white rounded-2xl p-5 shadow-2xl z-[999] flex flex-col items-center min-w-[300px] border border-gray-700"
+                    className="fixed left-1/2 transform -translate-x-1/2 bg-gray-900 text-white rounded-2xl p-5 shadow-2xl z-[9999] flex flex-col items-center min-w-[300px] border border-gray-700"
                 >
                     <img src={remoteUser?.profileImage || defaultProfile} className="w-20 h-20 rounded-full mb-3 border-2 border-green-500 animate-pulse" />
                     <h3 className="text-xl font-bold">{remoteUser?.name || remoteUser?.userName}</h3>
