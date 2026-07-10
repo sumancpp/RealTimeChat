@@ -93,7 +93,7 @@ const StatusSection = () => {
     };
 
     const markStatusAsViewed = async (status) => {
-        if (status.user._id !== userData._id) {
+        if (status.user?._id !== userData?._id) {
             try {
                 await axios.post(`${serverUrl}/status/view/${status._id}`, {}, { withCredentials: true });
             } catch (error) {
@@ -173,7 +173,8 @@ const StatusSection = () => {
 
     // Group statuses by user
     const groupedStatuses = statuses.reduce((acc, status) => {
-        const userId = status.user._id;
+        const userId = status.user?._id;
+        if (!userId) return acc;
         if (!acc[userId]) {
             acc[userId] = { user: status.user, statuses: [] };
         }
@@ -181,10 +182,10 @@ const StatusSection = () => {
         return acc;
     }, {});
 
-    const myGroup = groupedStatuses[userData._id];
+    const myGroup = userData?._id ? groupedStatuses[userData._id] : undefined;
     
     // Filter out my group from recent updates
-    const otherGroups = Object.values(groupedStatuses).filter(group => group.user._id !== userData._id);
+    const otherGroups = Object.values(groupedStatuses).filter(group => group.user?._id !== userData?._id);
     
     // Get last status of group to show time
     const getLastStatusTime = (group) => {
@@ -367,7 +368,7 @@ const StatusSection = () => {
                             )}
 
                             {/* Reply Button Trigger (Only if someone else's status) */}
-                            {activeGroup.user._id !== userData._id && !showReplySheet && (
+                            {activeGroup.user?._id !== userData?._id && !showReplySheet && (
                                 <div 
                                     className="absolute bottom-4 w-full flex flex-col items-center justify-center text-white z-30 cursor-pointer drop-shadow-lg"
                                     onClick={(e) => { e.stopPropagation(); setShowReplySheet(true); }}
@@ -378,7 +379,7 @@ const StatusSection = () => {
                             )}
 
                             {/* Reply Sheet */}
-                            {activeGroup.user._id !== userData._id && showReplySheet && (
+                            {activeGroup.user?._id !== userData?._id && showReplySheet && (
                                 <motion.div 
                                     initial={{ y: "100%" }}
                                     animate={{ y: 0 }}
@@ -427,7 +428,7 @@ const StatusSection = () => {
                         </div>
 
                         {/* Viewers (Only if own status) */}
-                        {activeGroup.user._id === userData._id && (
+                        {activeGroup.user?._id === userData?._id && (
                             <div className="relative z-30">
                                 {showViewers && (
                                     <motion.div 

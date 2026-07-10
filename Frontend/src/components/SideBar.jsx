@@ -321,7 +321,7 @@ const SideBar = () => {
                                 {
                                     otherUsers
                                         ?.filter(user =>
-                                            (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai")
+                                            (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
                                         )
                                         ?.map((user) => (
 
@@ -461,7 +461,7 @@ const SideBar = () => {
                                         />
 
                                         {
-                                            (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai") && (
+                                            (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai") && (
 
                                                 <span
                                                     className='absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full'
@@ -508,7 +508,7 @@ const SideBar = () => {
                                         <p className='text-sm text-gray-500 truncate ml-2'>
 
                                             {
-                                                (onlineUsers.includes(user._id) || user.isAI || user.userName === "ai")
+                                                (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
                                                     ? "Online"
                                                     : (
                                                         user.lastMessage ||
