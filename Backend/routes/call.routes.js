@@ -1,6 +1,6 @@
 import express from "express";
 import { saveCallHistory, getCallHistory, deleteCallHistory } from "../controllers/call.controller.js";
-import isAuth from "../middleware/isAuth.js";
+import isAuth from "../middlewares/isAuth.js";
 
 const router = express.Router();
 
