@@ -24,6 +24,7 @@ const CallManager = () => {
     const remoteVideoRef = useRef();
     const peerConnectionRef = useRef(null);
     const localStreamRef = useRef(null);
+    const iceCandidateQueue = useRef([]);
 
     useEffect(() => {
         const socket = getSocket();
@@ -85,10 +86,26 @@ const CallManager = () => {
                     const answer = await peerConnectionRef.current.createAnswer();
                     await peerConnectionRef.current.setLocalDescription(answer);
                     socket.emit("webrtcSignal", { to: from, signalData: peerConnectionRef.current.localDescription });
+                    
+                    // Process queued ICE candidates
+                    while (iceCandidateQueue.current.length > 0) {
+                        const candidate = iceCandidateQueue.current.shift();
+                        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
                 } else if (signalData.type === 'answer') {
                     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(signalData));
+                    
+                    // Process queued ICE candidates
+                    while (iceCandidateQueue.current.length > 0) {
+                        const candidate = iceCandidateQueue.current.shift();
+                        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
                 } else if (signalData.candidate) {
-                    await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(signalData));
+                    if (peerConnectionRef.current.remoteDescription) {
+                        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(signalData));
+                    } else {
+                        iceCandidateQueue.current.push(signalData);
+                    }
                 }
             } catch (err) {
                 console.log("WebRTC Signal Error", err);
@@ -214,6 +231,7 @@ const CallManager = () => {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
         }
+        iceCandidateQueue.current = [];
         setMicMuted(false);
         setVideoMuted(false);
     };
