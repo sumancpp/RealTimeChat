@@ -268,21 +268,32 @@ const CallManager = () => {
             {/* Incoming Call Overlay */}
             {callState === 'ringing' && (
                 <motion.div 
-                    initial={{ top: -300, opacity: 0 }} 
-                    animate={{ top: 40, opacity: 1 }}
-                    exit={{ top: -300, opacity: 0 }}
+                    initial={{ top: -150, opacity: 0 }} 
+                    animate={{ top: 16, opacity: 1 }}
+                    exit={{ top: -150, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="fixed left-1/2 transform -translate-x-1/2 bg-gray-900 text-white rounded-2xl p-5 shadow-2xl z-[9999] flex flex-col items-center min-w-[300px] border border-gray-700"
+                    className="fixed left-1/2 transform -translate-x-1/2 w-[95%] max-w-md bg-gray-900 text-white rounded-2xl p-4 shadow-2xl z-[9999] flex items-center justify-between border border-gray-700"
                 >
-                    <img src={remoteUser?.profileImage || defaultProfile} className="w-20 h-20 rounded-full mb-3 border-2 border-green-500 animate-pulse" />
-                    <h3 className="text-xl font-bold">{remoteUser?.name || remoteUser?.userName}</h3>
-                    <p className="text-gray-400 mb-6">{callType === 'video' ? 'Incoming Video Call...' : 'Incoming Voice Call...'}</p>
-                    <div className="flex gap-6 w-full justify-center">
-                        <button onClick={rejectCall} className="bg-red-500 p-4 rounded-full hover:bg-red-600 transition">
-                            <PhoneOff size={24} />
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="relative">
+                            <img src={remoteUser?.profileImage || defaultProfile} className="w-12 h-12 rounded-full object-cover border border-green-500" alt="caller" />
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                            </span>
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                            <h3 className="font-bold text-md truncate">{remoteUser?.name || remoteUser?.userName}</h3>
+                            <p className="text-gray-400 text-xs truncate">{callType === 'video' ? 'Incoming Video Call...' : 'Incoming Voice Call...'}</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex gap-2 shrink-0">
+                        <button onClick={rejectCall} className="bg-red-500 p-3 rounded-full hover:bg-red-600 transition shadow-lg">
+                            <PhoneOff size={20} />
                         </button>
-                        <button onClick={answerCall} className="bg-green-500 p-4 rounded-full hover:bg-green-600 transition animate-bounce">
-                            {callType === 'video' ? <Video size={24} /> : <Phone size={24} />}
+                        <button onClick={answerCall} className="bg-green-500 p-3 rounded-full hover:bg-green-600 transition shadow-lg animate-bounce">
+                            {callType === 'video' ? <Video size={20} /> : <Phone size={20} />}
                         </button>
                     </div>
                 </motion.div>
