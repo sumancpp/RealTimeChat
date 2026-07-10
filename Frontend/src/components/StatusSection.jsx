@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { serverUrl } from '../config';
-import { Plus, X, Eye, Send, Smile, ChevronUp } from 'lucide-react';
+import { Plus, X, Eye, Send, Smile, ChevronUp, Trash2 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker from 'emoji-picker-react';
@@ -172,6 +172,30 @@ const StatusSection = () => {
             console.log("Reply error:", error);
         } finally {
             setReplying(false);
+        }
+    };
+
+    const handleDeleteStatus = async (statusId) => {
+        try {
+            await axios.delete(`${serverUrl}/status/${statusId}`, { withCredentials: true });
+            
+            // Remove from state
+            const updatedGroup = { ...activeGroup, statuses: activeGroup.statuses.filter(s => s._id !== statusId) };
+            if (updatedGroup.statuses.length === 0) {
+                setActiveGroup(null);
+                setMyStatuses([]);
+                fetchStatuses();
+            } else {
+                setActiveGroup(updatedGroup);
+                setActiveGroupIndex(prev => Math.max(0, prev - 1));
+                if (updatedGroup.user._id === userData._id) {
+                    setMyStatuses(updatedGroup.statuses);
+                }
+                fetchStatuses();
+            }
+        } catch (error) {
+            console.error("Failed to delete status", error);
+            alert("Failed to delete status.");
         }
     };
 
@@ -346,9 +370,16 @@ const StatusSection = () => {
                                     <p className="text-xs text-gray-200">{new Date(activeGroup.statuses[activeGroupIndex].createdAt).toLocaleTimeString()}</p>
                                 </div>
                             </div>
-                            <button onClick={() => setActiveGroup(null)} className="text-white p-2 rounded-full hover:bg-gray-700/50">
-                                <X size={24} />
-                            </button>
+                            <div className="flex items-center gap-3">
+                                {activeGroup.user._id === userData?._id && (
+                                    <button onClick={() => handleDeleteStatus(activeGroup.statuses[activeGroupIndex]._id)} className="text-red-500 p-2 rounded-full hover:bg-gray-700/50">
+                                        <Trash2 size={24} />
+                                    </button>
+                                )}
+                                <button onClick={() => setActiveGroup(null)} className="text-white p-2 rounded-full hover:bg-gray-700/50">
+                                    <X size={24} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Image & Navigation Areas */}

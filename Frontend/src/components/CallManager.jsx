@@ -42,6 +42,12 @@ const CallManager = () => {
             startLocalMedia(type).then(stream => {
                 const socket = getSocket();
                 if (socket) socket.emit("callUser", { userToCall: userToCall._id, callType: type });
+                
+                // Save Call History
+                import('axios').then((axios) => {
+                    axios.default.post(`${serverUrl}/call/history`, { receiverId: userToCall._id, callType: type }, { withCredentials: true })
+                        .catch(err => console.error("Failed to save call history", err));
+                });
             });
         };
 

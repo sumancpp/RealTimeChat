@@ -73,3 +73,25 @@ export const viewStatus = async (req, res) => {
         res.status(500).json({ message: "Failed to view status" });
     }
 };
+
+// Delete a status
+export const deleteStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const status = await Status.findById(id);
+        
+        if (!status) {
+            return res.status(404).json({ message: "Status not found" });
+        }
+        
+        if (status.user.toString() !== req.userId.toString()) {
+            return res.status(403).json({ message: "Not authorized to delete this status" });
+        }
+        
+        await Status.findByIdAndDelete(id);
+        return res.status(200).json({ message: "Status deleted successfully", id });
+    } catch (error) {
+        console.log("Delete Status Error:", error);
+        return res.status(500).json({ message: "Failed to delete status" });
+    }
+};

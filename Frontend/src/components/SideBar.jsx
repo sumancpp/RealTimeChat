@@ -20,6 +20,7 @@ import {
 
 import StatusSection from "./StatusSection";
 import CreateGroupModal from "./CreateGroupModal";
+import CallSection from "./CallSection";
 
 import {
     useDispatch,
@@ -574,9 +575,7 @@ const SideBar = () => {
                 )}
 
                 {activeTab === "calls" && (
-                    <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500 text-lg">Calls feature coming soon...</p>
-                    </div>
+                    <CallSection />
                 )}
             </div>
 

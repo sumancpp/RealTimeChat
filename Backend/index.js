@@ -15,6 +15,7 @@ import userRouter from "./routes/user.routes.js";
 import messageRouter from "./routes/message.routes.js";
 import statusRouter from "./routes/status.routes.js";
 import groupRouter from "./routes/group.routes.js";
+import callRouter from "./routes/call.routes.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -83,6 +84,11 @@ app.use(
 app.use(
     "/group",
     groupRouter
+);
+
+app.use(
+    "/call",
+    callRouter
 );
 
 // SERVE FRONTEND IN PRODUCTION
