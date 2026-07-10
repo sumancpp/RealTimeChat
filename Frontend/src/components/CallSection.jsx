@@ -156,7 +156,6 @@ const CallSection = () => {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <button onClick={() => startCall(user, 'voice')} className="text-gray-600 hover:text-green-500 p-2"><Phone size={22} /></button>
-                                        <button onClick={() => startCall(user, 'video')} className="text-gray-600 hover:text-green-500 p-2"><Video size={22} /></button>
                                     </div>
                                 </div>
                             ))}
