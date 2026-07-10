@@ -362,7 +362,7 @@ const StatusSection = () => {
                         </div>
 
                         {/* Header */}
-                        <div className="flex justify-between items-center p-4 mt-4 z-10 absolute top-2 w-full bg-gradient-to-b from-black/50 to-transparent">
+                        <div className="flex justify-between items-center p-4 mt-4 z-30 absolute top-2 w-full bg-gradient-to-b from-black/50 to-transparent pointer-events-auto">
                             <div className="flex items-center gap-3">
                                 <img src={activeGroup.user.profileImage || defaultProfile} className="w-10 h-10 rounded-full border border-gray-400" alt="User" />
                                 <div className="text-white drop-shadow-md">
@@ -491,12 +491,20 @@ const StatusSection = () => {
                                         </div>
                                     </motion.div>
                                 )}
-                                <div 
-                                    className="p-4 bg-gray-900 text-white flex justify-center items-center gap-2 cursor-pointer hover:bg-gray-800"
-                                    onClick={() => setShowViewers(!showViewers)}
-                                >
-                                    <Eye size={20} />
-                                    <span>{activeGroup.statuses[activeGroupIndex].viewers.length}</span>
+                                <div className="flex bg-gray-900 text-white">
+                                    <div 
+                                        className="p-4 flex-1 flex justify-center items-center gap-2 cursor-pointer hover:bg-gray-800"
+                                        onClick={() => setShowViewers(!showViewers)}
+                                    >
+                                        <Eye size={20} />
+                                        <span>{activeGroup.statuses[activeGroupIndex].viewers.length} Viewers</span>
+                                    </div>
+                                    <div 
+                                        className="p-4 flex justify-center items-center cursor-pointer hover:bg-red-500 hover:text-white text-red-400 transition-colors border-l border-gray-700"
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteStatus(activeGroup.statuses[activeGroupIndex]._id); }}
+                                    >
+                                        <Trash2 size={20} />
+                                    </div>
                                 </div>
                             </div>
                         )}
