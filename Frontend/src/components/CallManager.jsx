@@ -164,7 +164,10 @@ const CallManager = () => {
     };
 
     const initWebRTC = async (isCaller) => {
-        const configuration = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] };
+        const configuration = { 'iceServers': [
+            { 'urls': 'stun:stun.l.google.com:19302' },
+            { 'urls': 'stun:stun.cloudflare.com:3478' }
+        ] };
         const peerConnection = new RTCPeerConnection(configuration);
         peerConnectionRef.current = peerConnection;
 
@@ -199,8 +202,10 @@ const CallManager = () => {
     };
 
     const answerCall = async () => {
+        // Instantly update UI so the user doesn't feel a lag while camera/mic initializes
+        setCallState('connected'); 
+        
         await startLocalMedia(callType);
-        setCallState('connected');
         const socket = getSocket();
         if (socket) socket.emit("acceptCall", { to: remoteUser._id });
         await initWebRTC(false); // Initialize but wait for offer
