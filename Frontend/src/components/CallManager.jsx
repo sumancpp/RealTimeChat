@@ -119,6 +119,13 @@ const CallManager = () => {
     useEffect(() => {
         if (remoteVideoRef.current && remoteStream) {
             remoteVideoRef.current.srcObject = remoteStream;
+            remoteVideoRef.current.play().catch(e => console.log("Video auto-play prevented:", e));
+        }
+        // If it's a voice call, we still need an audio element to play the stream
+        const audioElement = document.getElementById('remoteAudio');
+        if (audioElement && remoteStream) {
+            audioElement.srcObject = remoteStream;
+            audioElement.play().catch(e => console.log("Audio auto-play prevented:", e));
         }
     }, [remoteStream, callState]);
 
@@ -152,8 +159,10 @@ const CallManager = () => {
         }
 
         // Listen for remote stream
+        const remoteMediaStream = new MediaStream();
         peerConnection.ontrack = (event) => {
-            setRemoteStream(event.streams[0]);
+            remoteMediaStream.addTrack(event.track);
+            setRemoteStream(remoteMediaStream);
         };
 
         // ICE Candidates
@@ -288,6 +297,8 @@ const CallManager = () => {
                                 <div className={`p-4 rounded-full bg-gray-800 border-4 ${callState === 'connected' ? 'border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]' : 'border-gray-600'} transition-all duration-500`}>
                                     <img src={remoteUser?.profileImage || defaultProfile} className="w-40 h-40 rounded-full object-cover" />
                                 </div>
+                                {/* Hidden Audio element for voice calls */}
+                                <audio id="remoteAudio" autoPlay playsInline className="hidden" />
                             </div>
                         )}
                     </div>
