@@ -600,32 +600,31 @@ const SideBar = () => {
             </div>
 
             {/* DYNAMIC ACTION BUTTON */}
-            <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => {
-                    if (activeTab === "chats") {
-                        handleLogout();
-                    } else if (activeTab === "groups") {
-                        setShowGroupModal(true);
-                    } else if (activeTab === "status") {
-                        const fileInput = document.getElementById('status-file-input');
-                        if (fileInput) fileInput.click();
-                    } else if (activeTab === "calls") {
-                        alert("Calls feature coming soon!");
-                    }
-                }}
-                className={`absolute bottom-20 right-5 p-4 rounded-full shadow-lg border transition cursor-pointer z-20 ${
-                    activeTab === "chats" 
-                        ? "bg-white border-gray-200 text-red-500 hover:bg-red-50" 
-                        : "bg-green-500 border-green-600 text-white hover:bg-green-600"
-                }`}
-            >
-                {activeTab === "chats" && <LogOut className="rotate-180" size={24} />}
-                {activeTab === "groups" && <Plus size={24} />}
-                {activeTab === "status" && <Camera size={24} />}
-                {activeTab === "calls" && <PhoneCall size={24} />}
-            </motion.button>
+            {activeTab !== "calls" && (
+                <motion.button
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => {
+                        if (activeTab === "chats") {
+                            handleLogout();
+                        } else if (activeTab === "groups") {
+                            setShowGroupModal(true);
+                        } else if (activeTab === "status") {
+                            const fileInput = document.getElementById('status-file-input');
+                            if (fileInput) fileInput.click();
+                        }
+                    }}
+                    className={`absolute bottom-20 right-5 p-4 rounded-full shadow-lg border transition cursor-pointer z-20 ${
+                        activeTab === "chats" 
+                            ? "bg-white border-gray-200 text-red-500 hover:bg-red-50" 
+                            : "bg-green-500 border-green-600 text-white hover:bg-green-600"
+                    }`}
+                >
+                    {activeTab === "chats" && <LogOut className="rotate-180" size={24} />}
+                    {activeTab === "groups" && <Plus size={24} />}
+                    {activeTab === "status" && <Camera size={24} />}
+                </motion.button>
+            )}
 
         </div>
 
