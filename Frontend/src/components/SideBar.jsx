@@ -319,11 +319,11 @@ const SideBar = () => {
                             <div className='flex items-center overflow-x-auto scrollbar-hide gap-4 flex-1 pb-2 mt-7'>
 
                                 {
-                                    otherUsers
-                                        ?.filter(user =>
+                                    Array.isArray(otherUsers) && otherUsers
+                                        .filter(user =>
                                             (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
                                         )
-                                        ?.map((user) => (
+                                        .map((user) => (
 
                                             <div
                                                 key={user._id}
@@ -427,7 +427,7 @@ const SideBar = () => {
                 {activeTab === "chats" && (
                     <div className='flex flex-col gap-2 px-3 py-4'>
                         {
-                            otherUsers?.map((user) => (
+                            Array.isArray(otherUsers) && otherUsers.map((user) => (
 
                                 <div
                                     key={user._id}
@@ -536,7 +536,7 @@ const SideBar = () => {
                             <h2 className="font-semibold text-gray-700">My Groups</h2>
                         </div>
                         <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-2">
-                            {groups.map((group) => (
+                            {Array.isArray(groups) && groups.map((group) => (
                                 <div
                                     key={group._id}
                                     onClick={() => dispatch(setSelectedUser(group))}

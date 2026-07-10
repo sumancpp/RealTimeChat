@@ -40,94 +40,94 @@ const messageSlice = createSlice({
             state,
             action
         ) => {
+            if (Array.isArray(state.messages)) {
+                state.messages =
+                    state.messages.map(
+                        (msg) => {
 
-            state.messages =
-                state.messages.map(
-                    (msg) => {
+                            if (
+                                msg.sender?.toString() !==
+                                action.payload?.toString()
+                            ) {
+                                return {
+                                    ...msg,
+                                    isSeen: true
+                                };
+                            }
 
-                        if (
-                            msg.sender?.toString() !==
-                            action.payload?.toString()
-                        ) {
-                            return {
-                                ...msg,
-                                isSeen: true
-                            };
+                            return msg;
+
                         }
-
-                        return msg;
-
-                    }
-                );
-
+                    );
+            }
         },
 
         updateReaction: (
             state,
             action
         ) => {
+            if (Array.isArray(state.messages)) {
+                state.messages =
+                    state.messages.map(
+                        (msg) => {
 
-            state.messages =
-                state.messages.map(
-                    (msg) => {
+                            if (
 
-                        if (
+                                msg._id ===
+                                action.payload._id
 
-                            msg._id ===
-                            action.payload._id
+                            ) {
 
-                        ) {
+                                return action.payload;
 
-                            return action.payload;
+                            }
+
+                            return msg;
 
                         }
-
-                        return msg;
-
-                    }
-                );
-
+                    );
+            }
         },
 
         deleteMessageRedux: (
             state,
             action
         ) => {
+            if (Array.isArray(state.messages)) {
+                state.messages =
+                    state.messages.map(
+                        (msg) => {
 
-            state.messages =
-                state.messages.map(
-                    (msg) => {
+                            if (
 
-                        if (
+                                msg._id ===
+                                action.payload
 
-                            msg._id ===
-                            action.payload
+                            ) {
 
-                        ) {
+                                return {
 
-                            return {
+                                    ...msg,
 
-                                ...msg,
+                                    isDeleted: true,
 
-                                isDeleted: true,
+                                    message: "",
 
-                                message: "",
+                                    image: "",
 
-                                image: "",
+                                    replyTo: null,
 
-                                replyTo: null,
+                                    reactions: []
 
-                                reactions: []
+                                };
 
-                            };
+                            }
+
+                            return msg;
 
                         }
-
-                        return msg;
-
-                    }
-                );
-
+                    );
+            }
         },
 
         clearMessages: (

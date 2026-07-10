@@ -808,7 +808,7 @@ const MessageArea = () => {
             }
           >
 
-            {messages?.map(
+            {Array.isArray(messages) && messages.map(
               (msg, index) => {
                   if (msg.isSystemMessage) {
                       return (
@@ -1112,7 +1112,7 @@ ${msg.sender?.toString() ===
     "
                       >
 
-                        {msg.reactions.map(
+                        {Array.isArray(msg.reactions) && msg.reactions.map(
                           (
                             reaction,
                             index

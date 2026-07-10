@@ -236,7 +236,7 @@ const StatusSection = () => {
             {/* Recent Updates */}
             {otherGroups.length > 0 && <h3 className="text-md font-semibold text-gray-500 mb-3 px-2">Recent updates</h3>}
             <div className="flex flex-col gap-2">
-                {otherGroups.map((group) => (
+                {Array.isArray(otherGroups) && otherGroups.map((group) => (
                     <div 
                         key={group.user._id} 
                         className="flex items-center gap-4 cursor-pointer p-2 rounded-xl hover:bg-slate-200 transition-colors"
@@ -320,9 +320,9 @@ const StatusSection = () => {
                         className="fixed inset-0 z-[100] bg-black flex flex-col"
                     >
                         {/* Progress bars segment */}
-                        <div className="w-full flex gap-1 px-2 pt-2 z-10 absolute top-0">
-                            {activeGroup.statuses.map((_, idx) => (
-                                <div key={idx} className="h-1 flex-1 bg-gray-600/50 rounded-full overflow-hidden">
+                        <div className="flex w-full gap-1 p-2 absolute top-0 z-10">
+                            {Array.isArray(activeGroup.statuses) && activeGroup.statuses.map((_, idx) => (
+                                <div key={idx} className="h-1 flex-1 bg-gray-500/50 rounded-full overflow-hidden">
                                     <div 
                                         className="h-full bg-white transition-all duration-1000 ease-linear" 
                                         style={{ 
@@ -440,8 +440,8 @@ const StatusSection = () => {
                                             <h3 className="text-xl font-bold">Viewed by {activeGroup.statuses[activeGroupIndex].viewers.length}</h3>
                                             <button onClick={() => setShowViewers(false)}><X size={20} /></button>
                                         </div>
-                                        <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto">
-                                            {activeGroup.statuses[activeGroupIndex].viewers.map((viewer, i) => (
+                                        <div className="flex flex-col gap-2 mb-4">
+                                            {Array.isArray(activeGroup.statuses[activeGroupIndex].viewers) && activeGroup.statuses[activeGroupIndex].viewers.map((viewer, i) => (
                                                 <div key={i} className="flex items-center gap-3">
                                                     <img src={viewer.user.profileImage || defaultProfile} className="w-10 h-10 rounded-full" alt="Viewer" />
                                                     <div>
