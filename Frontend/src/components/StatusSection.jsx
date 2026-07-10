@@ -38,8 +38,12 @@ const StatusSection = () => {
         try {
             const res = await axios.get(`${serverUrl}/status`, { withCredentials: true });
             // Sort to have older statuses first for sequence
-            const sortedStatuses = res.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            setStatuses(sortedStatuses);
+            if (Array.isArray(res.data)) {
+                const sortedStatuses = res.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                setStatuses(sortedStatuses);
+            } else {
+                setStatuses([]);
+            }
         } catch (error) {
             console.log("Error fetching statuses", error);
         }
