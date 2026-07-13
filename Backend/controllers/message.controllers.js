@@ -510,17 +510,27 @@ export const getSortedUsers = async (
         const currentUser =
             req.userId;
 
-        const users =
-            await User.find({
+        const conversations = await Conversation.find({
+            participants: { $in: [currentUser] },
+            isGroup: false
+        });
 
-                _id: {
-                    $ne:
-                        currentUser
+        const chattedUserIds = new Set();
+        conversations.forEach(conv => {
+            conv.participants.forEach(p => {
+                if (p.toString() !== currentUser.toString()) {
+                    chattedUserIds.add(p.toString());
                 }
+            });
+        });
 
-            }).select(
-                "-password"
-            );
+        // Add AI users so they are always accessible
+        const aiUsers = await User.find({ isAI: true }).select("_id");
+        aiUsers.forEach(ai => chattedUserIds.add(ai._id.toString()));
+
+        const users = await User.find({
+            _id: { $in: Array.from(chattedUserIds) }
+        }).select("-password");
 
         const usersWithChatData =
             await Promise.all(

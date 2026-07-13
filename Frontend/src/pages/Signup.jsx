@@ -19,7 +19,7 @@ const Signup = () => {
   
 
   const [formData, setFormData] = useState({
-    userName: "",
+    name: "",
     email: "",
     password: "",
     securityQuestion: "",
@@ -60,9 +60,9 @@ const Signup = () => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-  // Username validation
-  if (!formData.userName) {
-    setError("Username is required ❌")
+  // Name validation
+  if (!formData.name) {
+    setError("Full Name is required ❌")
     setLoading(false)
     return
   }
@@ -160,7 +160,7 @@ const Signup = () => {
         >
 
           {[
-            { name: "userName", type: "text", placeholder: "Enter username" },
+            { name: "name", type: "text", placeholder: "Enter Full Name" },
             { name: "email", type: "email", placeholder: "Enter email" },
             { name: "password", type: "password", placeholder: "Enter password" }
           ].map((field, index) => {

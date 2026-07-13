@@ -8,9 +8,9 @@ import crypto from "crypto";
 
 export const signUp = async (req, res) => {
      try {
-        const {userName,email,password, securityQuestion, securityAnswer}=req.body
+        const {name, email, password, securityQuestion, securityAnswer}=req.body
 
-         if (!userName || !email || !password || !securityQuestion || !securityAnswer) {
+         if (!name || !email || !password || !securityQuestion || !securityAnswer) {
          return res.status(400).json({ message: "All fields are required" })
         }
 
@@ -18,20 +18,30 @@ export const signUp = async (req, res) => {
              return res.status(400).json({message:"Password must be at least 6 characters"})
         }
 
-        const checkUserByuserName = await User.findOne({userName})
-        if(checkUserByuserName){
-            return res.status(400).json({message:"Username already exist"})
-        }
-
         const checkUserByemail = await User.findOne({email})
         if(checkUserByemail){
             return res.status(400).json({message:"Email already exist"})
         }
 
+        let baseUserName = name.trim().toLowerCase().replace(/\s+/g, '');
+        if (!baseUserName) baseUserName = "user";
+        
+        let generatedUserName = "";
+        let isUnique = false;
+        
+        while (!isUnique) {
+             generatedUserName = baseUserName + Math.floor(1000 + Math.random() * 9000);
+             const existing = await User.findOne({userName: generatedUserName});
+             if (!existing) {
+                 isUnique = true;
+             }
+        }
+
         const hashedPassword = await bcrypt.hash(password,5)
 
         const user = await User.create({
-            userName,
+            name: name.trim(),
+            userName: generatedUserName,
             email,
             password:hashedPassword,
             securityQuestion,
