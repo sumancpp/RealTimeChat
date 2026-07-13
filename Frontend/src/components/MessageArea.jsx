@@ -52,6 +52,8 @@ import {
 
 import GroupInfoModal from "./GroupInfoModal";
 
+import TableTennisGame from "./TableTennisGame";
+
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
     const now = new Date();
@@ -120,6 +122,9 @@ const MessageArea = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
 
+  const [inGameMode, setInGameMode] = useState(false);
+  const [isGameHost, setIsGameHost] = useState(false);
+
   const { onlineUsers } =
     useSelector(
       state => state.user
@@ -170,6 +175,7 @@ const MessageArea = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    setInGameMode(false);
   }, [selectedUser]);
 
   useEffect(() => {
@@ -202,6 +208,27 @@ const MessageArea = () => {
 
     };
 
+  }, []);
+
+  useEffect(() => {
+      if (!socket) return;
+      
+      const handleGameAccepted = () => {
+          setInGameMode(true);
+          setIsGameHost(true);
+      };
+      
+      const handleGameDeclined = () => {
+          alert("Your game invite was declined.");
+      };
+
+      socket.on("gameAccepted", handleGameAccepted);
+      socket.on("gameDeclined", handleGameDeclined);
+
+      return () => {
+          socket.off("gameAccepted", handleGameAccepted);
+          socket.off("gameDeclined", handleGameDeclined);
+      };
   }, []);
 
   useEffect(() => {
@@ -884,6 +911,14 @@ const MessageArea = () => {
              group={selectedUser}
           />
 
+          {inGameMode ? (
+              <TableTennisGame 
+                  opponent={selectedUser} 
+                  isHost={isGameHost} 
+                  onEndGame={() => setInGameMode(false)} 
+              />
+          ) : (
+          <>
           {/* MESSAGES */}
           <div
             ref={messageContainerRef}
@@ -897,6 +932,46 @@ const MessageArea = () => {
 
             {Array.isArray(messages) && messages.map(
               (msg, index) => {
+                  if (msg.message === "@game") {
+                      return (
+                          <div key={msg._id || index} className="flex justify-center my-4 w-full">
+                              <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl text-center max-w-[85%] shadow-sm">
+                                  <div className="text-3xl mb-2">🏓</div>
+                                  <p className="font-bold text-[#0b2a5b] mb-3">
+                                      {msg.sender?._id?.toString() === userData?._id?.toString() || msg.sender?.toString() === userData?._id?.toString()
+                                          ? "You sent a Table Tennis invite" 
+                                          : `${msg.sender?.name || msg.sender?.userName || "Someone"} invited you to play Table Tennis!`}
+                                  </p>
+                                  {(msg.sender?._id?.toString() !== userData?._id?.toString() && msg.sender?.toString() !== userData?._id?.toString()) && (
+                                      <div className="flex gap-3 justify-center">
+                                          <button 
+                                              onClick={() => {
+                                                  socket.emit("acceptGame", { to: msg.sender?._id || msg.sender });
+                                                  setInGameMode(true);
+                                                  setIsGameHost(false);
+                                              }} 
+                                              className="bg-green-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition-colors shadow-sm"
+                                          >
+                                              Accept
+                                          </button>
+                                          <button 
+                                              onClick={() => {
+                                                  socket.emit("declineGame", { to: msg.sender?._id || msg.sender });
+                                              }} 
+                                              className="bg-red-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-red-600 transition-colors shadow-sm"
+                                          >
+                                              Decline
+                                          </button>
+                                      </div>
+                                  )}
+                                  {(msg.sender?._id?.toString() === userData?._id?.toString() || msg.sender?.toString() === userData?._id?.toString()) && (
+                                      <p className="text-xs text-gray-500 italic">Waiting for response...</p>
+                                  )}
+                              </div>
+                          </div>
+                      );
+                  }
+
                   if (msg.isSystemMessage) {
                       return (
                           <div key={msg._id || index} className="flex justify-center my-4 w-full">
@@ -1602,6 +1677,8 @@ text-sm
             )}
 
           </div>
+          </>
+          )}
 
         </>
 

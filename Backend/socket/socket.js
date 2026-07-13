@@ -225,6 +225,56 @@ io.on(
             }
         });
 
+        // GAME EVENTS
+        socket.on("gameInvite", ({ to }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("gameInvite", { from: userId });
+            }
+        });
+
+        socket.on("acceptGame", ({ to }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("gameAccepted", { from: userId });
+            }
+        });
+
+        socket.on("declineGame", ({ to }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("gameDeclined", { from: userId });
+            }
+        });
+        
+        socket.on("endGame", ({ to }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("gameEnded", { from: userId });
+            }
+        });
+
+        socket.on("paddleMove", ({ to, y }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("paddleMove", { y });
+            }
+        });
+
+        socket.on("ballMove", ({ to, ball }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("ballMove", { ball });
+            }
+        });
+
+        socket.on("scoreUpdate", ({ to, score }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("scoreUpdate", { score });
+            }
+        });
+
         // DISCONNECT
         socket.on(
             "disconnect",
