@@ -86,7 +86,7 @@ const SideBar = () => {
     const [groups, setGroups] = useState([]);
     const [showGroupModal, setShowGroupModal] = useState(false);
 
-    const [viewingLockedChats, setViewingLockedChats] = useState(false);
+    const [targetLockedUser, setTargetLockedUser] = useState(null);
     const [showPinModal, setShowPinModal] = useState(false);
     const [pinInput, setPinInput] = useState("");
     const [pinError, setPinError] = useState("");
@@ -96,13 +96,25 @@ const SideBar = () => {
         try {
             const res = await axios.post(`${serverUrl}/user/chat-lock/verify`, { pin: pinInput }, { withCredentials: true });
             if (res.data.success) {
-                setViewingLockedChats(true);
+                if (targetLockedUser) {
+                    dispatch(setSelectedUser(targetLockedUser));
+                    setTargetLockedUser(null);
+                }
                 setShowPinModal(false);
                 setPinInput("");
                 setPinError("");
             }
         } catch (error) {
             setPinError(error.response?.data?.message || "Invalid PIN");
+        }
+    };
+
+    const handleUserClick = (user) => {
+        if (user.isLocked) {
+            setTargetLockedUser(user);
+            setShowPinModal(true);
+        } else {
+            dispatch(setSelectedUser(user));
         }
     };
 
@@ -447,47 +459,15 @@ const SideBar = () => {
                 {activeTab === "chats" && (
                     <div className='flex flex-col gap-2 px-3 py-4'>
                         {(() => {
-                            const regularUsers = Array.isArray(otherUsers) ? otherUsers.filter(u => !u.isLocked) : [];
-                            const lockedUsers = Array.isArray(otherUsers) ? otherUsers.filter(u => u.isLocked) : [];
-                            const displayUsers = viewingLockedChats ? lockedUsers : regularUsers;
+                            const displayUsers = Array.isArray(otherUsers) ? otherUsers : [];
 
                             return (
                                 <>
-                                    {!viewingLockedChats && lockedUsers.length > 0 && (
-                                        <div 
-                                            onClick={() => setShowPinModal(true)}
-                                            className="w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm bg-white hover:bg-slate-50 mb-2 border border-gray-100 text-gray-700 font-semibold"
-                                        >
-                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                                                <Lock size={20} className="text-gray-500" />
-                                            </div>
-                                            <span>Locked Chats</span>
-                                        </div>
-                                    )}
-                                    
-                                    {viewingLockedChats && (
-                                        <div 
-                                            onClick={() => setViewingLockedChats(false)}
-                                            className="w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm bg-white hover:bg-slate-50 mb-2 border border-gray-100 text-gray-700 font-semibold"
-                                        >
-                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                                                <X size={20} className="text-gray-500" />
-                                            </div>
-                                            <span>Close Locked Chats</span>
-                                        </div>
-                                    )}
-
                                     {displayUsers.map((user) => (
 
                                 <div
                                     key={user._id}
-                                    onClick={() =>
-                                        dispatch(
-                                            setSelectedUser(
-                                                user
-                                            )
-                                        )
-                                    }
+                                    onClick={() => handleUserClick(user)}
                                     className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-lg
 
                                     ${selectedUser?._id ===
@@ -542,18 +522,23 @@ const SideBar = () => {
 
                                     <div className='flex-1 overflow-hidden rounded-2xl'>
 
-                                        <h2 className='font-semibold text-[#0b2a5b] truncate ml-2'>
+                                        <div className='flex items-center ml-2'>
+                                            <h2 className='font-semibold text-[#0b2a5b] truncate'>
 
-                                            {
-                                                user.unreadCount > 0
-                                                    ? `${user.unreadCount} new`
-                                                    : (
-                                                        user?.name ||
-                                                        user?.userName
-                                                    )
-                                            }
+                                                {
+                                                    user.unreadCount > 0
+                                                        ? `${user.unreadCount} new`
+                                                        : (
+                                                            user?.name ||
+                                                            user?.userName
+                                                        )
+                                                }
 
-                                        </h2>
+                                            </h2>
+                                            {user.isLocked && (
+                                                <Lock size={16} className="text-gray-400 ml-2" />
+                                            )}
+                                        </div>
 
                                         <p className='text-sm text-gray-500 truncate ml-2'>
 
@@ -682,8 +667,8 @@ const SideBar = () => {
         {showPinModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                 <div className="bg-white p-6 rounded-2xl shadow-xl w-80 max-w-[90%]">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Enter Chat Lock PIN</h3>
-                    <p className="text-sm text-gray-500 mb-4">Please enter your secret PIN to view locked chats.</p>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Chat is Locked</h3>
+                    <p className="text-sm text-gray-500 mb-4">Please enter your secret PIN to open this conversation.</p>
                     <form onSubmit={handlePinSubmit}>
                         <input
                             type="password"
@@ -697,7 +682,7 @@ const SideBar = () => {
                         <div className="flex justify-end gap-3 mt-5">
                             <button
                                 type="button"
-                                onClick={() => { setShowPinModal(false); setPinInput(""); setPinError(""); }}
+                                onClick={() => { setShowPinModal(false); setPinInput(""); setPinError(""); setTargetLockedUser(null); }}
                                 className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
                             >
                                 Cancel
