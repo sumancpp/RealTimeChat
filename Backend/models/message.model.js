@@ -82,7 +82,12 @@ const messageSchema = new mongoose.Schema({
     isSystemMessage: {
         type: Boolean,
         default: false
-    }
+    },
+    
+    deletedFor: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }]
 
 }, {
     timestamps: true

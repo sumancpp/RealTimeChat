@@ -433,7 +433,7 @@ export const getMessage = async (
             }).populate({
 
     path: "messages",
-
+    match: { deletedFor: { $ne: sender } },
     populate: {
 
         path: "replyTo",
@@ -574,7 +574,8 @@ export const getSortedUsers = async (
 
                                     }
 
-                                ]
+                                ],
+                                deletedFor: { $ne: currentUser }
 
                             })
 
@@ -594,7 +595,9 @@ export const getSortedUsers = async (
                                     currentUser,
 
                                 isSeen:
-                                    false
+                                    false,
+                                
+                                deletedFor: { $ne: currentUser }
 
                             });
 
@@ -625,7 +628,10 @@ export const getSortedUsers = async (
 
             );
 
-        usersWithChatData.sort(
+        // Filter out users who have no messages left with the current user, unless they are AI
+        let filteredUsers = usersWithChatData.filter(u => u.lastMessageTime || u.isAI);
+
+        filteredUsers.sort(
             (a, b) => {
 
                 const timeA =
@@ -653,7 +659,7 @@ export const getSortedUsers = async (
 
         return res.status(200)
             .json(
-                usersWithChatData
+                filteredUsers
             );
 
     } catch (error) {
@@ -866,6 +872,7 @@ export const deleteConversation = async (req, res) => {
     try {
         const currentUser = req.userId;
         const { id: otherUser } = req.params;
+        const { deleteForEveryone } = req.body;
 
         // Find the conversation
         const conversation = await Conversation.findOne({
@@ -877,11 +884,23 @@ export const deleteConversation = async (req, res) => {
             return res.status(404).json({ message: "Conversation not found" });
         }
 
-        // Delete all messages in this conversation
-        await Message.deleteMany({ _id: { $in: conversation.messages } });
-
-        // Delete the conversation document
-        await Conversation.findByIdAndDelete(conversation._id);
+        if (deleteForEveryone) {
+            // Delete all messages in this conversation globally
+            await Message.deleteMany({ _id: { $in: conversation.messages } });
+            // Delete the conversation document
+            await Conversation.findByIdAndDelete(conversation._id);
+            
+            const otherSocketId = getReceiverSocketId(otherUser);
+            if (otherSocketId) {
+                io.to(otherSocketId).emit("conversationDeletedForEveryone", { conversationId: conversation._id, otherUserId: currentUser });
+            }
+        } else {
+            // Just mark as deleted for the current user
+            await Message.updateMany(
+                { _id: { $in: conversation.messages } },
+                { $addToSet: { deletedFor: currentUser } }
+            );
+        }
 
         return res.status(200).json({ message: "Conversation deleted successfully" });
     } catch (error) {

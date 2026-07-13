@@ -118,6 +118,7 @@ const MessageArea = () => {
     );
 
   const pickerRef = useRef(null);
+  const menuRef = useRef(null);
 
   const fileInputRef = useRef(null);
 
@@ -254,6 +255,19 @@ const MessageArea = () => {
 
     };
 
+  }, []);
+
+  // CLOSE MENU ON OUTSIDE CLICK
+  useEffect(() => {
+    const handleClickOutsideMenu = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutsideMenu);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideMenu);
+    };
   }, []);
 
   useEffect(() => {
@@ -716,9 +730,12 @@ const MessageArea = () => {
       }
   };
 
-  const handleDeleteChat = async () => {
+  const handleDeleteChat = async (deleteForEveryone = false) => {
       try {
-          await axios.delete(`${serverUrl}/message/conversation/${selectedUser._id}`, { withCredentials: true });
+          await axios.delete(`${serverUrl}/message/conversation/${selectedUser._id}`, { 
+              data: { deleteForEveryone },
+              withCredentials: true 
+          });
           dispatch(setSelectedUser(null));
       } catch (error) {
           console.log(error);
@@ -800,7 +817,7 @@ const MessageArea = () => {
 
             {/* CALL BUTTONS (Only for 1-on-1 for now) */}
             {!selectedUser?.isGroup && (
-              <div className="ml-auto flex items-center gap-4 text-gray-500 relative">
+              <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
                   className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
@@ -821,13 +838,16 @@ const MessageArea = () => {
                 </button>
 
                 {showMenu && (
-                  <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-40 z-50 flex flex-col overflow-hidden">
+                  <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-48 z-50 flex flex-col overflow-hidden">
                     <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                         <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
                         {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
                     </button>
-                    <button onClick={handleDeleteChat} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
-                        <Trash2 size={16} /> Delete Chat
+                    <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                        <Trash2 size={16} /> Delete for me
+                    </button>
+                    <button onClick={() => handleDeleteChat(true)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                        <Trash2 size={16} /> Delete for everyone
                     </button>
                   </div>
                 )}
