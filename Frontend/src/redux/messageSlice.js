@@ -126,6 +126,7 @@ const messageSlice = createSlice({
                             return msg;
 
                         }
+                    );
             }
         },
 
