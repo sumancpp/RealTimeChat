@@ -13,7 +13,9 @@ import {
     setMessages,
     addMessage,
     updateSeenMessages,
-    clearMessages
+    clearMessages,
+    editMessageRedux,
+    updateViewOnceSeen
 } from "../redux/messageSlice";
 
 import {
@@ -258,6 +260,18 @@ const getMessages = () => {
 
         socket.on("newGroupMessage", handleNewGroupMessage);
 
+        const handleMessageEdited = (payload) => {
+             dispatch(editMessageRedux(payload));
+        };
+
+        socket.on("messageEdited", handleMessageEdited);
+
+        const handleViewOnceOpened = (payload) => {
+             dispatch(updateViewOnceSeen(payload.messageId));
+        };
+
+        socket.on("viewOnceOpened", handleViewOnceOpened);
+
         return () => {
 
             socket.off(
@@ -268,6 +282,16 @@ const getMessages = () => {
             socket.off(
                 "newGroupMessage",
                 handleNewGroupMessage
+            );
+
+            socket.off(
+                "messageEdited",
+                handleMessageEdited
+            );
+
+            socket.off(
+                "viewOnceOpened",
+                handleViewOnceOpened
             );
 
         };

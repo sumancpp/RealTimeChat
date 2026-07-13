@@ -10,7 +10,10 @@ import {
   getSortedUsers,
   reactToMessage,
   deleteMessage,
-  deleteConversation
+  deleteConversation,
+  editMessage,
+  updateDisappearingTimer,
+  markViewOnceSeen
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -50,6 +53,27 @@ messageRouter.delete(
     "/conversation/:id",
     isAuth,
     deleteConversation
+);
+
+// EDIT MESSAGE
+messageRouter.put(
+    "/edit/:messageId",
+    isAuth,
+    editMessage
+);
+
+// DISAPPEARING TIMER
+messageRouter.put(
+    "/disappearing/:id",
+    isAuth,
+    updateDisappearingTimer
+);
+
+// MARK VIEW ONCE SEEN
+messageRouter.put(
+    "/view-once/:messageId",
+    isAuth,
+    markViewOnceSeen
 );
 
 export default messageRouter;

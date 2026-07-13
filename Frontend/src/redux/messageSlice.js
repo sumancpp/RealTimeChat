@@ -126,7 +126,38 @@ const messageSlice = createSlice({
                             return msg;
 
                         }
-                    );
+            }
+        },
+
+        editMessageRedux: (state, action) => {
+            if (Array.isArray(state.messages)) {
+                const { messageId, newContent, editedAt } = action.payload;
+                state.messages = state.messages.map(msg => {
+                    if (msg._id === messageId) {
+                        return {
+                            ...msg,
+                            message: newContent,
+                            isEdited: true,
+                            editedAt
+                        };
+                    }
+                    return msg;
+                });
+            }
+        },
+
+        updateViewOnceSeen: (state, action) => {
+            if (Array.isArray(state.messages)) {
+                const messageId = action.payload;
+                state.messages = state.messages.map(msg => {
+                    if (msg._id === messageId) {
+                        return {
+                            ...msg,
+                            viewOnceSeen: true
+                        };
+                    }
+                    return msg;
+                });
             }
         },
 
@@ -154,7 +185,11 @@ export const {
 
     deleteMessageRedux,
 
-    clearMessages
+    clearMessages,
+    
+    editMessageRedux,
+
+    updateViewOnceSeen
 
 } = messageSlice.actions;
 

@@ -66,7 +66,19 @@ const userSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
         }
-    ]
+    ],
+
+    lockedChats: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
+    ],
+
+    chatLockPin: {
+        type: String,
+        default: null
+    }
 
 }, {
     timestamps: true

@@ -15,7 +15,8 @@ import {
     Phone,
     Plus,
     Camera,
-    PhoneCall
+    PhoneCall,
+    Lock
 } from "lucide-react";
 
 import StatusSection from "./StatusSection";
@@ -84,6 +85,26 @@ const SideBar = () => {
         
     const [groups, setGroups] = useState([]);
     const [showGroupModal, setShowGroupModal] = useState(false);
+
+    const [viewingLockedChats, setViewingLockedChats] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pinInput, setPinInput] = useState("");
+    const [pinError, setPinError] = useState("");
+
+    const handlePinSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await axios.post(`${serverUrl}/user/chat-lock/verify`, { pin: pinInput }, { withCredentials: true });
+            if (res.data.success) {
+                setViewingLockedChats(true);
+                setShowPinModal(false);
+                setPinInput("");
+                setPinError("");
+            }
+        } catch (error) {
+            setPinError(error.response?.data?.message || "Invalid PIN");
+        }
+    };
 
     useEffect(() => {
         if (activeTab === "groups") {
@@ -195,7 +216,7 @@ const SideBar = () => {
     };
 
     return (
-
+        <>
         <div className='w-full h-screen bg-slate-100 border-r border-gray-300 flex flex-col overflow-hidden relative'>
 
             {/* TOP SECTION */}
@@ -425,8 +446,38 @@ const SideBar = () => {
             <div className='flex-1 overflow-y-auto scrollbar-hide bg-slate-100 mt-1 pb-16'>
                 {activeTab === "chats" && (
                     <div className='flex flex-col gap-2 px-3 py-4'>
-                        {
-                            Array.isArray(otherUsers) && otherUsers.map((user) => (
+                        {(() => {
+                            const regularUsers = Array.isArray(otherUsers) ? otherUsers.filter(u => !u.isLocked) : [];
+                            const lockedUsers = Array.isArray(otherUsers) ? otherUsers.filter(u => u.isLocked) : [];
+                            const displayUsers = viewingLockedChats ? lockedUsers : regularUsers;
+
+                            return (
+                                <>
+                                    {!viewingLockedChats && lockedUsers.length > 0 && (
+                                        <div 
+                                            onClick={() => setShowPinModal(true)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm bg-white hover:bg-slate-50 mb-2 border border-gray-100 text-gray-700 font-semibold"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                                <Lock size={20} className="text-gray-500" />
+                                            </div>
+                                            <span>Locked Chats</span>
+                                        </div>
+                                    )}
+                                    
+                                    {viewingLockedChats && (
+                                        <div 
+                                            onClick={() => setViewingLockedChats(false)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm bg-white hover:bg-slate-50 mb-2 border border-gray-100 text-gray-700 font-semibold"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                                <X size={20} className="text-gray-500" />
+                                            </div>
+                                            <span>Close Locked Chats</span>
+                                        </div>
+                                    )}
+
+                                    {displayUsers.map((user) => (
 
                                 <div
                                     key={user._id}
@@ -523,8 +574,10 @@ const SideBar = () => {
 
                                 </div>
 
-                            ))
-                        }
+                            ))}
+                            </>
+                            );
+                        })()}
 
                     </div>
                 )}
@@ -625,9 +678,45 @@ const SideBar = () => {
             )}
 
         </div>
+        
+        {showPinModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="bg-white p-6 rounded-2xl shadow-xl w-80 max-w-[90%]">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Enter Chat Lock PIN</h3>
+                    <p className="text-sm text-gray-500 mb-4">Please enter your secret PIN to view locked chats.</p>
+                    <form onSubmit={handlePinSubmit}>
+                        <input
+                            type="password"
+                            placeholder="****"
+                            value={pinInput}
+                            onChange={(e) => setPinInput(e.target.value)}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-center tracking-widest text-lg"
+                            autoFocus
+                        />
+                        {pinError && <p className="text-red-500 text-xs mt-2">{pinError}</p>}
+                        <div className="flex justify-end gap-3 mt-5">
+                            <button
+                                type="button"
+                                onClick={() => { setShowPinModal(false); setPinInput(""); setPinError(""); }}
+                                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={pinInput.length < 4}
+                                className="px-4 py-2 text-sm text-white bg-green-500 hover:bg-green-600 disabled:opacity-50 rounded-lg transition"
+                            >
+                                Unlock
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
 
+        </>
     );
-
 };
 
 export default SideBar;

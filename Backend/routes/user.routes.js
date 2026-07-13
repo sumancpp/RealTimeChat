@@ -6,7 +6,11 @@ import {
     searchUsers,
     subscribeToNotifications,
     blockUser,
-    unblockUser
+    unblockUser,
+    setupChatLockPin,
+    verifyChatLockPin,
+    lockChat,
+    unlockChat
 } from "../controllers/user.controller.js";
 
 import isAuth from "../middlewares/isAuth.js";
@@ -66,6 +70,34 @@ userRouter.post(
     "/unblock/:id",
     isAuth,
     unblockUser
+);
+
+// SETUP CHAT LOCK PIN
+userRouter.post(
+    "/chat-lock/setup",
+    isAuth,
+    setupChatLockPin
+);
+
+// VERIFY CHAT LOCK PIN
+userRouter.post(
+    "/chat-lock/verify",
+    isAuth,
+    verifyChatLockPin
+);
+
+// LOCK CHAT
+userRouter.post(
+    "/chat-lock/lock/:id",
+    isAuth,
+    lockChat
+);
+
+// UNLOCK CHAT
+userRouter.post(
+    "/chat-lock/unlock/:id",
+    isAuth,
+    unlockChat
 );
 
 export default userRouter;

@@ -16,7 +16,10 @@ import {
   Phone,
   Video,
   MoreVertical,
-  Ban
+  Ban,
+  Edit3,
+  Lock,
+  Timer
 } from "lucide-react";
 
 import axios from "axios";
@@ -88,6 +91,8 @@ const MessageArea = () => {
   const [replyMessage, setReplyMessage] =
     useState(null);
 
+  const [editingMessageId, setEditingMessageId] = useState(null);
+
   useEffect(() => {
 
     console.log(
@@ -111,6 +116,7 @@ const MessageArea = () => {
 
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
 
   const { onlineUsers } =
     useSelector(
@@ -136,6 +142,8 @@ const MessageArea = () => {
     setRecordingMode] =
     useState(false);
 
+  const [isViewOnce, setIsViewOnce] = useState(false);
+
   const mediaRecorderRef =
     useRef(null);
 
@@ -155,8 +163,10 @@ const MessageArea = () => {
   useEffect(() => {
     setMessage("");
     setReplyMessage(null);
+    setEditingMessageId(null);
     setFrontendImage(null);
     setBackendImage(null);
+    setIsViewOnce(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -497,6 +507,16 @@ const MessageArea = () => {
 
       setSending(true);
 
+      if (editingMessageId) {
+          const res = await axios.put(`${serverUrl}/message/edit/${editingMessageId}`, { newContent: message }, { withCredentials: true });
+          if (res.data) {
+              dispatch(editMessageRedux(res.data));
+          }
+          setMessage("");
+          setEditingMessageId(null);
+          return;
+      }
+
       const currentReply =
         replyMessage;
 
@@ -521,6 +541,10 @@ const MessageArea = () => {
           "file",
           backendImage
         );
+      }
+
+      if (isViewOnce) {
+        formData.append("isViewOnce", true);
       }
 
       const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
@@ -558,6 +582,7 @@ const MessageArea = () => {
       setFrontendImage(null);
 
       setBackendImage(null);
+      setIsViewOnce(false);
 
       if (fileInputRef.current) {
 
@@ -730,6 +755,46 @@ const MessageArea = () => {
       }
   };
 
+  const handleLockToggle = async () => {
+    try {
+      const isLocked = userData?.lockedChats?.includes(selectedUser._id);
+      
+      if (!isLocked) {
+         if (!userData?.chatLockPin) {
+             const pin = prompt("Create a 4-digit PIN to lock this chat:");
+             if (pin && pin.length >= 4) {
+                 await axios.post(`${serverUrl}/user/chat-lock/setup`, { pin }, { withCredentials: true });
+             } else {
+                 alert("PIN must be at least 4 digits.");
+                 return;
+             }
+         }
+         const res = await axios.post(`${serverUrl}/user/chat-lock/lock/${selectedUser._id}`, {}, { withCredentials: true });
+         dispatch(setUserData(res.data));
+         alert("Chat locked securely!");
+      } else {
+         const res = await axios.post(`${serverUrl}/user/chat-lock/unlock/${selectedUser._id}`, {}, { withCredentials: true });
+         dispatch(setUserData(res.data));
+         alert("Chat unlocked.");
+      }
+      setShowMenu(false);
+    } catch (error) {
+       console.log(error);
+    }
+  };
+
+  const handleSetDisappearing = async (timer) => {
+      try {
+          const res = await axios.put(`${serverUrl}/message/disappearing/${selectedUser._id}`, { timer }, { withCredentials: true });
+          dispatch(setUserData({ ...userData, disappearingTimerUpdate: true })); // Trigger a re-fetch or just local update (we can just alert for now or update a local state)
+          alert(`Disappearing messages set to ${timer > 0 ? timer + ' hours' : 'Off'}`);
+          setShowDisappearingMenu(false);
+          setShowMenu(false);
+      } catch (error) {
+          console.log(error);
+      }
+  };
+
   const handleDeleteChat = async (deleteForEveryone = false) => {
       try {
           await axios.delete(`${serverUrl}/message/conversation/${selectedUser._id}`, { 
@@ -789,15 +854,18 @@ const MessageArea = () => {
               }}
             >
 
-              <h2 className="text-lg font-semibold text-[#0b2a5b]">
-
-                {
-                  selectedUser?.isGroup 
-                    ? selectedUser.groupName 
-                    : (selectedUser?.name || selectedUser?.userName)
-                }
-
-              </h2>
+              <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-[#0b2a5b]">
+                    {
+                      selectedUser?.isGroup 
+                        ? selectedUser.groupName 
+                        : (selectedUser?.name || selectedUser?.userName)
+                    }
+                  </h2>
+                  {selectedUser?.disappearingTimer > 0 && (
+                      <Timer size={14} className="text-blue-500" />
+                  )}
+              </div>
 
               <p className="text-xs text-gray-500">
 
@@ -843,6 +911,31 @@ const MessageArea = () => {
                         <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
                         {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
                     </button>
+                    <button onClick={handleLockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100">
+                        <Lock size={16} className={userData?.lockedChats?.includes(selectedUser._id) ? "text-green-500" : "text-gray-500"} />
+                        {userData?.lockedChats?.includes(selectedUser._id) ? "Unlock Chat" : "Lock Chat"}
+                    </button>
+                    
+                    <div className="relative">
+                        <button 
+                            onClick={() => setShowDisappearingMenu(!showDisappearingMenu)} 
+                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between border-t border-gray-100"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Timer size={16} className="text-blue-500" /> Disappearing Messages
+                            </div>
+                            <span className="text-[10px] text-gray-400">▶</span>
+                        </button>
+                        {showDisappearingMenu && (
+                            <div className="absolute top-0 right-full mr-1 bg-white border border-gray-200 shadow-lg rounded-lg w-32 z-50 overflow-hidden">
+                                <button onClick={() => handleSetDisappearing(0)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Off</button>
+                                <button onClick={() => handleSetDisappearing(24)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">24 hours</button>
+                                <button onClick={() => handleSetDisappearing(168)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">7 days</button>
+                                <button onClick={() => handleSetDisappearing(2160)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">90 days</button>
+                            </div>
+                        )}
+                    </div>
+
                     <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
                         <Trash2 size={16} /> Delete for me
                     </button>
@@ -977,51 +1070,70 @@ const MessageArea = () => {
 
                     {/* IMAGE */}
                     {msg.image && (
-
-                      <img
-
-                        src={msg.image}
-
-                        alt="chat"
-
-                        onClick={() =>
-                          setSelectedImage(
-                            msg.image
-                          )
-                        }
-
-                        className="
-    max-w-[200px]
-    sm:max-w-[250px]
-    max-h-[250px]
-    rounded-xl
-    object-cover
-    mb-2
-    cursor-pointer
-    hover:opacity-90
-    transition
-    "
-
-                      />
-
-                    )
-                    }
+                      msg.isViewOnce ? (
+                        msg.viewOnceSeen ? (
+                           <div className="flex items-center gap-2 italic text-gray-500 py-1">
+                               <Timer size={14} /> Opened
+                           </div>
+                        ) : (
+                           <div 
+                              onClick={async () => {
+                                 if (msg.sender?.toString() !== userData?._id?.toString()) {
+                                     setSelectedImage(msg.image);
+                                     await axios.put(`${serverUrl}/message/view-once/${msg._id}`, {}, { withCredentials: true });
+                                 } else {
+                                     alert("You sent this view once photo.");
+                                 }
+                              }}
+                              className="flex items-center gap-2 cursor-pointer bg-blue-100 text-blue-600 px-3 py-2 rounded-xl mb-2 font-semibold shadow-sm w-max"
+                           >
+                               <ImagePlus size={16} /> Photo (View Once)
+                           </div>
+                        )
+                      ) : (
+                        <img
+                          src={msg.image}
+                          alt="chat"
+                          onClick={() => setSelectedImage(msg.image)}
+                          className="max-w-[200px] sm:max-w-[250px] max-h-[250px] rounded-xl object-cover mb-2 cursor-pointer hover:opacity-90 transition"
+                        />
+                      )
+                    )}
 
                     {msg.voice && (
-
-                      <audio
-
-                        controls
-
-                        src={msg.voice}
-
-                        className="
-    w-[250px]
-    mb-2
-    "
-
-                      />
-
+                      msg.isViewOnce ? (
+                        msg.viewOnceSeen ? (
+                           <div className="flex items-center gap-2 italic text-gray-500 py-1">
+                               <Timer size={14} /> Opened
+                           </div>
+                        ) : (
+                           <div 
+                              className="flex flex-col gap-2 bg-blue-100 text-blue-600 px-3 py-2 rounded-xl mb-2 w-max shadow-sm"
+                           >
+                               <div className="flex items-center gap-2 font-semibold">
+                                 <Mic size={16} /> Voice (View Once)
+                               </div>
+                               {msg.sender?.toString() !== userData?._id?.toString() ? (
+                                   <audio
+                                     controls
+                                     src={msg.voice}
+                                     className="w-[200px]"
+                                     onEnded={async () => {
+                                         await axios.put(`${serverUrl}/message/view-once/${msg._id}`, {}, { withCredentials: true });
+                                     }}
+                                   />
+                               ) : (
+                                   <span className="text-xs text-gray-500">You sent this view once voice message.</span>
+                               )}
+                           </div>
+                        )
+                      ) : (
+                        <audio
+                          controls
+                          src={msg.voice}
+                          className="w-[250px] mb-2"
+                        />
+                      )
                     )}
 
                     {activeReactionMessage ===
@@ -1098,31 +1210,33 @@ ${msg.sender?.toString() ===
                           {msg.sender?.toString() ===
                             userData?._id?.toString() && (
 
-                              <button
-
-                                onClick={() => {
-
-                                  deleteMessageForEveryone(
-                                    msg._id
-                                  );
-
-                                  setActiveReactionMessage(
-                                    null
-                                  );
-
-                                }}
-
-                                className="
-    text-red-500
-    font-bold
-    px-2
-    "
-
-                              >
-
-                                <Trash2 size={20} />
-
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => {
+                                    const timeDiff = Date.now() - new Date(msg.createdAt).getTime();
+                                    if (timeDiff > 15 * 60 * 1000) {
+                                      alert("You can only edit messages within 15 minutes of sending.");
+                                    } else {
+                                      setEditingMessageId(msg._id);
+                                      setMessage(msg.message);
+                                      setActiveReactionMessage(null);
+                                    }
+                                  }}
+                                  className="text-blue-500 font-bold px-2"
+                                >
+                                  <Edit3 size={20} />
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    deleteMessageForEveryone(msg._id);
+                                    setActiveReactionMessage(null);
+                                  }}
+                                  className="text-red-500 font-bold px-2"
+                                >
+                                  <Trash2 size={20} />
+                                </button>
+                              </>
 
                             )}
 
@@ -1151,6 +1265,7 @@ ${msg.sender?.toString() ===
 
                       {/* TIME AND SEEN STATUS */}
                       <div className="flex items-center gap-[2px] ml-auto text-[11px] text-gray-500">
+                        {msg.isEdited && <span className="italic mr-1 text-[10px]">(Edited)</span>}
                         <span>
                           {new Date(msg.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                         </span>
@@ -1219,17 +1334,26 @@ ${msg.sender?.toString() ===
 
           {/* IMAGE PREVIEW */}
           {frontendImage && (
-            <div className="px-4 py-2 relative w-max">
-              <img
-                src={frontendImage}
-                alt="preview"
-                className={`w-32 h-32 rounded-lg object-cover ${sending ? 'opacity-50' : ''}`}
-              />
-              {sending && (
-                <div className="absolute inset-0 flex items-center justify-center ml-4 mt-2 w-32 h-32">
-                  <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
+            <div className="px-4 py-2 relative w-max flex flex-col gap-2">
+              <div className="relative">
+                <img
+                  src={frontendImage}
+                  alt="preview"
+                  className={`w-32 h-32 rounded-lg object-cover ${sending ? 'opacity-50' : ''}`}
+                />
+                {sending && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+              <button 
+                  type="button" 
+                  onClick={() => setIsViewOnce(!isViewOnce)}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full transition w-max ${isViewOnce ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                  <Timer size={12} /> {isViewOnce ? "View Once On" : "View Once Off"}
+              </button>
             </div>
           )}
 
@@ -1417,6 +1541,32 @@ ${msg.sender?.toString() ===
               <div className="w-full bg-gray-50 px-2 sm:px-3 py-4 border-t border-gray-300 flex items-center justify-center text-gray-500 text-sm">
                  You have blocked this user. Unblock them to send a message.
               </div>
+            ) : editingMessageId ? (
+              <form
+                onSubmit={handleSendMessage}
+                className="w-full bg-blue-50 px-2 sm:px-3 py-2 border-t border-blue-200 flex flex-col gap-2"
+              >
+                <div className="flex justify-between items-center text-xs text-blue-500 font-semibold px-2">
+                  <span>Editing message...</span>
+                  <button type="button" onClick={() => { setEditingMessageId(null); setMessage(""); }}>✕ Cancel</button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <textarea
+                    type="text"
+                    value={message}
+                    rows={1}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="flex-1 min-w-0 resize-none px-4 py-2 rounded-2xl border border-blue-200 bg-white focus:outline-none focus:border-blue-400 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!message.trim() || sending}
+                    className="bg-blue-500 text-white p-2 rounded-full cursor-pointer hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    <SendHorizonal size={20} />
+                  </button>
+                </div>
+              </form>
             ) : (
             <form
               onSubmit={
@@ -1456,6 +1606,16 @@ ${msg.sender?.toString() ===
                 />
 
               </label>
+
+              {/* VIEW ONCE TOGGLE */}
+              <button
+                type="button"
+                onClick={() => setIsViewOnce(!isViewOnce)}
+                className={`flex items-center justify-center p-1 rounded-full transition-colors ${isViewOnce ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                title="View Once"
+              >
+                <Timer size={20} />
+              </button>
 
               {/* INPUT */}
               <textarea
