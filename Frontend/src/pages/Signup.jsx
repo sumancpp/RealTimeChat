@@ -205,6 +205,7 @@ const Signup = () => {
                 placeholder={field.placeholder}
                 value={formData[field.name]}
                 onChange={handleChange}
+                maxLength={field.name === "name" ? 10 : undefined}
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   visible: { opacity: 1, y: 0 }

@@ -193,6 +193,7 @@ const Profile = () => {
                             placeholder="Enter your full name"
                             value={formData.name}
                             onChange={handleChange}
+                            maxLength={10}
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-[#f0fdfa] focus:outline-none focus:ring-2 focus:ring-orange-400"
                         />
 
