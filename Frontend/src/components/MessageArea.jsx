@@ -14,7 +14,9 @@ import {
   Mic,
   Square,
   Phone,
-  Video
+  Video,
+  MoreVertical,
+  Ban
 } from "lucide-react";
 
 import axios from "axios";
@@ -39,7 +41,8 @@ import {
 } from "../redux/messageSlice";
 
 import {
-  setSelectedUser
+  setSelectedUser,
+  setUserData
 } from "../redux/userSlice";
 
 import GroupInfoModal from "./GroupInfoModal";
@@ -107,6 +110,7 @@ const MessageArea = () => {
     useState(false);
 
   const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const { onlineUsers } =
     useSelector(
@@ -697,6 +701,29 @@ const MessageArea = () => {
       }
 
     };
+
+  const handleBlockToggle = async () => {
+      try {
+          const isBlocked = userData?.blockedUsers?.includes(selectedUser._id);
+          const endpoint = isBlocked ? `/user/unblock/${selectedUser._id}` : `/user/block/${selectedUser._id}`;
+          const res = await axios.post(`${serverUrl}${endpoint}`, {}, { withCredentials: true });
+          if (res.data) {
+              dispatch(setUserData(res.data));
+          }
+          setShowMenu(false);
+      } catch (error) {
+          console.log(error);
+      }
+  };
+
+  const handleDeleteChat = async () => {
+      try {
+          await axios.delete(`${serverUrl}/message/conversation/${selectedUser._id}`, { withCredentials: true });
+          dispatch(setSelectedUser(null));
+      } catch (error) {
+          console.log(error);
+      }
+  };
 
   return (
 
@@ -1348,6 +1375,11 @@ ${msg.sender?.toString() ===
 
 
 
+            {userData?.blockedUsers?.includes(selectedUser._id) ? (
+              <div className="w-full bg-gray-50 px-2 sm:px-3 py-4 border-t border-gray-300 flex items-center justify-center text-gray-500 text-sm">
+                 You have blocked this user. Unblock them to send a message.
+              </div>
+            ) : (
             <form
               onSubmit={
                 handleSendMessage
@@ -1506,6 +1538,7 @@ text-sm
               </button>
 
             </form>
+            )}
 
           </div>
 

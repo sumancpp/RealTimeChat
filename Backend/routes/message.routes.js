@@ -9,7 +9,8 @@ import {
   sendMessage,
   getSortedUsers,
   reactToMessage,
-  deleteMessage
+  deleteMessage,
+  deleteConversation
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -43,6 +44,12 @@ messageRouter.delete(
     "/delete/:messageId",
     isAuth,
     deleteMessage
+);
+
+messageRouter.delete(
+    "/conversation/:id",
+    isAuth,
+    deleteConversation
 );
 
 export default messageRouter;

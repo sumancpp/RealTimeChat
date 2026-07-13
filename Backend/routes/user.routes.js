@@ -4,7 +4,9 @@ import {
     getCurrentUser,
     getOtherUser,
     searchUsers,
-    subscribeToNotifications
+    subscribeToNotifications,
+    blockUser,
+    unblockUser
 } from "../controllers/user.controller.js";
 
 import isAuth from "../middlewares/isAuth.js";
@@ -50,6 +52,20 @@ userRouter.post(
     "/subscribe",
     isAuth,
     subscribeToNotifications
+);
+
+// BLOCK USER
+userRouter.post(
+    "/block/:id",
+    isAuth,
+    blockUser
+);
+
+// UNBLOCK USER
+userRouter.post(
+    "/unblock/:id",
+    isAuth,
+    unblockUser
 );
 
 export default userRouter;

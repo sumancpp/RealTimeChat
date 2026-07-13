@@ -29,6 +29,16 @@ export const sendMessage = async (req, res) => {
         const { receiver } =
             req.params;
 
+        const senderUserObj = await User.findById(sender);
+        const receiverUserObj = await User.findById(receiver);
+
+        if (receiverUserObj?.blockedUsers?.includes(sender)) {
+            return res.status(403).json({ message: "You are blocked by this user" });
+        }
+        if (senderUserObj?.blockedUsers?.includes(receiver)) {
+            return res.status(403).json({ message: "You have blocked this user" });
+        }
+
         const {
             message,
             replyTo
@@ -849,4 +859,32 @@ export const deleteMessage = async (
 
     }
 
+};
+
+// DELETE CONVERSATION
+export const deleteConversation = async (req, res) => {
+    try {
+        const currentUser = req.userId;
+        const { id: otherUser } = req.params;
+
+        // Find the conversation
+        const conversation = await Conversation.findOne({
+            participants: { $all: [currentUser, otherUser] },
+            isGroup: false
+        });
+
+        if (!conversation) {
+            return res.status(404).json({ message: "Conversation not found" });
+        }
+
+        // Delete all messages in this conversation
+        await Message.deleteMany({ _id: { $in: conversation.messages } });
+
+        // Delete the conversation document
+        await Conversation.findByIdAndDelete(conversation._id);
+
+        return res.status(200).json({ message: "Conversation deleted successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 };

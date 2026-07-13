@@ -218,3 +218,43 @@ export const subscribeToNotifications = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// BLOCK USER
+export const blockUser = async (req, res) => {
+    try {
+        const currentUser = req.userId;
+        const { id: userToBlock } = req.params;
+
+        if (currentUser.toString() === userToBlock.toString()) {
+            return res.status(400).json({ message: "You cannot block yourself" });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            currentUser,
+            { $addToSet: { blockedUsers: userToBlock } },
+            { new: true }
+        ).select("-password");
+
+        return res.status(200).json(user);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// UNBLOCK USER
+export const unblockUser = async (req, res) => {
+    try {
+        const currentUser = req.userId;
+        const { id: userToUnblock } = req.params;
+
+        const user = await User.findByIdAndUpdate(
+            currentUser,
+            { $pull: { blockedUsers: userToUnblock } },
+            { new: true }
+        ).select("-password");
+
+        return res.status(200).json(user);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};

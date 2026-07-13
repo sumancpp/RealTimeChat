@@ -59,7 +59,14 @@ const userSchema = new mongoose.Schema({
     aiChatDate: {
         type: Date,
         default: null
-    }
+    },
+
+    blockedUsers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
+    ]
 
 }, {
     timestamps: true
