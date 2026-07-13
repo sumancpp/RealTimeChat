@@ -68,18 +68,6 @@ const userSchema = new mongoose.Schema({
         }
     ],
 
-    lockedChats: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }
-    ],
-
-    chatLockPin: {
-        type: String,
-        default: null
-    }
-
 }, {
     timestamps: true
 });

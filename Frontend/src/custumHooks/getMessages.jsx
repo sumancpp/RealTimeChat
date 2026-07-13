@@ -14,8 +14,7 @@ import {
     addMessage,
     updateSeenMessages,
     clearMessages,
-    editMessageRedux,
-    updateViewOnceSeen
+    editMessageRedux
 } from "../redux/messageSlice";
 
 import {
@@ -271,22 +270,6 @@ const getMessages = () => {
 
         socket.on("messageEdited", handleMessageEdited);
 
-        const handleViewOnceOpened = (payload) => {
-             dispatch(updateViewOnceSeen(payload.messageId));
-        };
-
-        socket.on("viewOnceOpened", handleViewOnceOpened);
-
-        const handleDisappearingTimerUpdated = (payload) => {
-            const { timer, otherUser } = payload;
-            dispatch(updateOtherUser({ _id: otherUser, disappearingTimer: timer }));
-            if (selectedUser?._id === otherUser) {
-                dispatch(setSelectedUser({ ...selectedUser, disappearingTimer: timer }));
-            }
-        };
-
-        socket.on("disappearingTimerUpdated", handleDisappearingTimerUpdated);
-
         return () => {
 
             socket.off(
@@ -302,16 +285,6 @@ const getMessages = () => {
             socket.off(
                 "messageEdited",
                 handleMessageEdited
-            );
-
-            socket.off(
-                "viewOnceOpened",
-                handleViewOnceOpened
-            );
-
-            socket.off(
-                "disappearingTimerUpdated",
-                handleDisappearingTimerUpdated
             );
 
         };

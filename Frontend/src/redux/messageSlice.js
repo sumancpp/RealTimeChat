@@ -147,20 +147,6 @@ const messageSlice = createSlice({
             }
         },
 
-        updateViewOnceSeen: (state, action) => {
-            if (Array.isArray(state.messages)) {
-                const messageId = action.payload;
-                state.messages = state.messages.map(msg => {
-                    if (msg._id === messageId) {
-                        return {
-                            ...msg,
-                            viewOnceSeen: true
-                        };
-                    }
-                    return msg;
-                });
-            }
-        },
 
         clearMessages: (
             state
@@ -188,9 +174,7 @@ export const {
 
     clearMessages,
     
-    editMessageRedux,
-
-    updateViewOnceSeen
+    editMessageRedux
 
 } = messageSlice.actions;
 

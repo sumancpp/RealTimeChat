@@ -182,17 +182,9 @@ export const searchUsers = async (
 
             });
 
-        const currentUserDoc = await User.findById(req.userId);
-        const lockedChats = currentUserDoc?.lockedChats?.map(id => id.toString()) || [];
-
-        const usersWithLockStatus = users.map(user => ({
-            ...user.toObject(),
-            isLocked: lockedChats.includes(user._id.toString())
-        }));
-
         return res
             .status(200)
-            .json(usersWithLockStatus);
+            .json(users);
 
     }
 
@@ -261,73 +253,6 @@ export const unblockUser = async (req, res) => {
             { new: true }
         ).select("-password");
 
-        return res.status(200).json(user);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// CHAT LOCK - SETUP PIN
-export const setupChatLockPin = async (req, res) => {
-    try {
-        const { pin } = req.body;
-        if (!pin || pin.length < 4) {
-            return res.status(400).json({ message: "PIN must be at least 4 characters" });
-        }
-        
-        const hashedPin = await bcrypt.hash(pin, 10);
-        const user = await User.findByIdAndUpdate(req.userId, { chatLockPin: hashedPin }, { new: true }).select("-password");
-        return res.status(200).json(user);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// CHAT LOCK - VERIFY PIN
-export const verifyChatLockPin = async (req, res) => {
-    try {
-        const { pin } = req.body;
-        const user = await User.findById(req.userId);
-        
-        if (!user.chatLockPin) {
-            return res.status(400).json({ message: "No PIN set up" });
-        }
-        
-        const isMatch = await bcrypt.compare(pin, user.chatLockPin);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid PIN" });
-        }
-        
-        return res.status(200).json({ success: true });
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// CHAT LOCK - LOCK CHAT
-export const lockChat = async (req, res) => {
-    try {
-        const { id: userToLock } = req.params;
-        const user = await User.findByIdAndUpdate(
-            req.userId,
-            { $addToSet: { lockedChats: userToLock } },
-            { new: true }
-        ).select("-password");
-        return res.status(200).json(user);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// CHAT LOCK - UNLOCK CHAT
-export const unlockChat = async (req, res) => {
-    try {
-        const { id: userToUnlock } = req.params;
-        const user = await User.findByIdAndUpdate(
-            req.userId,
-            { $pull: { lockedChats: userToUnlock } },
-            { new: true }
-        ).select("-password");
         return res.status(200).json(user);
     } catch (error) {
         return res.status(500).json({ message: error.message });

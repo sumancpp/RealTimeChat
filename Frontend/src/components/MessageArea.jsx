@@ -144,7 +144,6 @@ const MessageArea = () => {
     setRecordingMode] =
     useState(false);
 
-  const [isViewOnce, setIsViewOnce] = useState(false);
 
   const mediaRecorderRef =
     useRef(null);
@@ -168,7 +167,6 @@ const MessageArea = () => {
     setEditingMessageId(null);
     setFrontendImage(null);
     setBackendImage(null);
-    setIsViewOnce(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -545,9 +543,6 @@ const MessageArea = () => {
         );
       }
 
-      if (isViewOnce) {
-        formData.append("isViewOnce", true);
-      }
 
       const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
       const res = await axios.post(
@@ -582,15 +577,9 @@ const MessageArea = () => {
       setReplyMessage(null);
 
       setFrontendImage(null);
-
       setBackendImage(null);
-      setIsViewOnce(false);
-
       if (fileInputRef.current) {
-
-        fileInputRef.current.value =
-          "";
-
+        fileInputRef.current.value = "";
       }
 
     }
@@ -757,50 +746,7 @@ const MessageArea = () => {
       }
   };
 
-  const handleLockToggle = async () => {
-    try {
-      const isLocked = userData?.lockedChats?.includes(selectedUser._id);
-      
-      if (!isLocked) {
-         if (!userData?.chatLockPin) {
-             const pin = prompt("Create a 4-digit PIN to lock this chat:");
-             if (pin && pin.length >= 4) {
-                 await axios.post(`${serverUrl}/user/chat-lock/setup`, { pin }, { withCredentials: true });
-             } else {
-                 alert("PIN must be at least 4 digits.");
-                 return;
-             }
-         }
-         const res = await axios.post(`${serverUrl}/user/chat-lock/lock/${selectedUser._id}`, {}, { withCredentials: true });
-         dispatch(setUserData(res.data));
-         dispatch(updateOtherUser({ _id: selectedUser._id, isLocked: true }));
-         dispatch(setSelectedUser({ ...selectedUser, isLocked: true }));
-         alert("Chat locked securely!");
-      } else {
-         const res = await axios.post(`${serverUrl}/user/chat-lock/unlock/${selectedUser._id}`, {}, { withCredentials: true });
-         dispatch(setUserData(res.data));
-         dispatch(updateOtherUser({ _id: selectedUser._id, isLocked: false }));
-         dispatch(setSelectedUser({ ...selectedUser, isLocked: false }));
-         alert("Chat unlocked.");
-      }
-      setShowMenu(false);
-    } catch (error) {
-       console.log(error);
-    }
-  };
 
-  const handleSetDisappearing = async (timer) => {
-      try {
-          const res = await axios.put(`${serverUrl}/message/disappearing/${selectedUser._id}`, { timer }, { withCredentials: true });
-          dispatch(updateOtherUser({ _id: selectedUser._id, disappearingTimer: timer }));
-          dispatch(setSelectedUser({ ...selectedUser, disappearingTimer: timer }));
-          alert(`Disappearing messages set to ${timer > 0 ? timer + ' hours' : 'Off'}`);
-          setShowDisappearingMenu(false);
-          setShowMenu(false);
-      } catch (error) {
-          console.log(error);
-      }
-  };
 
   const handleDeleteChat = async (deleteForEveryone = false) => {
       try {
@@ -918,30 +864,6 @@ const MessageArea = () => {
                         <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
                         {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
                     </button>
-                    <button onClick={handleLockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100">
-                        <Lock size={16} className={userData?.lockedChats?.includes(selectedUser._id) ? "text-green-500" : "text-gray-500"} />
-                        {userData?.lockedChats?.includes(selectedUser._id) ? "Unlock Chat" : "Lock Chat"}
-                    </button>
-                    
-                    <div className="relative">
-                        <button 
-                            onClick={() => setShowDisappearingMenu(!showDisappearingMenu)} 
-                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between border-t border-gray-100"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Timer size={16} className="text-blue-500" /> Disappearing Messages
-                            </div>
-                            <span className="text-[10px] text-gray-400">▶</span>
-                        </button>
-                        {showDisappearingMenu && (
-                            <div className="absolute top-0 right-full mr-1 bg-white border border-gray-200 shadow-lg rounded-lg w-32 z-50 overflow-hidden">
-                                <button onClick={() => handleSetDisappearing(0)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Off</button>
-                                <button onClick={() => handleSetDisappearing(24)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">24 hours</button>
-                                <button onClick={() => handleSetDisappearing(168)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">7 days</button>
-                                <button onClick={() => handleSetDisappearing(2160)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">90 days</button>
-                            </div>
-                        )}
-                    </div>
 
                     <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
                         <Trash2 size={16} /> Delete for me
@@ -1077,70 +999,20 @@ const MessageArea = () => {
 
                     {/* IMAGE */}
                     {msg.image && (
-                      msg.isViewOnce ? (
-                        msg.viewOnceSeen ? (
-                           <div className="flex items-center gap-2 italic text-gray-500 py-1">
-                               <Timer size={14} /> Opened
-                           </div>
-                        ) : (
-                           <div 
-                              onClick={async () => {
-                                 if (msg.sender?.toString() !== userData?._id?.toString()) {
-                                     setSelectedImage(msg.image);
-                                     await axios.put(`${serverUrl}/message/view-once/${msg._id}`, {}, { withCredentials: true });
-                                 } else {
-                                     alert("You sent this view once photo.");
-                                 }
-                              }}
-                              className="flex items-center gap-2 cursor-pointer bg-blue-100 text-blue-600 px-3 py-2 rounded-xl mb-2 font-semibold shadow-sm w-max"
-                           >
-                               <ImagePlus size={16} /> Photo (View Once)
-                           </div>
-                        )
-                      ) : (
                         <img
                           src={msg.image}
                           alt="chat"
                           onClick={() => setSelectedImage(msg.image)}
                           className="max-w-[200px] sm:max-w-[250px] max-h-[250px] rounded-xl object-cover mb-2 cursor-pointer hover:opacity-90 transition"
                         />
-                      )
                     )}
 
                     {msg.voice && (
-                      msg.isViewOnce ? (
-                        msg.viewOnceSeen ? (
-                           <div className="flex items-center gap-2 italic text-gray-500 py-1">
-                               <Timer size={14} /> Opened
-                           </div>
-                        ) : (
-                           <div 
-                              className="flex flex-col gap-2 bg-blue-100 text-blue-600 px-3 py-2 rounded-xl mb-2 w-max shadow-sm"
-                           >
-                               <div className="flex items-center gap-2 font-semibold">
-                                 <Mic size={16} /> Voice (View Once)
-                               </div>
-                               {msg.sender?.toString() !== userData?._id?.toString() ? (
-                                   <audio
-                                     controls
-                                     src={msg.voice}
-                                     className="w-[200px]"
-                                     onEnded={async () => {
-                                         await axios.put(`${serverUrl}/message/view-once/${msg._id}`, {}, { withCredentials: true });
-                                     }}
-                                   />
-                               ) : (
-                                   <span className="text-xs text-gray-500">You sent this view once voice message.</span>
-                               )}
-                           </div>
-                        )
-                      ) : (
                         <audio
                           controls
                           src={msg.voice}
                           className="w-[250px] mb-2"
                         />
-                      )
                     )}
 
                     {activeReactionMessage ===
@@ -1354,13 +1226,6 @@ ${msg.sender?.toString() ===
                   </div>
                 )}
               </div>
-              <button 
-                  type="button" 
-                  onClick={() => setIsViewOnce(!isViewOnce)}
-                  className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full transition w-max ${isViewOnce ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-              >
-                  <Timer size={12} /> {isViewOnce ? "View Once On" : "View Once Off"}
-              </button>
             </div>
           )}
 
@@ -1614,15 +1479,6 @@ ${msg.sender?.toString() ===
 
               </label>
 
-              {/* VIEW ONCE TOGGLE */}
-              <button
-                type="button"
-                onClick={() => setIsViewOnce(!isViewOnce)}
-                className={`flex items-center justify-center p-1 rounded-full transition-colors ${isViewOnce ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
-                title="View Once"
-              >
-                <Timer size={20} />
-              </button>
 
               {/* INPUT */}
               <textarea

@@ -99,26 +99,9 @@ const messageSchema = new mongoose.Schema({
         default: null
     },
 
-    expiresAt: {
-        type: Date,
-        default: null
-    },
-
-    isViewOnce: {
-        type: Boolean,
-        default: false
-    },
-
-    viewOnceSeen: {
-        type: Boolean,
-        default: false
-    }
-
 }, {
     timestamps: true
 });
-
-messageSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const Message = mongoose.model(
     "Message",

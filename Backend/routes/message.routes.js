@@ -11,9 +11,7 @@ import {
   reactToMessage,
   deleteMessage,
   deleteConversation,
-  editMessage,
-  updateDisappearingTimer,
-  markViewOnceSeen
+  editMessage
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -61,19 +59,4 @@ messageRouter.put(
     isAuth,
     editMessage
 );
-
-// DISAPPEARING TIMER
-messageRouter.put(
-    "/disappearing/:id",
-    isAuth,
-    updateDisappearingTimer
-);
-
-// MARK VIEW ONCE SEEN
-messageRouter.put(
-    "/view-once/:messageId",
-    isAuth,
-    markViewOnceSeen
-);
-
 export default messageRouter;

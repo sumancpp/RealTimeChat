@@ -41,8 +41,7 @@ export const sendMessage = async (req, res) => {
 
         const {
             message,
-            replyTo,
-            isViewOnce
+            replyTo
         } = req.body;
 
         console.log(
@@ -106,10 +105,7 @@ if (req.file) {
 
             });
 
-        let expiresAt = null;
-        if (conversation && conversation.disappearingTimer > 0) {
-            expiresAt = new Date(Date.now() + conversation.disappearingTimer * 60 * 60 * 1000);
-        }
+
 
         const newMessage =
 await Message.create({
@@ -127,11 +123,7 @@ await Message.create({
     replyTo:
         replyTo || null,
 
-    isSeen: false,
-    
-    expiresAt,
-    
-    isViewOnce: isViewOnce === 'true' || isViewOnce === true
+    isSeen: false
 
 });
 
@@ -535,9 +527,6 @@ export const getSortedUsers = async (
             isGroup: false
         });
 
-        const currentUserDoc = await User.findById(currentUser);
-        const lockedChats = currentUserDoc?.lockedChats?.map(id => id.toString()) || [];
-
         const chattedUserIds = new Set();
         conversations.forEach(conv => {
             conv.participants.forEach(p => {
@@ -632,11 +621,7 @@ export const getSortedUsers = async (
 
                                 null,
 
-                            unreadCount,
-
-                            isLocked: lockedChats.includes(user._id.toString()),
-                            
-                            disappearingTimer: conversations.find(c => c.participants.some(p => p.toString() === user._id.toString()))?.disappearingTimer || 0
+                            unreadCount
 
                         };
 
@@ -958,65 +943,5 @@ export const editMessage = async (req, res) => {
         return res.status(200).json(message);
     } catch (error) {
         return res.status(500).json({ message: error.message });
-    }
-};
-
-// UPDATE DISAPPEARING TIMER
-export const updateDisappearingTimer = async (req, res) => {
-    try {
-        const { id: otherUser } = req.params;
-        const { timer } = req.body;
-        const currentUser = req.userId;
-
-        let conversation = await Conversation.findOne({
-            participants: { $all: [currentUser, otherUser] },
-            isGroup: false
-        });
-
-        if (!conversation) {
-            conversation = await Conversation.create({
-                participants: [currentUser, otherUser],
-                messages: []
-            });
-        }
-
-        conversation.disappearingTimer = timer;
-        await conversation.save();
-
-        const otherSocketId = getReceiverSocketId(otherUser);
-        if (otherSocketId) {
-            io.to(otherSocketId).emit("disappearingTimerUpdated", { timer, otherUser: currentUser });
-        }
-
-        return res.status(200).json(conversation);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// MARK VIEW ONCE SEEN
-export const markViewOnceSeen = async (req, res) => {
-    try {
-        const { messageId } = req.params;
-        const userId = req.userId;
-
-        const message = await Message.findById(messageId);
-
-        if (!message) {
-            return res.status(404).json({ message: "Message not found" });
-        }
-
-        // if (message.receiver.toString() !== userId.toString()) {
-        //     return res.status(403).json({ message: "Not authorized" });
-        // }
-
-        message.viewOnceSeen = true;
-        await message.save();
-
-        io.emit("viewOnceOpened", { messageId: message._id });
-
-        return res.status(200).json(message);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
+      }
 };

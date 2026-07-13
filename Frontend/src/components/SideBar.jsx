@@ -86,36 +86,8 @@ const SideBar = () => {
     const [groups, setGroups] = useState([]);
     const [showGroupModal, setShowGroupModal] = useState(false);
 
-    const [targetLockedUser, setTargetLockedUser] = useState(null);
-    const [showPinModal, setShowPinModal] = useState(false);
-    const [pinInput, setPinInput] = useState("");
-    const [pinError, setPinError] = useState("");
-
-    const handlePinSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await axios.post(`${serverUrl}/user/chat-lock/verify`, { pin: pinInput }, { withCredentials: true });
-            if (res.data.success) {
-                if (targetLockedUser) {
-                    dispatch(setSelectedUser(targetLockedUser));
-                    setTargetLockedUser(null);
-                }
-                setShowPinModal(false);
-                setPinInput("");
-                setPinError("");
-            }
-        } catch (error) {
-            setPinError(error.response?.data?.message || "Invalid PIN");
-        }
-    };
-
     const handleUserClick = (user) => {
-        if (user.isLocked) {
-            setTargetLockedUser(user);
-            setShowPinModal(true);
-        } else {
-            dispatch(setSelectedUser(user));
-        }
+        dispatch(setSelectedUser(user));
     };
 
     useEffect(() => {
@@ -535,9 +507,6 @@ const SideBar = () => {
                                                 }
 
                                             </h2>
-                                            {user.isLocked && (
-                                                <Lock size={16} className="text-gray-400 ml-2" />
-                                            )}
                                         </div>
 
                                         <p className='text-sm text-gray-500 truncate ml-2'>
@@ -663,42 +632,6 @@ const SideBar = () => {
             )}
 
         </div>
-        
-        {showPinModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white p-6 rounded-2xl shadow-xl w-80 max-w-[90%]">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Chat is Locked</h3>
-                    <p className="text-sm text-gray-500 mb-4">Please enter your secret PIN to open this conversation.</p>
-                    <form onSubmit={handlePinSubmit}>
-                        <input
-                            type="password"
-                            placeholder="****"
-                            value={pinInput}
-                            onChange={(e) => setPinInput(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-center tracking-widest text-lg"
-                            autoFocus
-                        />
-                        {pinError && <p className="text-red-500 text-xs mt-2">{pinError}</p>}
-                        <div className="flex justify-end gap-3 mt-5">
-                            <button
-                                type="button"
-                                onClick={() => { setShowPinModal(false); setPinInput(""); setPinError(""); setTargetLockedUser(null); }}
-                                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={pinInput.length < 4}
-                                className="px-4 py-2 text-sm text-white bg-green-500 hover:bg-green-600 disabled:opacity-50 rounded-lg transition"
-                            >
-                                Unlock
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        )}
 
         </>
     );
