@@ -38,6 +38,13 @@ const userSlice = createSlice({
                 action.payload;
 
         },
+        
+        updateOtherUser: (state, action) => {
+            const index = state.otherUsers.findIndex(u => u._id === action.payload._id);
+            if (index !== -1) {
+                state.otherUsers[index] = { ...state.otherUsers[index], ...action.payload };
+            }
+        },
 
         setOnlineUsers: (state, action) => {
 
@@ -57,6 +64,8 @@ export const {
     setOtherUsers,
 
     setSelectedUser,
+    
+    updateOtherUser,
 
     setOnlineUsers
 

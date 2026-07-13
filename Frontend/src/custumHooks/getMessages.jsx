@@ -22,6 +22,11 @@ import {
     getSocket
 } from "../socket";
 
+import {
+    updateOtherUser,
+    setSelectedUser
+} from "../redux/userSlice";
+
 const getMessages = () => {
 
     const dispatch =
@@ -272,6 +277,16 @@ const getMessages = () => {
 
         socket.on("viewOnceOpened", handleViewOnceOpened);
 
+        const handleDisappearingTimerUpdated = (payload) => {
+            const { timer, otherUser } = payload;
+            dispatch(updateOtherUser({ _id: otherUser, disappearingTimer: timer }));
+            if (selectedUser?._id === otherUser) {
+                dispatch(setSelectedUser({ ...selectedUser, disappearingTimer: timer }));
+            }
+        };
+
+        socket.on("disappearingTimerUpdated", handleDisappearingTimerUpdated);
+
         return () => {
 
             socket.off(
@@ -292,6 +307,11 @@ const getMessages = () => {
             socket.off(
                 "viewOnceOpened",
                 handleViewOnceOpened
+            );
+
+            socket.off(
+                "disappearingTimerUpdated",
+                handleDisappearingTimerUpdated
             );
 
         };

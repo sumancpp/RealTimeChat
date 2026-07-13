@@ -45,6 +45,8 @@ import {
 
 import {
   setSelectedUser,
+  setOtherUsers,
+  updateOtherUser,
   setUserData
 } from "../redux/userSlice";
 
@@ -771,10 +773,14 @@ const MessageArea = () => {
          }
          const res = await axios.post(`${serverUrl}/user/chat-lock/lock/${selectedUser._id}`, {}, { withCredentials: true });
          dispatch(setUserData(res.data));
+         dispatch(updateOtherUser({ _id: selectedUser._id, isLocked: true }));
+         dispatch(setSelectedUser({ ...selectedUser, isLocked: true }));
          alert("Chat locked securely!");
       } else {
          const res = await axios.post(`${serverUrl}/user/chat-lock/unlock/${selectedUser._id}`, {}, { withCredentials: true });
          dispatch(setUserData(res.data));
+         dispatch(updateOtherUser({ _id: selectedUser._id, isLocked: false }));
+         dispatch(setSelectedUser({ ...selectedUser, isLocked: false }));
          alert("Chat unlocked.");
       }
       setShowMenu(false);
@@ -786,7 +792,8 @@ const MessageArea = () => {
   const handleSetDisappearing = async (timer) => {
       try {
           const res = await axios.put(`${serverUrl}/message/disappearing/${selectedUser._id}`, { timer }, { withCredentials: true });
-          dispatch(setUserData({ ...userData, disappearingTimerUpdate: true })); // Trigger a re-fetch or just local update (we can just alert for now or update a local state)
+          dispatch(updateOtherUser({ _id: selectedUser._id, disappearingTimer: timer }));
+          dispatch(setSelectedUser({ ...selectedUser, disappearingTimer: timer }));
           alert(`Disappearing messages set to ${timer > 0 ? timer + ' hours' : 'Off'}`);
           setShowDisappearingMenu(false);
           setShowMenu(false);
