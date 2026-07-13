@@ -35,7 +35,7 @@ import {
   useSelector
 } from "react-redux";
 
-import { socket } from "../socket";
+import { socket, getSocket } from "../socket";
 
 import {
   updateReaction,
@@ -211,7 +211,8 @@ const MessageArea = () => {
   }, []);
 
   useEffect(() => {
-      if (!socket) return;
+      const activeSocket = getSocket() || socket;
+      if (!activeSocket) return;
       
       const handleGameAccepted = () => {
           setInGameMode(true);
@@ -222,12 +223,12 @@ const MessageArea = () => {
           alert("Your game invite was declined.");
       };
 
-      socket.on("gameAccepted", handleGameAccepted);
-      socket.on("gameDeclined", handleGameDeclined);
+      activeSocket.on("gameAccepted", handleGameAccepted);
+      activeSocket.on("gameDeclined", handleGameDeclined);
 
       return () => {
-          socket.off("gameAccepted", handleGameAccepted);
-          socket.off("gameDeclined", handleGameDeclined);
+          activeSocket.off("gameAccepted", handleGameAccepted);
+          activeSocket.off("gameDeclined", handleGameDeclined);
       };
   }, []);
 
@@ -946,7 +947,8 @@ const MessageArea = () => {
                                       <div className="flex gap-3 justify-center">
                                           <button 
                                               onClick={() => {
-                                                  socket.emit("acceptGame", { to: msg.sender?._id || msg.sender });
+                                                  const activeSocket = getSocket() || socket;
+                                                  activeSocket.emit("acceptGame", { to: selectedUser._id });
                                                   setInGameMode(true);
                                                   setIsGameHost(false);
                                               }} 
@@ -956,7 +958,8 @@ const MessageArea = () => {
                                           </button>
                                           <button 
                                               onClick={() => {
-                                                  socket.emit("declineGame", { to: msg.sender?._id || msg.sender });
+                                                  const activeSocket = getSocket() || socket;
+                                                  activeSocket.emit("declineGame", { to: selectedUser._id });
                                               }} 
                                               className="bg-red-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-red-600 transition-colors shadow-sm"
                                           >
