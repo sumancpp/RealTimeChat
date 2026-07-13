@@ -1035,7 +1035,7 @@ const MessageArea = () => {
                           }}
                           className={`
 absolute
--top-14
+${index === 0 ? "-bottom-14" : "-top-14"}
 bg-white
 shadow-lg
 rounded-full
