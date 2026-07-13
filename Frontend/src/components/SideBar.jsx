@@ -148,7 +148,7 @@ const SideBar = () => {
                 const result =
                     await axios.get(
 
-                        `${serverUrl}/message/sorted-users`,
+                        `${serverUrl}/message/sorted-users?t=${Date.now()}`,
 
                         {
                             withCredentials: true
@@ -168,7 +168,7 @@ const SideBar = () => {
             const result =
                 await axios.get(
 
-                    `${serverUrl}/user/search?query=${value}`,
+                    `${serverUrl}/user/search?query=${value}&t=${Date.now()}`,
 
                     {
                         withCredentials: true

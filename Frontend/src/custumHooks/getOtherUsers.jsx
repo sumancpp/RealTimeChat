@@ -38,8 +38,7 @@ const useGetOtherUsers = () => {
 
                     const result =
                         await axios.get(
-
-                            `${serverUrl}/message/sorted-users`,
+                            `${serverUrl}/message/sorted-users?t=${Date.now()}`,
 
                             {
                                 withCredentials: true,
