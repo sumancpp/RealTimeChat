@@ -182,9 +182,17 @@ export const searchUsers = async (
 
             });
 
+        const currentUserDoc = await User.findById(req.userId);
+        const lockedChats = currentUserDoc?.lockedChats?.map(id => id.toString()) || [];
+
+        const usersWithLockStatus = users.map(user => ({
+            ...user.toObject(),
+            isLocked: lockedChats.includes(user._id.toString())
+        }));
+
         return res
             .status(200)
-            .json(users);
+            .json(usersWithLockStatus);
 
     }
 
