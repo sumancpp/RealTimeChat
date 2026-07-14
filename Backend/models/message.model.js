@@ -84,6 +84,21 @@ const messageSchema = new mongoose.Schema({
         default: false
     },
     
+    isAIMessage: {
+        type: Boolean,
+        default: false
+    },
+    
+    isAIMusic: {
+        type: Boolean,
+        default: false
+    },
+    
+    musicQuery: {
+        type: String,
+        default: ""
+    },
+    
     deletedFor: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"

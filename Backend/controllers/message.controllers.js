@@ -108,7 +108,12 @@ if (req.file) {
 
 
         let finalMessage = message;
+        let isAIMessage = false;
+        let isAIMusic = false;
+        let musicQuery = "";
+
         if (finalMessage?.trim().toLowerCase() === "@roast") {
+            isAIMessage = true;
             const targetName = receiverUserObj?.name || receiverUserObj?.userName || "my friend";
             const roastPrompt = `Generate a short, funny, friendly roast for someone named ${targetName}. Keep it under 2 sentences.`;
             try {
@@ -140,11 +145,14 @@ if (req.file) {
                 }
             }
             
-            const musicPrompt = `Based on this recent chat history: "${historyStr || 'No history yet'}", what is the mood of the conversation? Suggest exactly 2 songs that fit this mood perfectly. Format strictly as: "Mood: [mood] 🎵 Songs: 1. [song by artist], 2. [song by artist]". Keep it short.`;
+            const musicPrompt = `Based on this recent chat history: "${historyStr || 'No history yet'}", what is the mood of the conversation? Suggest 1 song that fits this mood perfectly. Return ONLY the song title and artist format like "Song Name by Artist", nothing else.`;
             try {
                 const aiMusic = await generateGeminiReply(musicPrompt);
                 if (aiMusic) {
-                    finalMessage = `🎧 ${aiMusic}`;
+                    isAIMessage = true;
+                    isAIMusic = true;
+                    musicQuery = aiMusic.trim().replace(/['"]/g, ''); // Remove quotes if any
+                    finalMessage = `I'm feeling the vibe! Here's a mood track for us:`;
                 }
             } catch (err) {
                 console.error("Music generation failed", err);
@@ -160,6 +168,10 @@ await Message.create({
     receiver,
 
     message: finalMessage,
+    
+    isAIMessage,
+    isAIMusic,
+    musicQuery,
 
     image,
 

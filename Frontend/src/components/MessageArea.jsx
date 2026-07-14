@@ -22,7 +22,8 @@ import {
   Flame,
   Palette,
   Film,
-  Music
+  Music,
+  Play
 } from "lucide-react";
 
 import axios from "axios";
@@ -1139,9 +1140,12 @@ const MessageArea = () => {
 
 
 
-                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${(msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString()
-                        ? THEMES[chatTheme].myBubble
-                        : THEMES[chatTheme].otherBubble
+                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${
+                        msg.isAIMessage 
+                          ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-md border border-white/20'
+                          : (msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString()
+                            ? THEMES[chatTheme].myBubble
+                            : THEMES[chatTheme].otherBubble
                       }`}
 
                   >
@@ -1329,9 +1333,29 @@ ${msg.sender?.toString() ===
                             🚫 This message was deleted
                           </p>
                         ) : msg.message && (
-                          <p className="break-words whitespace-pre-wrap">
+                          <div className="break-words whitespace-pre-wrap">
+                            {msg.isAIMessage && <span className="mr-1">✨</span>}
                             {msg.message}
-                          </p>
+                          </div>
+                        )}
+                        
+                        {msg.isAIMusic && msg.musicQuery && (
+                          <a 
+                            href={`https://music.youtube.com/search?q=${encodeURIComponent(msg.musicQuery)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 bg-white/20 hover:bg-white/30 transition border border-white/30 p-3 rounded-xl flex items-center gap-3 backdrop-blur-sm cursor-pointer shadow-sm group decoration-transparent no-underline block"
+                          >
+                            <div className="bg-white text-pink-500 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                                <Play size={20} fill="currentColor" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold truncate text-white leading-tight">{msg.musicQuery}</p>
+                                <p className="text-[10px] opacity-90 flex items-center gap-1 mt-1 font-medium">
+                                    <Music size={10} /> Listen on YouTube Music
+                                </p>
+                            </div>
+                          </a>
                         )}
                       </div>
 
