@@ -19,8 +19,17 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         myPaddleY: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
         opponentPaddleY: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
         ball: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: 5, dy: 5 },
-        isHost: isHost
+        isHost: isHost,
+        isPaused: true // Start with a brief pause
     });
+
+    useEffect(() => {
+        // Initial pause before game starts
+        const timer = setTimeout(() => {
+            if (gameState.current) gameState.current.isPaused = false;
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         if (!socket) return;
@@ -132,57 +141,73 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             ctx.fill();
             ctx.closePath();
 
+            if (gameState.current.isPaused) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = 'bold 40px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Get Ready...', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+            }
+
             // Host handles physics
             if (gameState.current.isHost) {
-                let { x, y, dx, dy } = gameState.current.ball;
-                
-                x += dx;
-                y += dy;
+                if (!gameState.current.isPaused) {
+                    let { x, y, dx, dy } = gameState.current.ball;
+                    
+                    x += dx;
+                    y += dy;
 
-                // Bounce off top and bottom
-                if (y - BALL_SIZE < 0 || y + BALL_SIZE > CANVAS_HEIGHT) {
-                    dy *= -1;
+                    // Bounce off top and bottom
+                    if (y - BALL_SIZE < 0 || y + BALL_SIZE > CANVAS_HEIGHT) {
+                        dy *= -1;
+                    }
+
+                    // Bounce off paddles
+                    let paddleX = dx < 0 ? 10 + PADDLE_WIDTH : CANVAS_WIDTH - 20 - BALL_SIZE;
+                    let paddleY = dx < 0 ? gameState.current.myPaddleY : gameState.current.opponentPaddleY;
+
+                    if (
+                        (dx < 0 && x - BALL_SIZE < paddleX && y > paddleY && y < paddleY + PADDLE_HEIGHT) ||
+                        (dx > 0 && x + BALL_SIZE > paddleX && y > paddleY && y < paddleY + PADDLE_HEIGHT)
+                    ) {
+                        dx *= -1.1; // Speed up slightly
+                        dy = (y - (paddleY + PADDLE_HEIGHT / 2)) * 0.2; // Add some english
+                    }
+
+                    // Scoring
+                    if (x < 0) {
+                        // Opponent scores
+                        setScore(s => {
+                            const newScore = { ...s, opponent: s.opponent + 1 };
+                            socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
+                            return newScore;
+                        });
+                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: 5, dy: 5 };
+                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
+                        
+                        gameState.current.isPaused = true;
+                        setTimeout(() => {
+                            if (gameState.current) gameState.current.isPaused = false;
+                        }, 2000);
+                    } else if (x > CANVAS_WIDTH) {
+                        // I score
+                        setScore(s => {
+                            const newScore = { ...s, me: s.me + 1 };
+                            socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
+                            return newScore;
+                        });
+                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: -5, dy: 5 };
+                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
+                        
+                        gameState.current.isPaused = true;
+                        setTimeout(() => {
+                            if (gameState.current) gameState.current.isPaused = false;
+                        }, 2000);
+                    } else {
+                        gameState.current.ball = { x, y, dx, dy };
+                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
+                    }
                 }
-
-                // Bounce off paddles
-                let paddleX = dx < 0 ? 10 + PADDLE_WIDTH : CANVAS_WIDTH - 20 - BALL_SIZE;
-                let paddleY = dx < 0 ? gameState.current.myPaddleY : gameState.current.opponentPaddleY;
-
-                if (
-                    (dx < 0 && x - BALL_SIZE < paddleX && y > paddleY && y < paddleY + PADDLE_HEIGHT) ||
-                    (dx > 0 && x + BALL_SIZE > paddleX && y > paddleY && y < paddleY + PADDLE_HEIGHT)
-                ) {
-                    dx *= -1.1; // Speed up slightly
-                    dy = (y - (paddleY + PADDLE_HEIGHT / 2)) * 0.2; // Add some english
-                }
-
-                // Scoring
-                if (x < 0) {
-                    // Opponent scores
-                    setScore(s => {
-                        const newScore = { ...s, opponent: s.opponent + 1 };
-                        socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
-                        return newScore;
-                    });
-                    x = CANVAS_WIDTH / 2;
-                    y = CANVAS_HEIGHT / 2;
-                    dx = 5;
-                    dy = 5;
-                } else if (x > CANVAS_WIDTH) {
-                    // I score
-                    setScore(s => {
-                        const newScore = { ...s, me: s.me + 1 };
-                        socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
-                        return newScore;
-                    });
-                    x = CANVAS_WIDTH / 2;
-                    y = CANVAS_HEIGHT / 2;
-                    dx = -5;
-                    dy = 5;
-                }
-
-                gameState.current.ball = { x, y, dx, dy };
-                socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
             }
 
             animationFrameId = requestAnimationFrame(render);
@@ -201,32 +226,33 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
     };
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full bg-[#efeae2] p-4 relative">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#051630] p-4 sm:p-8 backdrop-blur-md">
             <button 
                 onClick={handleEndGame} 
-                className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md text-red-500 hover:bg-red-50"
+                className="absolute top-6 right-6 sm:top-8 sm:right-8 bg-white/10 p-3 rounded-full shadow-lg text-white hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-50"
             >
-                <X size={24} />
+                <X size={28} />
             </button>
-            <div className="flex justify-between w-full max-w-[600px] mb-4 px-4 font-bold text-2xl text-[#0b2a5b]">
-                <div className="flex items-center gap-2">
-                    {isHost ? "You" : (opponent.name || opponent.userName)}
-                    <span className="text-orange-500">{isHost ? score.me : score.opponent}</span>
+            <div className="flex justify-between w-full max-w-[1200px] mb-6 px-6 font-extrabold text-3xl sm:text-5xl text-white tracking-wider">
+                <div className="flex items-center gap-4 bg-white/10 px-6 py-3 rounded-2xl shadow-inner border border-white/5">
+                    <span className="text-xl sm:text-2xl text-gray-300 font-medium">{isHost ? "You" : (opponent.name || opponent.userName)}</span>
+                    <span className="text-orange-500 min-w-[2ch] text-center">{isHost ? score.me : score.opponent}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-orange-500">{!isHost ? score.me : score.opponent}</span>
-                    {!isHost ? "You" : (opponent.name || opponent.userName)}
+                <div className="flex items-center gap-4 bg-white/10 px-6 py-3 rounded-2xl shadow-inner border border-white/5">
+                    <span className="text-orange-500 min-w-[2ch] text-center">{!isHost ? score.me : score.opponent}</span>
+                    <span className="text-xl sm:text-2xl text-gray-300 font-medium">{!isHost ? "You" : (opponent.name || opponent.userName)}</span>
                 </div>
             </div>
-            <div className="w-full max-w-[600px] aspect-[3/2] bg-[#0b2a5b] rounded-xl overflow-hidden shadow-2xl border-4 border-orange-500 relative">
+            <div className="w-full max-w-[1200px] flex-1 max-h-[75vh] bg-[#0b2a5b] rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(249,115,22,0.15)] border-4 border-orange-500/50 relative flex items-center justify-center">
                 <canvas
                     ref={canvasRef}
                     width={CANVAS_WIDTH}
                     height={CANVAS_HEIGHT}
-                    className="w-full h-full block cursor-none"
+                    className="w-full h-full object-contain cursor-none"
+                    style={{ maxHeight: '100%', maxWidth: '100%' }}
                 />
             </div>
-            <p className="mt-4 text-gray-500 font-medium text-sm">Move your mouse or finger up and down to control the paddle</p>
+            <p className="mt-8 text-gray-400 font-medium text-sm sm:text-base tracking-wide uppercase">Move your mouse or finger up and down to control the paddle</p>
         </div>
     );
 };
