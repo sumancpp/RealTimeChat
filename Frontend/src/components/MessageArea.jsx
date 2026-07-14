@@ -1126,7 +1126,7 @@ const MessageArea = () => {
                         className="
         border-l-4
         border-orange-500
-        bg-gray-100
+        bg-black/10
         rounded-lg
         px-3
         py-2
@@ -1293,18 +1293,18 @@ ${msg.sender?.toString() ===
 
                       <div className="flex-1 min-w-0">
                         {msg.isDeleted ? (
-                          <p className="italic text-gray-500">
+                          <p className="italic opacity-70">
                             🚫 This message was deleted
                           </p>
                         ) : msg.message && (
-                          <p className="text-gray-800 break-words whitespace-pre-wrap">
+                          <p className="break-words whitespace-pre-wrap">
                             {msg.message}
                           </p>
                         )}
                       </div>
 
                       {/* TIME AND SEEN STATUS */}
-                      <div className="flex items-center gap-[2px] ml-auto text-[11px] text-gray-500">
+                      <div className="flex items-center gap-[2px] ml-auto text-[11px] opacity-70">
                         {msg.isEdited && <span className="italic mr-1 text-[10px]">(Edited)</span>}
                         <span>
                           {new Date(msg.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
@@ -1312,7 +1312,7 @@ ${msg.sender?.toString() ===
                         
                         {msg.sender?.toString() === userData?._id?.toString() && (
                           <span
-                            className={`font-bold ml-1 text-sm ${msg.isSeen ? "text-blue-500" : "text-gray-500"}`}
+                            className={`font-bold ml-1 text-sm ${msg.isSeen ? "text-blue-500" : "opacity-70"}`}
                           >
                             {msg.isSeen ? "✓✓" : "✓✓"}
                           </span>
