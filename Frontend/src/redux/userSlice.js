@@ -12,7 +12,9 @@ const userSlice = createSlice({
 
         selectedUser: null,
 
-        onlineUsers: []
+        onlineUsers: [],
+        
+        isSocketConnected: false
 
     },
 
@@ -42,7 +44,33 @@ const userSlice = createSlice({
         updateOtherUser: (state, action) => {
             const index = state.otherUsers.findIndex(u => u._id === action.payload._id);
             if (index !== -1) {
-                state.otherUsers[index] = { ...state.otherUsers[index], ...action.payload };
+                const updatedUser = { ...state.otherUsers[index], ...action.payload };
+                state.otherUsers.splice(index, 1);
+                state.otherUsers.unshift(updatedUser);
+            }
+        },
+
+        updateSidebarOnMessage: (state, action) => {
+            const { newMessage, myId, currentChatId } = action.payload;
+            const senderId = typeof newMessage.sender === 'object' ? newMessage.sender._id : newMessage.sender;
+            const receiverId = typeof newMessage.receiver === 'object' ? newMessage.receiver._id : newMessage.receiver;
+            const otherUserId = senderId === myId ? receiverId : senderId;
+            
+            const index = state.otherUsers.findIndex(u => u._id === otherUserId);
+            if (index !== -1) {
+                const user = state.otherUsers[index];
+                const updatedUser = { 
+                    ...user, 
+                    lastMessage: newMessage.message || (newMessage.image ? "📷 Image" : (newMessage.voice ? "🎤 Voice Message" : "")),
+                    lastMessageTime: newMessage.createdAt || new Date().toISOString()
+                };
+                
+                if (senderId !== myId && currentChatId !== otherUserId) {
+                    updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
+                }
+                
+                state.otherUsers.splice(index, 1);
+                state.otherUsers.unshift(updatedUser);
             }
         },
 
@@ -51,6 +79,10 @@ const userSlice = createSlice({
             state.onlineUsers =
                 action.payload;
 
+        },
+        
+        setSocketConnected: (state, action) => {
+            state.isSocketConnected = action.payload;
         }
 
     }
@@ -66,8 +98,12 @@ export const {
     setSelectedUser,
     
     updateOtherUser,
+    
+    updateSidebarOnMessage,
 
-    setOnlineUsers
+    setOnlineUsers,
+    
+    setSocketConnected
 
 } = userSlice.actions;
 

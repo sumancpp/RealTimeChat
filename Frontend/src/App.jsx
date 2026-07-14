@@ -25,7 +25,8 @@ import getCurrentUser from "./custumHooks/getCurrentUser";
 import getOtherUsers from "./custumHooks/getOtherUsers";
 
 import {
-  setOnlineUsers
+  setOnlineUsers,
+  setSocketConnected
 } from "./redux/userSlice";
 
 import {
@@ -154,6 +155,7 @@ const App = () => {
           "Socket Connected:",
           activeSocket.id
         );
+        dispatch(setSocketConnected(true));
 
       }
     );
@@ -166,6 +168,7 @@ const App = () => {
         console.log(
           "Socket Disconnected"
         );
+        dispatch(setSocketConnected(false));
 
       }
     );

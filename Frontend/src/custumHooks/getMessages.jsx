@@ -22,7 +22,7 @@ import {
 } from "../socket";
 
 import {
-    updateOtherUser,
+    updateSidebarOnMessage,
     setSelectedUser
 } from "../redux/userSlice";
 
@@ -33,7 +33,8 @@ const getMessages = () => {
 
     const {
         selectedUser,
-        userData
+        userData,
+        isSocketConnected
     } = useSelector(
         (state) => state.user
     );
@@ -142,8 +143,8 @@ const getMessages = () => {
 
         if (
             !socket ||
-            !selectedUser ||
-            !userData
+            !userData ||
+            !isSocketConnected
         ) return;
 
         const handleNewMessage =
@@ -242,6 +243,13 @@ const getMessages = () => {
 
                 }
 
+                // UPDATE SIDEBAR FOR THIS MESSAGE
+                dispatch(updateSidebarOnMessage({
+                    newMessage,
+                    myId,
+                    currentChatId
+                }));
+
             };
 
         socket.on(
@@ -292,6 +300,7 @@ const getMessages = () => {
     }, [
         selectedUser?._id,
         userData?._id,
+        isSocketConnected,
         dispatch
     ]);
 
