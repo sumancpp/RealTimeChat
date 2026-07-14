@@ -199,9 +199,16 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                                   x - BALL_SIZE <= gameState.current.myPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
 
                     if (hitGuest || hitHost) {
-                        dy *= -1.1; // Speed up slightly
+                        // Increase speed gradually by 5% and cap it at a maximum of 12
+                        let newSpeed = Math.abs(dy) * 1.05;
+                        const MAX_SPEED = 12;
+                        if (newSpeed > MAX_SPEED) newSpeed = MAX_SPEED;
+                        
+                        // Reverse direction with the new speed
+                        dy = dy > 0 ? -newSpeed : newSpeed;
+                        
                         let paddleCenter = hitGuest ? gameState.current.opponentPaddleX + PADDLE_WIDTH / 2 : gameState.current.myPaddleX + PADDLE_WIDTH / 2;
-                        dx = (x - paddleCenter) * 0.2; // Add some english
+                        dx = (x - paddleCenter) * 0.15; // Add some english (reduced multiplier for better control)
                     }
 
                     // Scoring
