@@ -275,10 +275,10 @@ io.on(
             await handleGameMessageDeletion(messageId);
         });
 
-        socket.on("paddleMove", ({ to, y }) => {
+        socket.on("paddleMove", ({ to, x, y }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
-                io.to(receiverSocketId).emit("paddleMove", { y });
+                io.to(receiverSocketId).emit("paddleMove", { x, y });
             }
         });
 
