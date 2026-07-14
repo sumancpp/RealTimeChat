@@ -9,15 +9,15 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
     const { userData } = useSelector((state) => state.user);
 
     // Game constants
-    const CANVAS_WIDTH = 600;
-    const CANVAS_HEIGHT = 400;
-    const PADDLE_WIDTH = 10;
-    const PADDLE_HEIGHT = 80;
+    const CANVAS_WIDTH = 400;
+    const CANVAS_HEIGHT = 600;
+    const PADDLE_WIDTH = 80;
+    const PADDLE_HEIGHT = 10;
     const BALL_SIZE = 10;
     
     const gameState = useRef({
-        myPaddleY: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        opponentPaddleY: CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+        myPaddleX: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2,
+        opponentPaddleX: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2,
         ball: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: 5, dy: 5 },
         isHost: isHost,
         isPaused: true // Start with a brief pause
@@ -34,8 +34,8 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
     useEffect(() => {
         if (!socket) return;
 
-        socket.on("paddleMove", ({ y }) => {
-            gameState.current.opponentPaddleY = y;
+        socket.on("paddleMove", ({ x }) => {
+            gameState.current.opponentPaddleX = x;
         });
 
         socket.on("ballMove", ({ ball }) => {
@@ -63,33 +63,37 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         };
     }, []);
 
-    // Handle mouse movement for paddle
+    // Handle touch/mouse movement for paddle
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const handleMouseMove = (e) => {
+        const updatePaddlePosition = (clientX) => {
             const rect = canvas.getBoundingClientRect();
-            // Scale mouse coordinates to match internal canvas resolution
-            const scaleY = canvas.height / rect.height;
-            let y = (e.clientY - rect.top) * scaleY - PADDLE_HEIGHT / 2;
+            const scaleX = canvas.width / rect.width;
+            let touchX = (clientX - rect.left) * scaleX;
             
-            if (y < 0) y = 0;
-            if (y > CANVAS_HEIGHT - PADDLE_HEIGHT) y = CANVAS_HEIGHT - PADDLE_HEIGHT;
+            // If I am guest, my view is flipped 180 degrees.
+            // A touch on the left screen (small clientX) maps to the right of the canvas (large X).
+            if (!gameState.current.isHost) {
+                touchX = CANVAS_WIDTH - touchX;
+            }
             
-            gameState.current.myPaddleY = y;
-            socket.emit("paddleMove", { to: opponent._id, y });
+            let x = touchX - PADDLE_WIDTH / 2;
+            
+            if (x < 0) x = 0;
+            if (x > CANVAS_WIDTH - PADDLE_WIDTH) x = CANVAS_WIDTH - PADDLE_WIDTH;
+            
+            gameState.current.myPaddleX = x;
+            socket.emit("paddleMove", { to: opponent._id, x });
+        };
+
+        const handleMouseMove = (e) => {
+            updatePaddlePosition(e.clientX);
         };
 
         const handleTouchMove = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const scaleY = canvas.height / rect.height;
-            let y = (e.touches[0].clientY - rect.top) * scaleY - PADDLE_HEIGHT / 2;
-            if (y < 0) y = 0;
-            if (y > CANVAS_HEIGHT - PADDLE_HEIGHT) y = CANVAS_HEIGHT - PADDLE_HEIGHT;
-            
-            gameState.current.myPaddleY = y;
-            socket.emit("paddleMove", { to: opponent._id, y });
+            updatePaddlePosition(e.touches[0].clientX);
             e.preventDefault();
         };
 
@@ -117,22 +121,25 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             ctx.strokeStyle = '#fff';
             ctx.setLineDash([10, 10]);
             ctx.beginPath();
-            ctx.moveTo(CANVAS_WIDTH / 2, 0);
-            ctx.lineTo(CANVAS_WIDTH / 2, CANVAS_HEIGHT);
+            ctx.moveTo(0, CANVAS_HEIGHT / 2);
+            ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Draw paddles
-            ctx.fillStyle = '#f97316'; // Orange for my paddle
-            if (gameState.current.isHost) {
-                ctx.fillRect(10, gameState.current.myPaddleY, PADDLE_WIDTH, PADDLE_HEIGHT);
-                ctx.fillStyle = '#fff'; // White for opponent paddle
-                ctx.fillRect(CANVAS_WIDTH - 20, gameState.current.opponentPaddleY, PADDLE_WIDTH, PADDLE_HEIGHT);
-            } else {
-                ctx.fillRect(CANVAS_WIDTH - 20, gameState.current.myPaddleY, PADDLE_WIDTH, PADDLE_HEIGHT);
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(10, gameState.current.opponentPaddleY, PADDLE_WIDTH, PADDLE_HEIGHT);
+            // If Guest, rotate canvas 180 degrees so their paddle is at the bottom
+            if (!gameState.current.isHost) {
+                ctx.save();
+                ctx.translate(CANVAS_WIDTH, CANVAS_HEIGHT);
+                ctx.rotate(Math.PI);
             }
+
+            // Draw Host paddle (at bottom of canvas coordinate system)
+            ctx.fillStyle = gameState.current.isHost ? '#f97316' : '#fff';
+            ctx.fillRect(gameState.current.isHost ? gameState.current.myPaddleX : gameState.current.opponentPaddleX, CANVAS_HEIGHT - 20, PADDLE_WIDTH, PADDLE_HEIGHT);
+            
+            // Draw Guest paddle (at top of canvas coordinate system)
+            ctx.fillStyle = !gameState.current.isHost ? '#f97316' : '#fff';
+            ctx.fillRect(!gameState.current.isHost ? gameState.current.myPaddleX : gameState.current.opponentPaddleX, 10, PADDLE_WIDTH, PADDLE_HEIGHT);
 
             // Draw ball
             ctx.beginPath();
@@ -146,7 +153,21 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                 ctx.font = 'bold 40px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
+                // Because of rotation, Guest text would be upside down. Restore first to draw text right-side up.
+                if (!gameState.current.isHost) {
+                    ctx.restore();
+                }
                 ctx.fillText('Get Ready...', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+                // Re-save and rotate just in case anything else draws after this (though there isn't)
+                if (!gameState.current.isHost) {
+                    ctx.save();
+                    ctx.translate(CANVAS_WIDTH, CANVAS_HEIGHT);
+                    ctx.rotate(Math.PI);
+                }
+            }
+
+            if (!gameState.current.isHost) {
+                ctx.restore();
             }
 
             // Host handles physics
@@ -157,28 +178,30 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     x += dx;
                     y += dy;
 
-                    // Bounce off top and bottom
-                    if (y - BALL_SIZE < 0 || y + BALL_SIZE > CANVAS_HEIGHT) {
-                        dy *= -1;
+                    // Bounce off left and right walls
+                    if (x - BALL_SIZE < 0 || x + BALL_SIZE > CANVAS_WIDTH) {
+                        dx *= -1;
                     }
 
                     // Bounce off paddles
-                    let paddleX = dx < 0 ? 10 + PADDLE_WIDTH : CANVAS_WIDTH - 20 - BALL_SIZE;
-                    let paddleY = dx < 0 ? gameState.current.myPaddleY : gameState.current.opponentPaddleY;
+                    // Guest paddle is at y=10. Bottom edge is 10 + PADDLE_HEIGHT.
+                    // Host paddle is at y=CANVAS_HEIGHT-20. Top edge is CANVAS_HEIGHT-20.
+                    let paddleY = dy < 0 ? 10 + PADDLE_HEIGHT : CANVAS_HEIGHT - 20 - BALL_SIZE;
+                    let paddleX = dy < 0 ? gameState.current.opponentPaddleX : gameState.current.myPaddleX;
 
                     if (
-                        (dx < 0 && x - BALL_SIZE < paddleX && y > paddleY && y < paddleY + PADDLE_HEIGHT) ||
-                        (dx > 0 && x + BALL_SIZE > paddleX && y > paddleY && y < paddleY + PADDLE_HEIGHT)
+                        (dy < 0 && y - BALL_SIZE < paddleY && x > paddleX && x < paddleX + PADDLE_WIDTH) ||
+                        (dy > 0 && y + BALL_SIZE > paddleY && x > paddleX && x < paddleX + PADDLE_WIDTH)
                     ) {
-                        dx *= -1.1; // Speed up slightly
-                        dy = (y - (paddleY + PADDLE_HEIGHT / 2)) * 0.2; // Add some english
+                        dy *= -1.1; // Speed up slightly
+                        dx = (x - (paddleX + PADDLE_WIDTH / 2)) * 0.2; // Add some english
                     }
 
                     // Scoring
-                    if (x < 0) {
-                        // Opponent scores
+                    if (y < 0) {
+                        // Host scored (ball passed Guest at top)
                         setScore(s => {
-                            const newScore = { ...s, opponent: s.opponent + 1 };
+                            const newScore = { ...s, me: s.me + 1 };
                             socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
                             return newScore;
                         });
@@ -189,14 +212,14 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                         setTimeout(() => {
                             if (gameState.current) gameState.current.isPaused = false;
                         }, 2000);
-                    } else if (x > CANVAS_WIDTH) {
-                        // I score
+                    } else if (y > CANVAS_HEIGHT) {
+                        // Guest scored (ball passed Host at bottom)
                         setScore(s => {
-                            const newScore = { ...s, me: s.me + 1 };
+                            const newScore = { ...s, opponent: s.opponent + 1 };
                             socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
                             return newScore;
                         });
-                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: -5, dy: 5 };
+                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: -5, dy: -5 };
                         socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
                         
                         gameState.current.isPaused = true;
@@ -252,7 +275,7 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     style={{ maxHeight: '100%', maxWidth: '100%' }}
                 />
             </div>
-            <p className="mt-8 text-gray-400 font-medium text-sm sm:text-base tracking-wide uppercase">Move your mouse or finger up and down to control the paddle</p>
+            <p className="mt-8 text-gray-400 font-medium text-sm sm:text-base tracking-wide uppercase">Move your mouse or finger left and right to control the paddle</p>
         </div>
     );
 };
