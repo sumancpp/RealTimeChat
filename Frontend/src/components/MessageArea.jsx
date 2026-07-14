@@ -18,10 +18,10 @@ import {
   MoreVertical,
   Ban,
   Edit3,
-  Lock,
   Timer,
   Flame,
-  Palette
+  Palette,
+  Film
 } from "lucide-react";
 
 import axios from "axios";
@@ -56,8 +56,8 @@ import {
 import GroupInfoModal from "./GroupInfoModal";
 
 import TableTennisGame from "./TableTennisGame";
-
 import DrawingCanvas from "./DrawingCanvas";
+import ChatReplay from "./ChatReplay";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -163,6 +163,7 @@ const MessageArea = () => {
 
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showChatReplay, setShowChatReplay] = useState(false);
   const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
 
   const [inGameMode, setInGameMode] = useState(false);
@@ -935,6 +936,14 @@ const MessageArea = () => {
             </div>
 
             <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
+              <button 
+                  onClick={() => setShowChatReplay(true)}
+                  className="hover:text-pink-500 hover:bg-pink-50 p-2 rounded-full transition-colors"
+                  title="Chat Replay Story"
+              >
+                  <Film size={24} />
+              </button>
+              
               {selectedUser?.isGroup ? (
                 <button 
                   onClick={() => setShowDrawingCanvas(true)}
@@ -1010,6 +1019,15 @@ const MessageArea = () => {
 
           {showDrawingCanvas && selectedUser?.isGroup && (
               <DrawingCanvas groupId={selectedUser._id} onClose={() => setShowDrawingCanvas(false)} />
+          )}
+
+          {showChatReplay && (
+              <ChatReplay 
+                  messages={messages} 
+                  currentUser={userData} 
+                  selectedUser={selectedUser} 
+                  onClose={() => setShowChatReplay(false)} 
+              />
           )}
 
           {inGameMode ? (
