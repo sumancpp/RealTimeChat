@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
+import Conversation from "../models/conversation.model.js";
 
 const app = express();
 
@@ -293,6 +294,43 @@ io.on(
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("scoreUpdate", { score });
+            }
+        });
+
+        // GROUP DRAWING EVENTS
+        socket.on("draw", async ({ groupId, data }) => {
+            try {
+                const group = await Conversation.findById(groupId);
+                if (group && group.isGroup) {
+                    group.participants.forEach(p => {
+                        if (p.toString() !== userId?.toString()) {
+                            const receiverSocketId = getReceiverSocketId(p.toString());
+                            if (receiverSocketId) {
+                                io.to(receiverSocketId).emit("draw", { groupId, data });
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        });
+
+        socket.on("clearCanvas", async ({ groupId }) => {
+            try {
+                const group = await Conversation.findById(groupId);
+                if (group && group.isGroup) {
+                    group.participants.forEach(p => {
+                        if (p.toString() !== userId?.toString()) {
+                            const receiverSocketId = getReceiverSocketId(p.toString());
+                            if (receiverSocketId) {
+                                io.to(receiverSocketId).emit("clearCanvas", { groupId });
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.log(err);
             }
         });
 

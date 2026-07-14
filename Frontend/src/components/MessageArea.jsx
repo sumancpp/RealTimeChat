@@ -20,7 +20,8 @@ import {
   Edit3,
   Lock,
   Timer,
-  Flame
+  Flame,
+  Palette
 } from "lucide-react";
 
 import axios from "axios";
@@ -55,6 +56,8 @@ import {
 import GroupInfoModal from "./GroupInfoModal";
 
 import TableTennisGame from "./TableTennisGame";
+
+import DrawingCanvas from "./DrawingCanvas";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -186,6 +189,7 @@ const MessageArea = () => {
 
   const [chatTheme, setChatTheme] = useState('default');
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showDrawingCanvas, setShowDrawingCanvas] = useState(false);
 
   useEffect(() => {
     if (selectedUser) {
@@ -930,62 +934,71 @@ const MessageArea = () => {
 
             </div>
 
-            {/* CALL BUTTONS (Only for 1-on-1 for now) */}
-            {!selectedUser?.isGroup && (
-              <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
+            <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
+              {selectedUser?.isGroup ? (
                 <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
-                  className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                  onClick={() => setShowDrawingCanvas(true)}
+                  className="hover:text-purple-500 hover:bg-purple-50 p-2 rounded-full transition-colors"
+                  title="Group Whiteboard"
                 >
-                  <Video size={24} />
+                  <Palette size={24} />
                 </button>
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'voice' } }))}
-                  className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
-                >
-                  <Phone size={22} />
-                </button>
-                <button 
-                  onClick={() => setShowMenu(!showMenu)} 
-                  className="hover:text-gray-700 hover:bg-gray-50 p-2 rounded-full transition-colors"
-                >
-                  <MoreVertical size={24} />
-                </button>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
+                    className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                  >
+                    <Video size={24} />
+                  </button>
+                  <button 
+                    onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'voice' } }))}
+                    className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                  >
+                    <Phone size={22} />
+                  </button>
+                  <button 
+                    onClick={() => setShowMenu(!showMenu)} 
+                    className="hover:text-gray-700 hover:bg-gray-50 p-2 rounded-full transition-colors"
+                  >
+                    <MoreVertical size={24} />
+                  </button>
 
-                {showMenu && (
-                  <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-48 z-50 flex flex-col overflow-hidden">
-                    <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                        <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
-                        {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
-                    </button>
+                  {showMenu && (
+                    <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-48 z-50 flex flex-col overflow-hidden">
+                      <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                          <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
+                          {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
+                      </button>
 
-                    <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100">
-                        <Edit3 size={16} className="text-indigo-500" /> Theme: {THEMES[chatTheme].name}
-                    </button>
-                    {showThemeMenu && (
-                        <div className="bg-gray-50 border-t border-gray-200">
-                            {Object.keys(THEMES).map(key => (
-                                <button 
-                                    key={key} 
-                                    onClick={() => changeTheme(key)}
-                                    className={`w-full text-left px-8 py-2 text-sm hover:bg-gray-200 ${chatTheme === key ? 'font-bold text-indigo-600' : 'text-gray-600'}`}
-                                >
-                                    {THEMES[key].name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                      <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100">
+                          <Edit3 size={16} className="text-indigo-500" /> Theme: {THEMES[chatTheme].name}
+                      </button>
+                      {showThemeMenu && (
+                          <div className="bg-gray-50 border-t border-gray-200">
+                              {Object.keys(THEMES).map(key => (
+                                  <button 
+                                      key={key} 
+                                      onClick={() => changeTheme(key)}
+                                      className={`w-full text-left px-8 py-2 text-sm hover:bg-gray-200 ${chatTheme === key ? 'font-bold text-indigo-600' : 'text-gray-600'}`}
+                                  >
+                                      {THEMES[key].name}
+                                  </button>
+                              ))}
+                          </div>
+                      )}
 
-                    <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
-                        <Trash2 size={16} /> Delete for me
-                    </button>
-                    <button onClick={() => handleDeleteChat(true)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
-                        <Trash2 size={16} /> Delete for everyone
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                      <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                          <Trash2 size={16} /> Delete for me
+                      </button>
+                      <button onClick={() => handleDeleteChat(true)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                          <Trash2 size={16} /> Delete for everyone
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
 
           </div>
 
@@ -994,6 +1007,10 @@ const MessageArea = () => {
              onClose={() => setShowGroupInfo(false)}
              group={selectedUser}
           />
+
+          {showDrawingCanvas && selectedUser?.isGroup && (
+              <DrawingCanvas groupId={selectedUser._id} onClose={() => setShowDrawingCanvas(false)} />
+          )}
 
           {inGameMode ? (
               <TableTennisGame 
