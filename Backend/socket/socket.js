@@ -233,25 +233,46 @@ io.on(
             }
         });
 
-        socket.on("acceptGame", ({ to }) => {
+        socket.on("acceptGame", ({ to, messageId }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
-                io.to(receiverSocketId).emit("gameAccepted", { from: userId });
+                io.to(receiverSocketId).emit("gameAccepted", { from: userId, messageId });
             }
         });
 
-        socket.on("declineGame", ({ to }) => {
+        const handleGameMessageDeletion = async (messageId) => {
+            if (!messageId) return;
+            try {
+                const message = await Message.findById(messageId);
+                if (message) {
+                    message.isDeleted = true;
+                    message.message = "";
+                    message.image = "";
+                    message.voice = "";
+                    message.replyTo = null;
+                    message.reactions = [];
+                    await message.save();
+                    io.emit("gameMessageDeleted", { messageId });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
+        socket.on("declineGame", async ({ to, messageId }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("gameDeclined", { from: userId });
             }
+            await handleGameMessageDeletion(messageId);
         });
         
-        socket.on("endGame", ({ to }) => {
+        socket.on("endGame", async ({ to, messageId }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("gameEnded", { from: userId });
             }
+            await handleGameMessageDeletion(messageId);
         });
 
         socket.on("paddleMove", ({ to, y }) => {

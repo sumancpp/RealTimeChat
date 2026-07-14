@@ -3,7 +3,7 @@ import { socket } from '../socket';
 import { useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 
-const TableTennisGame = ({ opponent, isHost, onEndGame }) => {
+const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) => {
     const canvasRef = useRef(null);
     const [score, setScore] = useState({ me: 0, opponent: 0 });
     const { userData } = useSelector((state) => state.user);
@@ -196,7 +196,7 @@ const TableTennisGame = ({ opponent, isHost, onEndGame }) => {
     }, [opponent._id]);
     
     const handleEndGame = () => {
-        socket.emit("endGame", { to: opponent._id });
+        socket.emit("endGame", { to: opponent._id, messageId: activeGameMessageId });
         onEndGame();
     };
 

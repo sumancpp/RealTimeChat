@@ -147,6 +147,17 @@ const messageSlice = createSlice({
             }
         },
 
+        removeMessageRedux: (
+            state,
+            action
+        ) => {
+            if (Array.isArray(state.messages)) {
+                state.messages = state.messages.filter(
+                    msg => msg._id !== action.payload
+                );
+            }
+        },
+
 
         clearMessages: (
             state
@@ -174,7 +185,9 @@ export const {
 
     clearMessages,
     
-    editMessageRedux
+    editMessageRedux,
+
+    removeMessageRedux
 
 } = messageSlice.actions;
 

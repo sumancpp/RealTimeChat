@@ -40,7 +40,8 @@ import { socket, getSocket } from "../socket";
 import {
   updateReaction,
   deleteMessageRedux,
-  addMessage
+  addMessage,
+  removeMessageRedux
 } from "../redux/messageSlice";
 
 import {
@@ -124,6 +125,7 @@ const MessageArea = () => {
 
   const [inGameMode, setInGameMode] = useState(false);
   const [isGameHost, setIsGameHost] = useState(false);
+  const [activeGameMessageId, setActiveGameMessageId] = useState(null);
 
   const { onlineUsers } =
     useSelector(
@@ -176,6 +178,7 @@ const MessageArea = () => {
       fileInputRef.current.value = "";
     }
     setInGameMode(false);
+    setActiveGameMessageId(null);
   }, [selectedUser]);
 
   useEffect(() => {
@@ -214,23 +217,30 @@ const MessageArea = () => {
       const activeSocket = getSocket() || socket;
       if (!activeSocket) return;
       
-      const handleGameAccepted = () => {
+      const handleGameAccepted = ({ messageId }) => {
           setInGameMode(true);
           setIsGameHost(true);
+          setActiveGameMessageId(messageId);
       };
       
       const handleGameDeclined = () => {
           alert("Your game invite was declined.");
       };
 
+      const handleGameMessageDeleted = ({ messageId }) => {
+          dispatch(removeMessageRedux(messageId));
+      };
+
       activeSocket.on("gameAccepted", handleGameAccepted);
       activeSocket.on("gameDeclined", handleGameDeclined);
+      activeSocket.on("gameMessageDeleted", handleGameMessageDeleted);
 
       return () => {
           activeSocket.off("gameAccepted", handleGameAccepted);
           activeSocket.off("gameDeclined", handleGameDeclined);
+          activeSocket.off("gameMessageDeleted", handleGameMessageDeleted);
       };
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
 
@@ -916,6 +926,7 @@ const MessageArea = () => {
               <TableTennisGame 
                   opponent={selectedUser} 
                   isHost={isGameHost} 
+                  activeGameMessageId={activeGameMessageId}
                   onEndGame={() => setInGameMode(false)} 
               />
           ) : (
@@ -948,9 +959,10 @@ const MessageArea = () => {
                                           <button 
                                               onClick={() => {
                                                   const activeSocket = getSocket() || socket;
-                                                  activeSocket.emit("acceptGame", { to: selectedUser._id });
+                                                  activeSocket.emit("acceptGame", { to: selectedUser._id, messageId: msg._id });
                                                   setInGameMode(true);
                                                   setIsGameHost(false);
+                                                  setActiveGameMessageId(msg._id);
                                               }} 
                                               className="bg-green-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition-colors shadow-sm"
                                           >
@@ -959,7 +971,7 @@ const MessageArea = () => {
                                           <button 
                                               onClick={() => {
                                                   const activeSocket = getSocket() || socket;
-                                                  activeSocket.emit("declineGame", { to: selectedUser._id });
+                                                  activeSocket.emit("declineGame", { to: selectedUser._id, messageId: msg._id });
                                               }} 
                                               className="bg-red-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-red-600 transition-colors shadow-sm"
                                           >
