@@ -1705,39 +1705,16 @@ text-sm
 
               {/* SEND */}
               <button
-                type={
-                  !message.trim() &&
-                    !backendImage
-
-                    ? "button"
-
-                    : "submit"
-                }
-
-
-                onTouchStart={() => {
-
-                  if (
-                    !message.trim() &&
-                    !backendImage
-                  ) {
-
-                    startRecording();
-
+                type={(!message.trim() && !backendImage) ? "button" : "submit"}
+                onClick={(e) => {
+                  if (!message.trim() && !backendImage) {
+                    e.preventDefault();
+                    if (recordingMode) {
+                      stopRecording();
+                    } else {
+                      startRecording();
+                    }
                   }
-
-                }}
-
-                onTouchEnd={() => {
-
-                  if (
-                    recordingMode
-                  ) {
-
-                    stopRecording();
-
-                  }
-
                 }}
                 disabled={sending}
                 className={`
@@ -1759,14 +1736,10 @@ text-sm
                   }
   `}
               >
-                {!message.trim() && !backendImage ? (
-
+                {(!message.trim() && !backendImage && !recordingMode) ? (
                   <Mic size={20} />
-
                 ) : (
-
                   <SendHorizonal size={18} />
-
                 )}
               </button>
 
