@@ -72,6 +72,44 @@ const formatLastSeen = (date) => {
     return `Last seen ${dateString} at ${timeString}`;
 };
 
+const THEMES = {
+  default: {
+    bg: "bg-[#efeae2]",
+    myBubble: "bg-[#d9fdd3] text-gray-800",
+    otherBubble: "bg-white text-gray-800",
+    font: "font-sans",
+    name: "Default"
+  },
+  cyberpunk: {
+    bg: "bg-gradient-to-br from-gray-900 via-purple-900 to-black animate-gradient",
+    myBubble: "bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white border border-fuchsia-400/30",
+    otherBubble: "bg-gradient-to-r from-gray-800 to-gray-700 text-white border border-gray-600",
+    font: "font-mono",
+    name: "Cyberpunk"
+  },
+  sunset: {
+    bg: "bg-gradient-to-br from-orange-100 via-rose-100 to-yellow-100 animate-gradient",
+    myBubble: "bg-gradient-to-r from-orange-500 to-rose-500 text-white",
+    otherBubble: "bg-white/80 backdrop-blur-md text-gray-800 border border-white/50",
+    font: "font-sans",
+    name: "Sunset Bliss"
+  },
+  ocean: {
+    bg: "bg-gradient-to-br from-cyan-100 via-blue-100 to-indigo-100 animate-gradient",
+    myBubble: "bg-gradient-to-r from-cyan-600 to-blue-600 text-white",
+    otherBubble: "bg-white/90 backdrop-blur-md text-blue-900 border border-white/50",
+    font: "font-serif",
+    name: "Ocean Breeze"
+  },
+  forest: {
+    bg: "bg-gradient-to-br from-green-50 via-emerald-100 to-teal-50 animate-gradient",
+    myBubble: "bg-gradient-to-r from-emerald-600 to-teal-600 text-white",
+    otherBubble: "bg-white/90 backdrop-blur-md text-emerald-900 border border-white/50",
+    font: "font-sans",
+    name: "Forest Mint"
+  }
+};
+
 const MessageArea = () => {
 
   const dispatch = useDispatch();
@@ -144,6 +182,23 @@ const MessageArea = () => {
   const [activeReactionMessage, setActiveReactionMessage] = useState(null);
 
   const [selectedImage, setSelectedImage] = useState(null);
+
+  const [chatTheme, setChatTheme] = useState('default');
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setChatTheme(localStorage.getItem(`theme_${selectedUser._id}`) || 'default');
+      setShowThemeMenu(false);
+    }
+  }, [selectedUser?._id]);
+
+  const changeTheme = (themeKey) => {
+    setChatTheme(themeKey);
+    localStorage.setItem(`theme_${selectedUser._id}`, themeKey);
+    setShowThemeMenu(false);
+    setShowMenu(false);
+  };
 
 
 
@@ -800,7 +855,7 @@ const MessageArea = () => {
 
   return (
 
-    <div className="w-full h-screen flex flex-col bg-[#efeae2]">
+    <div className={`w-full h-screen flex flex-col ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
 
       {selectedUser ? (
 
@@ -902,6 +957,23 @@ const MessageArea = () => {
                         <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
                         {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
                     </button>
+
+                    <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100">
+                        <Edit3 size={16} className="text-indigo-500" /> Theme: {THEMES[chatTheme].name}
+                    </button>
+                    {showThemeMenu && (
+                        <div className="bg-gray-50 border-t border-gray-200">
+                            {Object.keys(THEMES).map(key => (
+                                <button 
+                                    key={key} 
+                                    onClick={() => changeTheme(key)}
+                                    className={`w-full text-left px-8 py-2 text-sm hover:bg-gray-200 ${chatTheme === key ? 'font-bold text-indigo-600' : 'text-gray-600'}`}
+                                >
+                                    {THEMES[key].name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
                         <Trash2 size={16} /> Delete for me
@@ -1035,10 +1107,9 @@ const MessageArea = () => {
 
 
 
-                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${(msg.sender?._id || msg.sender)?.toString() ===
-                      userData?._id?.toString()
-                      ? "bg-[#d9fdd3]"
-                      : "bg-white"
+                    className={`relative p-2 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm ${(msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString()
+                        ? THEMES[chatTheme].myBubble
+                        : THEMES[chatTheme].otherBubble
                       }`}
 
                   >
