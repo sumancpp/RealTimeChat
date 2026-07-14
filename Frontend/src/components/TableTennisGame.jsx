@@ -184,17 +184,24 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     }
 
                     // Bounce off paddles
-                    // Guest paddle is at y=10. Bottom edge is 10 + PADDLE_HEIGHT.
-                    // Host paddle is at y=CANVAS_HEIGHT-20. Top edge is CANVAS_HEIGHT-20.
-                    let paddleY = dy < 0 ? 10 + PADDLE_HEIGHT : CANVAS_HEIGHT - 20 - BALL_SIZE;
-                    let paddleX = dy < 0 ? gameState.current.opponentPaddleX : gameState.current.myPaddleX;
+                    const HIT_LENIENCY = 25; // Compensates for network latency
+                    
+                    let hitGuest = dy < 0 && 
+                                   y - BALL_SIZE <= 20 && 
+                                   y + BALL_SIZE >= 10 && 
+                                   x + BALL_SIZE >= gameState.current.opponentPaddleX - HIT_LENIENCY && 
+                                   x - BALL_SIZE <= gameState.current.opponentPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
 
-                    if (
-                        (dy < 0 && y - BALL_SIZE < paddleY && x > paddleX && x < paddleX + PADDLE_WIDTH) ||
-                        (dy > 0 && y + BALL_SIZE > paddleY && x > paddleX && x < paddleX + PADDLE_WIDTH)
-                    ) {
+                    let hitHost = dy > 0 && 
+                                  y + BALL_SIZE >= CANVAS_HEIGHT - 20 && 
+                                  y - BALL_SIZE <= CANVAS_HEIGHT - 10 && 
+                                  x + BALL_SIZE >= gameState.current.myPaddleX - HIT_LENIENCY && 
+                                  x - BALL_SIZE <= gameState.current.myPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
+
+                    if (hitGuest || hitHost) {
                         dy *= -1.1; // Speed up slightly
-                        dx = (x - (paddleX + PADDLE_WIDTH / 2)) * 0.2; // Add some english
+                        let paddleCenter = hitGuest ? gameState.current.opponentPaddleX + PADDLE_WIDTH / 2 : gameState.current.myPaddleX + PADDLE_WIDTH / 2;
+                        dx = (x - paddleCenter) * 0.2; // Add some english
                     }
 
                     // Scoring
