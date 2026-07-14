@@ -145,7 +145,7 @@ if (req.file) {
                 }
             }
             
-            const musicPrompt = `Based on this recent chat history: "${historyStr || 'No history yet'}", what is the mood of the conversation? Suggest 1 song that fits this mood perfectly. Return ONLY the song title and artist format like "Song Name by Artist", nothing else.`;
+            const musicPrompt = `Based on this recent chat history: "${historyStr || 'No history yet'}", what is the mood of the conversation? Suggest 1 song that fits this mood perfectly. You should suggest either an English song or a Hindi/Bollywood song, feel free to mix it up. Return ONLY the song title and artist format like "Song Name by Artist", nothing else.`;
             try {
                 const aiMusic = await generateGeminiReply(musicPrompt);
                 if (aiMusic) {
