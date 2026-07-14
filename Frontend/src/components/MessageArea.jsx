@@ -19,7 +19,8 @@ import {
   Ban,
   Edit3,
   Lock,
-  Timer
+  Timer,
+  Flame
 } from "lucide-react";
 
 import axios from "axios";
@@ -1691,6 +1692,16 @@ overflow-y-auto
 text-sm
 "
               />
+
+              {/* ROAST */}
+              <button
+                type="button"
+                onClick={() => setMessage("@roast")}
+                className="text-orange-500 hover:text-orange-600 transition mx-1"
+                title="AI Roast Mode"
+              >
+                <Flame size={24} />
+              </button>
 
               {/* SEND */}
               <button

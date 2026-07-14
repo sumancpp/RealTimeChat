@@ -107,6 +107,21 @@ if (req.file) {
 
 
 
+        let finalMessage = message;
+        if (finalMessage?.trim().toLowerCase() === "@roast") {
+            const targetName = receiverUserObj?.name || receiverUserObj?.userName || "my friend";
+            const roastPrompt = `Generate a short, funny, friendly roast for someone named ${targetName}. Keep it under 2 sentences.`;
+            try {
+                const aiRoast = await generateGeminiReply(roastPrompt);
+                if (aiRoast) {
+                    finalMessage = `🔥 ${aiRoast}`;
+                }
+            } catch (err) {
+                console.error("Roast generation failed", err);
+                finalMessage = "🔥 I tried to roast you, but the AI couldn't find anything bad to say!";
+            }
+        }
+
         const newMessage =
 await Message.create({
 
@@ -114,7 +129,7 @@ await Message.create({
 
     receiver,
 
-    message,
+    message: finalMessage,
 
     image,
 
