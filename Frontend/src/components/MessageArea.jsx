@@ -21,7 +21,8 @@ import {
   Timer,
   Flame,
   Palette,
-  Film
+  Film,
+  Music
 } from "lucide-react";
 
 import axios from "axios";
@@ -1722,6 +1723,16 @@ overflow-y-auto
 text-sm
 "
               />
+
+              {/* MUSIC MOOD */}
+              <button
+                type="button"
+                onClick={() => setMessage("@music")}
+                className="text-pink-500 hover:text-pink-600 transition mx-1"
+                title="Mood Music Suggestions"
+              >
+                <Music size={24} />
+              </button>
 
               {/* ROAST */}
               <button

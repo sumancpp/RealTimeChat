@@ -120,6 +120,36 @@ if (req.file) {
                 console.error("Roast generation failed", err);
                 finalMessage = "🔥 I tried to roast you, but the AI couldn't find anything bad to say!";
             }
+        } else if (finalMessage?.trim().toLowerCase() === "@music") {
+            let historyStr = "";
+            if (conversation && conversation.messages && conversation.messages.length > 0) {
+                try {
+                    const populatedConv = await Conversation.findById(conversation._id).populate({
+                        path: 'messages',
+                        options: { limit: 5, sort: { createdAt: -1 } }
+                    });
+                    if (populatedConv && populatedConv.messages) {
+                        historyStr = populatedConv.messages
+                            .reverse()
+                            .map(m => m.message)
+                            .filter(Boolean)
+                            .join(" | ");
+                    }
+                } catch (err) {
+                    console.error("Error fetching history for mood", err);
+                }
+            }
+            
+            const musicPrompt = `Based on this recent chat history: "${historyStr || 'No history yet'}", what is the mood of the conversation? Suggest exactly 2 songs that fit this mood perfectly. Format strictly as: "Mood: [mood] 🎵 Songs: 1. [song by artist], 2. [song by artist]". Keep it short.`;
+            try {
+                const aiMusic = await generateGeminiReply(musicPrompt);
+                if (aiMusic) {
+                    finalMessage = `🎧 ${aiMusic}`;
+                }
+            } catch (err) {
+                console.error("Music generation failed", err);
+                finalMessage = "🎧 I tried to find some mood music, but my headphones are tangled!";
+            }
         }
 
         const newMessage =
