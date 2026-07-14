@@ -967,7 +967,7 @@ const MessageArea = () => {
 
                   {showMenu && (
                     <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
-                      <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-pink-600 hover:bg-pink-50 flex items-center gap-2 font-medium border-b border-gray-100">
+                      <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Film size={16} /> Play Chat Story
                       </button>
                       <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
@@ -992,10 +992,10 @@ const MessageArea = () => {
                           </div>
                       )}
 
-                      <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                      <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-800 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
                           <Trash2 size={16} /> Delete for me
                       </button>
-                      <button onClick={() => handleDeleteChat(true)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                      <button onClick={() => handleDeleteChat(true)} className="w-full text-left px-4 py-3 text-sm text-red-800 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
                           <Trash2 size={16} /> Delete for everyone
                       </button>
                     </div>
