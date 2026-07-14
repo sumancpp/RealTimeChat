@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Pause, SkipForward } from 'lucide-react';
+import { X, Play, Pause, SkipForward, Share2 } from 'lucide-react';
 
 const ChatReplay = ({ messages, currentUser, selectedUser, onClose }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
     const containerRef = useRef(null);
     
-    // Filter out system messages and game invites to keep the story clean
-    const storyMessages = messages.filter(m => 
-        !m.isSystemMessage && 
-        !m.isDeleted && 
-        m.message !== "@game"
-    ).slice(-30); // Take the last 30 messages for the replay
+    const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000;
+    
+    // Filter out system messages, game invites, and only keep messages from the last 48 hours
+    const storyMessages = messages.filter(m => {
+        const msgTime = new Date(m.createdAt || Date.now()).getTime();
+        return !m.isSystemMessage && 
+               !m.isDeleted && 
+               m.message !== "@game" &&
+               msgTime > fortyEightHoursAgo;
+    });
 
     useEffect(() => {
         if (!isPlaying) return;
@@ -36,6 +40,39 @@ const ChatReplay = ({ messages, currentUser, selectedUser, onClose }) => {
         }
     }, [currentIndex]);
 
+    const handleShare = async () => {
+        const title = `Chat Story with ${selectedUser?.isGroup ? selectedUser.groupName : (selectedUser?.name || selectedUser?.userName)}`;
+        let text = `${title}\n\n`;
+        
+        storyMessages.forEach(msg => {
+            const isMe = (msg.sender?._id || msg.sender)?.toString() === currentUser?._id?.toString();
+            const senderName = isMe ? "Me" : (msg.sender?.name || msg.sender?.userName || "Them");
+            if (msg.message) {
+                text += `${senderName}: ${msg.message}\n`;
+            } else if (msg.image) {
+                text += `${senderName}: [Image]\n`;
+            } else if (msg.voice) {
+                text += `${senderName}: [Voice Message]\n`;
+            }
+        });
+        
+        text += "\nCreated via BaatCheet";
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title,
+                    text
+                });
+            } catch (err) {
+                console.log("Error sharing:", err);
+            }
+        } else {
+            alert("Sharing is not supported on this browser. The story text has been copied to your clipboard!");
+            navigator.clipboard.writeText(text);
+        }
+    };
+
     if (storyMessages.length === 0) {
         return (
             <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center text-white p-4">
@@ -55,9 +92,14 @@ const ChatReplay = ({ messages, currentUser, selectedUser, onClose }) => {
                     </h2>
                     <p className="text-xs text-gray-400">with {selectedUser?.isGroup ? selectedUser.groupName : (selectedUser?.name || selectedUser?.userName)}</p>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition">
-                    <X size={28} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={handleShare} className="p-2 hover:bg-white/10 text-orange-400 rounded-full transition" title="Share Story">
+                        <Share2 size={24} />
+                    </button>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition" title="Close">
+                        <X size={28} />
+                    </button>
+                </div>
             </div>
 
             {/* Messages Container */}
