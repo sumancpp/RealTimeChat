@@ -16,7 +16,8 @@ import {
     Plus,
     Camera,
     PhoneCall,
-    Lock
+    Lock,
+    Info
 } from "lucide-react";
 
 import StatusSection from "./StatusSection";
@@ -238,17 +239,29 @@ const SideBar = () => {
 
                     </h1>
 
-                    <img
-                        src={
-                            userData?.profileImage ||
-                            defaultProfile
-                        }
-                        onClick={() =>
-                            navigate("/profile")
-                        }
-                        alt="profile"
-                        className="w-16 h-16 rounded-full border-4 border-white shadow-md object-cover cursor-pointer"
-                    />
+                    <div className="flex items-center gap-3">
+                        <motion.button 
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => navigate("/about")}
+                            className="bg-white p-2 rounded-full shadow-md text-orange-500 hover:text-orange-600 transition"
+                            title="About BaatCheet"
+                        >
+                            <Info size={24} />
+                        </motion.button>
+
+                        <img
+                            src={
+                                userData?.profileImage ||
+                                defaultProfile
+                            }
+                            onClick={() =>
+                                navigate("/profile")
+                            }
+                            alt="profile"
+                            className="w-16 h-16 rounded-full border-4 border-white shadow-md object-cover cursor-pointer hover:opacity-90 transition"
+                        />
+                    </div>
 
                 </div>
 
