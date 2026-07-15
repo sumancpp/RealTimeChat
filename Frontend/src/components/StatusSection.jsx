@@ -302,7 +302,7 @@ const StatusSection = () => {
                         <div className="flex-1 flex items-center justify-center p-0 bg-black overflow-hidden min-h-0 relative">
                             <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" />
                         </div>
-                        <div className="p-4 bg-gray-900 flex flex-col gap-3 shrink-0 relative">
+                        <div className="p-4 pb-8 sm:pb-4 pr-6 sm:pr-4 bg-gray-900 flex flex-col gap-3 shrink-0 relative w-full box-border">
                             {showEmojiPicker && (
                                 <div className="absolute bottom-full left-4 mb-2 z-50" ref={pickerRef}>
                                     <EmojiPicker 
@@ -323,12 +323,12 @@ const StatusSection = () => {
                                     placeholder="Add a caption..." 
                                     value={caption}
                                     onChange={(e) => setCaption(e.target.value)}
-                                    className="flex-1 bg-gray-800 text-white p-3 rounded-full outline-none"
+                                    className="flex-1 min-w-0 bg-gray-800 text-white p-3 rounded-full outline-none"
                                 />
                                 <button 
                                     onClick={handleUpload}
                                     disabled={loading}
-                                    className="bg-green-500 w-12 h-12 flex items-center justify-center rounded-full text-white hover:bg-green-600 disabled:opacity-50 flex-shrink-0 shadow-lg active:scale-95 transition-transform mr-20 sm:mr-0"
+                                    className="bg-green-500 w-12 h-12 flex items-center justify-center rounded-full text-white hover:bg-green-600 disabled:opacity-50 flex-shrink-0 shadow-lg active:scale-95 transition-transform"
                                 >
                                     {loading ? <span className="animate-pulse">...</span> : <Send size={20} className="ml-1" />}
                                 </button>
@@ -414,7 +414,7 @@ const StatusSection = () => {
                                     initial={{ y: "100%" }}
                                     animate={{ y: 0 }}
                                     exit={{ y: "100%" }}
-                                    className="absolute bottom-0 w-full bg-gray-900 p-4 z-40 rounded-t-3xl shadow-2xl flex flex-col gap-3 pb-6"
+                                    className="absolute bottom-0 w-full bg-gray-900 p-4 z-40 rounded-t-3xl shadow-2xl flex flex-col gap-3 pb-10 pr-6 sm:pb-6 sm:pr-4 box-border"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <div className="flex justify-between items-center mb-2 px-2">
@@ -442,15 +442,15 @@ const StatusSection = () => {
                                             placeholder="Type a reply..." 
                                             value={replyText}
                                             onChange={(e) => setReplyText(e.target.value)}
-                                            className="flex-1 bg-gray-800 text-white placeholder-gray-400 p-3 rounded-full outline-none focus:ring-2 focus:ring-green-500"
+                                            className="flex-1 min-w-0 bg-gray-800 text-white placeholder-gray-400 p-3 rounded-full outline-none focus:ring-2 focus:ring-green-500"
                                             autoFocus
                                         />
                                         <button 
                                             onClick={handleReplySubmit}
                                             disabled={replying || !replyText.trim()}
-                                            className="bg-green-500 p-3 rounded-full text-white hover:bg-green-600 disabled:opacity-50 shrink-0"
+                                            className="bg-green-500 w-12 h-12 flex items-center justify-center rounded-full text-white hover:bg-green-600 disabled:opacity-50 flex-shrink-0 shadow-lg active:scale-95 transition-transform"
                                         >
-                                            {replying ? <span className="animate-pulse">...</span> : <Send size={20} />}
+                                            {replying ? <span className="animate-pulse">...</span> : <Send size={20} className="ml-1" />}
                                         </button>
                                     </div>
                                 </motion.div>
