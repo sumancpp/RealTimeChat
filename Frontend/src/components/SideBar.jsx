@@ -239,29 +239,17 @@ const SideBar = () => {
 
                     </h1>
 
-                    <div className="flex items-center gap-3">
-                        <motion.button 
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => navigate("/about")}
-                            className="bg-white p-2 rounded-full shadow-md text-orange-500 hover:text-orange-600 transition"
-                            title="About BaatCheet"
-                        >
-                            <Info size={24} />
-                        </motion.button>
-
-                        <img
-                            src={
-                                userData?.profileImage ||
-                                defaultProfile
-                            }
-                            onClick={() =>
-                                navigate("/profile")
-                            }
-                            alt="profile"
-                            className="w-16 h-16 rounded-full border-4 border-white shadow-md object-cover cursor-pointer hover:opacity-90 transition"
-                        />
-                    </div>
+                    <img
+                        src={
+                            userData?.profileImage ||
+                            defaultProfile
+                        }
+                        onClick={() =>
+                            navigate("/profile")
+                        }
+                        alt="profile"
+                        className="w-16 h-16 rounded-full border-4 border-white shadow-md object-cover cursor-pointer hover:opacity-90 transition"
+                    />
 
                 </div>
 
@@ -614,6 +602,10 @@ const SideBar = () => {
                 <div onClick={() => setActiveTab("calls")} className={`flex flex-col items-center cursor-pointer transition-colors ${activeTab === 'calls' ? 'text-green-500' : 'text-gray-500'}`}>
                     <Phone size={24} />
                     <span className="text-[10px] font-semibold mt-1">Calls</span>
+                </div>
+                <div onClick={() => navigate("/about")} className="flex flex-col items-center cursor-pointer transition-colors text-gray-500 hover:text-green-500">
+                    <Info size={24} />
+                    <span className="text-[10px] font-semibold mt-1">About</span>
                 </div>
             </div>
 
