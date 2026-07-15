@@ -19,12 +19,36 @@ const About = () => {
     };
 
     const crazyFeatures = [
-        { icon: <Music size={20} className="text-pink-500" />, text: "AI Mood Music: Automatically detects chat vibes and suggests playable YouTube Music cards." },
-        { icon: <Sparkles size={20} className="text-orange-500" />, text: "AI Roast Mode: Instantly generate hilarious AI-powered burns to send to your friends." },
-        { icon: <Film size={20} className="text-purple-500" />, text: "Chat Story Replay: Turn your last 48 hours of messages into a cinematic, animated playback." },
-        { icon: <Palette size={20} className="text-blue-500" />, text: "Real-Time Whiteboard: Draw and brainstorm together live with your group members." },
-        { icon: <Gamepad2 size={20} className="text-green-500" />, text: "Live Table Tennis: Challenge your friends to an interactive multiplayer table tennis game right inside the chat." },
-        { icon: <Palette size={20} className="text-indigo-500" />, text: "Custom Theming Engine: Personalize every chat with animated backgrounds like Cyberpunk or Sunset." }
+        { 
+            icon: <Music size={20} className="text-pink-500" />, 
+            text: "AI Mood Music: Automatically detects chat vibes and suggests playable YouTube Music cards.",
+            usage: "Click the Music (🎵) icon next to the chat input to type '@music' and hit send." 
+        },
+        { 
+            icon: <Sparkles size={20} className="text-orange-500" />, 
+            text: "AI Roast Mode: Instantly generate hilarious AI-powered burns to send to your friends.",
+            usage: "Click the Flame (🔥) icon next to the chat input to type '@roast' and hit send." 
+        },
+        { 
+            icon: <Film size={20} className="text-purple-500" />, 
+            text: "Chat Story Replay: Turn your last 48 hours of messages into a cinematic, animated playback.",
+            usage: "Open the 3-dot (⋮) menu in any 1-on-1 chat and select 'Play Chat Story'." 
+        },
+        { 
+            icon: <Palette size={20} className="text-blue-500" />, 
+            text: "Real-Time Whiteboard: Draw and brainstorm together live with your group members.",
+            usage: "Click the Palette (🎨) icon at the top right of any Group Chat." 
+        },
+        { 
+            icon: <Gamepad2 size={20} className="text-green-500" />, 
+            text: "Live Table Tennis: Challenge your friends to an interactive multiplayer table tennis game right inside the chat.",
+            usage: "Type '@game' as a message and hit send to invite your friend to a match." 
+        },
+        { 
+            icon: <Palette size={20} className="text-indigo-500" />, 
+            text: "Custom Theming Engine: Personalize every chat with animated backgrounds like Cyberpunk or Sunset.",
+            usage: "Open the 3-dot (⋮) menu in any 1-on-1 chat, select 'Theme', and choose your favorite." 
+        }
     ];
 
     const standardFeatures = [
@@ -66,9 +90,16 @@ const About = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         {crazyFeatures.map((feat, idx) => (
-                            <div key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 transition border border-gray-100">
-                                <div className="mt-1 bg-white p-2 rounded-xl shadow-sm">{feat.icon}</div>
-                                <p className="text-gray-700 leading-relaxed font-medium">{feat.text}</p>
+                            <div key={idx} className="flex flex-col gap-2 p-5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition border border-gray-100 shadow-sm hover:shadow-md">
+                                <div className="flex items-start gap-4">
+                                    <div className="mt-1 bg-white p-2 rounded-xl shadow-sm border border-gray-100">{feat.icon}</div>
+                                    <p className="text-gray-800 leading-relaxed font-semibold">{feat.text}</p>
+                                </div>
+                                <div className="mt-2 pl-[3.25rem]">
+                                    <p className="text-sm text-gray-500 bg-gray-100/50 p-3 rounded-xl border border-gray-200/50">
+                                        <span className="font-bold text-gray-700">How to use: </span>{feat.usage}
+                                    </p>
+                                </div>
                             </div>
                         ))}
                     </div>
