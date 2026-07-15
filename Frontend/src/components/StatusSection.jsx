@@ -328,9 +328,9 @@ const StatusSection = () => {
                                 <button 
                                     onClick={handleUpload}
                                     disabled={loading}
-                                    className="bg-green-500 p-3 rounded-full text-white hover:bg-green-600 disabled:opacity-50 shrink-0"
+                                    className="bg-green-500 w-12 h-12 flex items-center justify-center rounded-full text-white hover:bg-green-600 disabled:opacity-50 flex-shrink-0 shadow-lg active:scale-95 transition-transform"
                                 >
-                                    {loading ? <span className="animate-pulse">...</span> : <Send size={20} />}
+                                    {loading ? <span className="animate-pulse">...</span> : <Send size={20} className="ml-1" />}
                                 </button>
                             </div>
                         </div>

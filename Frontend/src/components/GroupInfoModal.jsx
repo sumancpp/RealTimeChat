@@ -124,8 +124,14 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
 
     return (
         <div className="fixed inset-0 bg-white z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom-2 duration-300">
-            <div className="w-full h-full max-w-3xl mx-auto p-4 sm:p-6 md:p-8 overflow-y-auto">
-                <div className="flex flex-col items-center mb-6">
+            <div className="w-full h-full max-w-3xl mx-auto p-4 sm:p-6 md:p-8 overflow-y-auto relative">
+                <button 
+                    onClick={onClose}
+                    className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors z-10"
+                >
+                    <X size={24} />
+                </button>
+                <div className="flex flex-col items-center mb-6 pt-4">
                     <img 
                         src={group.groupProfileImage || defaultProfile} 
                         alt="Group" 
