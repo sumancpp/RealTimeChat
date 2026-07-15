@@ -19,6 +19,7 @@ import callRouter from "./routes/call.routes.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import compression from "compression";
 
 import { app, server } from "./socket/socket.js";
 
@@ -40,6 +41,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(compression());
 
 app.use(cookieParser());
 
@@ -96,7 +98,7 @@ const __dirname = path.resolve();
 if (process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "../Frontend/dist")));
 
-    app.use((req, res) => {
+    app.get("*", (req, res) => {
         res.sendFile(path.join(__dirname, "../Frontend/dist", "index.html"));
     });
 }
