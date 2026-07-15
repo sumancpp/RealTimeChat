@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Send, Sparkles, Gamepad2, Film, Palette, Music, Phone, Users, CheckCheck, Image, Trash2, Reply } from 'lucide-react';
-import { useNavigate } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 const About = () => {
