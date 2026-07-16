@@ -948,18 +948,22 @@ const MessageArea = () => {
                 </button>
               ) : (
                 <>
-                  <button 
-                    onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
-                    className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
-                  >
-                    <Video size={24} />
-                  </button>
-                  <button 
-                    onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'voice' } }))}
-                    className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
-                  >
-                    <Phone size={22} />
-                  </button>
+                  {!selectedUser?.isAI && (
+                    <>
+                      <button 
+                        onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
+                        className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                      >
+                        <Video size={24} />
+                      </button>
+                      <button 
+                        onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'voice' } }))}
+                        className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                      >
+                        <Phone size={22} />
+                      </button>
+                    </>
+                  )}
                   <button 
                     onClick={() => setShowMenu(!showMenu)} 
                     className="hover:text-gray-700 hover:bg-gray-50 p-2 rounded-full transition-colors"

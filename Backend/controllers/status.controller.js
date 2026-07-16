@@ -1,6 +1,7 @@
 import Status from "../models/status.model.js";
 import uploadOnCloudinary from "../config/cloudinary.js";
 import User from "../models/user.model.js";
+import Message from "../models/message.model.js";
 
 // Upload Status
 export const uploadStatus = async (req, res) => {
@@ -35,9 +36,26 @@ export const uploadStatus = async (req, res) => {
 // Get All Statuses
 export const getStatuses = async (req, res) => {
     try {
-        // Find all statuses from last 24 hours
+        // Find users the current user has chatted with
+        const messages = await Message.find({
+            $or: [{ sender: req.userId }, { receiver: req.userId }]
+        }).select("sender receiver");
+        
+        const chattedUserIds = new Set();
+        messages.forEach(msg => {
+            if (msg.sender && msg.sender.toString() !== req.userId.toString()) {
+                chattedUserIds.add(msg.sender.toString());
+            }
+            if (msg.receiver && msg.receiver.toString() !== req.userId.toString()) {
+                chattedUserIds.add(msg.receiver.toString());
+            }
+        });
+        chattedUserIds.add(req.userId.toString()); // Always include own statuses
+
+        // Find all statuses from last 24 hours from chatted users
         const statuses = await Status.find({
-            createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+            createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+            user: { $in: Array.from(chattedUserIds) }
         }).populate("user", "name userName profileImage")
           .populate("viewers.user", "name userName profileImage")
           .sort({ createdAt: -1 });
