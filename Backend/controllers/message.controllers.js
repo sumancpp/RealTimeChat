@@ -266,22 +266,9 @@ console.log(
             }
         }
 
-        // SENDER SOCKET
-        const senderSocketId =
-            getReceiverSocketId(
-                sender
-            );
-
-        if (senderSocketId) {
-
-            io.to(
-                senderSocketId
-            ).emit(
-                "newMessage",
-                populatedMessage
-            );
-
-        }
+        // SENDER SOCKET EMISSION REMOVED
+        // Emitting back to the sender causes a duplication flicker with Optimistic UI updates.
+        // The sender already receives the message through the HTTP response.
 
         // AI COMMAND
 
@@ -372,17 +359,8 @@ console.log(
                     conversation.messages.push(aiMessage._id);
                     await conversation.save();
 
-                    if (senderSocketId) {
-                        io.to(senderSocketId).emit(
-                            "newMessage",
-                            populatedAiMessage
-                        );
-                    } else {
-                        console.log(
-                            "AI message not emitted: sender socket not connected",
-                            sender
-                        );
-                    }
+                    // SENDER SOCKET EMISSION REMOVED FOR AI
+                    // The sender receives the AI response through the HTTP response payload.
                 }
             } catch (error) {
                 console.error("AI ERROR:", error?.message || error);
@@ -425,17 +403,8 @@ console.log(
                 conversation.messages.push(aiMessage._id);
                 await conversation.save();
 
-                if (senderSocketId) {
-                    io.to(senderSocketId).emit(
-                        "newMessage",
-                        populatedAiMessage
-                    );
-                } else {
-                    console.log(
-                        "AI fallback message not emitted: sender socket not connected",
-                        sender
-                    );
-                }
+                // SENDER SOCKET EMISSION REMOVED FOR FALLBACK AI
+                // The sender receives the fallback AI response through the HTTP response payload.
             }
         }
 

@@ -164,11 +164,13 @@ export const sendGroupMessage = async (req, res) => {
             .populate({ path: "replyTo", select: "message image sender" })
             .populate("sender", "name userName profileImage");
 
-        // emit to all participants
+        // emit to all participants EXCEPT the sender
         group.participants.forEach(participantId => {
-            const socketId = getReceiverSocketId(participantId.toString());
-            if(socketId) {
-                io.to(socketId).emit("newGroupMessage", { ...populatedMessage.toObject(), groupId });
+            if (participantId.toString() !== sender.toString()) {
+                const socketId = getReceiverSocketId(participantId.toString());
+                if(socketId) {
+                    io.to(socketId).emit("newGroupMessage", { ...populatedMessage.toObject(), groupId });
+                }
             }
         });
 
