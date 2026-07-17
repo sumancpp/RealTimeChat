@@ -871,45 +871,7 @@ const MessageArea = () => {
 
           {/* HEADER */}
           <div className="w-full min-h-[70px] bg-white border-b sticky top-0 z-50 border-gray-300 flex items-center px-4 shadow-sm">
-               <div 
-              className={`ml-3 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors' : ''}`}
-              onClick={() => {
-                  if (selectedUser?.isGroup) {
-                      setShowGroupInfo(true);
-                  }
-              }}
-            >
 
-              <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-[#0b2a5b]">
-                    {
-                      selectedUser?.isGroup 
-                        ? selectedUser.groupName 
-                        : (selectedUser?.name || selectedUser?.userName)
-                    }
-                  </h2>
-                  {selectedUser?.disappearingTimer > 0 && (
-                      <Timer size={14} className="text-blue-500" />
-                  )}
-              </div>
-
-              <p className="text-xs text-gray-500">
-
-                {
-                  selectedUser?.isGroup 
-                    ? `${selectedUser.participants?.length || 0} participants`
-                    : (onlineUsers.includes(selectedUser._id) || selectedUser.isAI || selectedUser.userName === "ai")
-                      ? isTyping
-                        ? "Typing..."
-                        : "Online"
-                      : formatLastSeen(selectedUser.lastSeen)
-                }
-
-              </p>
-
-            </div>
-
-            
             <button
               onClick={() => {
                 if (window.history.state?.chatOpen) {
@@ -928,14 +890,50 @@ const MessageArea = () => {
 
             </button>
 
-            <img
-              src={
-                (selectedUser?.isGroup ? selectedUser?.groupProfileImage : selectedUser?.profileImage) ||
-                defaultProfile
-              }
-              alt="profile"
-              className="w-12 h-12 rounded-full object-cover"
-            />
+            <div 
+              className={`flex items-center flex-1 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 py-1 px-2 -ml-2 rounded-xl transition-colors' : ''}`}
+              onClick={() => {
+                  if (selectedUser?.isGroup) {
+                      setShowGroupInfo(true);
+                  }
+              }}
+            >
+              <img
+                src={
+                  (selectedUser?.isGroup ? selectedUser?.groupProfileImage : selectedUser?.profileImage) ||
+                  defaultProfile
+                }
+                alt="profile"
+                className="w-12 h-12 rounded-full object-cover shrink-0"
+              />
+
+              <div className="ml-3 truncate">
+                <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-[#0b2a5b] truncate">
+                      {
+                        selectedUser?.isGroup 
+                          ? selectedUser.groupName 
+                          : (selectedUser?.name || selectedUser?.userName)
+                      }
+                    </h2>
+                    {selectedUser?.disappearingTimer > 0 && (
+                        <Timer size={14} className="text-blue-500 shrink-0" />
+                    )}
+                </div>
+
+                <p className="text-xs text-gray-500 truncate">
+                  {
+                    selectedUser?.isGroup 
+                      ? `${selectedUser.participants?.length || 0} participants`
+                      : (onlineUsers.includes(selectedUser._id) || selectedUser.isAI || selectedUser.userName === "ai")
+                        ? isTyping
+                          ? "Typing..."
+                          : "Online"
+                        : formatLastSeen(selectedUser.lastSeen)
+                  }
+                </p>
+              </div>
+            </div>
 
             <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
               {selectedUser?.isGroup ? (
