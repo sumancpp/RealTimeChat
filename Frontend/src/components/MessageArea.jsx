@@ -871,35 +871,7 @@ const MessageArea = () => {
 
           {/* HEADER */}
           <div className="w-full min-h-[70px] bg-white border-b sticky top-0 z-50 border-gray-300 flex items-center px-4 shadow-sm">
-
-            <button
-              onClick={() => {
-                if (window.history.state?.chatOpen) {
-                  window.history.back();
-                } else {
-                  dispatch(setSelectedUser(null));
-                }
-              }}
-              className="lg:hidden mr-3"
-            >
-
-              <ArrowLeft
-                size={24}
-                className="text-gray-700"
-              />
-
-            </button>
-
-            <img
-              src={
-                (selectedUser?.isGroup ? selectedUser?.groupProfileImage : selectedUser?.profileImage) ||
-                defaultProfile
-              }
-              alt="profile"
-              className="w-12 h-12 rounded-full object-cover"
-            />
-
-            <div 
+               <div 
               className={`ml-3 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors' : ''}`}
               onClick={() => {
                   if (selectedUser?.isGroup) {
@@ -936,6 +908,34 @@ const MessageArea = () => {
               </p>
 
             </div>
+
+            
+            <button
+              onClick={() => {
+                if (window.history.state?.chatOpen) {
+                  window.history.back();
+                } else {
+                  dispatch(setSelectedUser(null));
+                }
+              }}
+              className="lg:hidden mr-3"
+            >
+
+              <ArrowLeft
+                size={24}
+                className="text-gray-700"
+              />
+
+            </button>
+
+            <img
+              src={
+                (selectedUser?.isGroup ? selectedUser?.groupProfileImage : selectedUser?.profileImage) ||
+                defaultProfile
+              }
+              alt="profile"
+              className="w-12 h-12 rounded-full object-cover"
+            />
 
             <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
               {selectedUser?.isGroup ? (
