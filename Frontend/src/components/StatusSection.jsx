@@ -26,6 +26,7 @@ const BAATCHEET_GROUP = {
             title: 'Search by Username',
             description: 'Easily find your friends by typing their unique username in the search bar! No need to share phone numbers.',
             icon: '🔍',
+            instruction: 'Tap the search icon in the main menu and type any @username!',
             caption: 'Find friends easily!',
             viewers: []
         },
@@ -38,6 +39,7 @@ const BAATCHEET_GROUP = {
             title: 'Baatcheet AI',
             description: 'Chat with our smart AI assistant for instant answers, advice, and help!',
             icon: '🤖',
+            instruction: 'Click the 🤖 icon at the bottom right corner of your chat list.',
             caption: 'Your personal AI assistant.',
             viewers: []
         },
@@ -50,6 +52,7 @@ const BAATCHEET_GROUP = {
             title: 'Group Chats',
             description: 'Create groups and bring all your friends together in one place for endless conversations.',
             icon: '👥',
+            instruction: "Tap the '+' icon and select 'New Group' to add your friends.",
             caption: 'The more the merrier!',
             viewers: []
         },
@@ -62,6 +65,7 @@ const BAATCHEET_GROUP = {
             title: 'Voice & Video Calls',
             description: 'Connect face-to-face with crystal clear high-quality video and voice calls.',
             icon: '📞',
+            instruction: 'Open any chat and tap the phone or camera icon at the top right.',
             caption: 'Crystal clear calls.',
             viewers: []
         },
@@ -70,11 +74,12 @@ const BAATCHEET_GROUP = {
             createdAt: new Date(Date.now() + 4000).toISOString(),
             type: 'custom',
             user: BAATCHEET_GROUP_USER,
-            bgColor: 'from-pink-500 to-rose-700',
-            title: 'AI Song & Roast',
-            description: 'Generate custom AI songs based on your mood or playfully roast your friends!',
-            icon: '🎵🔥',
-            caption: 'Unleash the fun!',
+            bgColor: 'from-indigo-500 to-purple-700',
+            title: 'Mood Music',
+            description: 'Generate custom AI songs based on your current vibe.',
+            icon: '🎵',
+            instruction: "Inside a chat, tap the '+' menu and select 'Music'.",
+            caption: 'Let the music play!',
             viewers: []
         },
         {
@@ -82,11 +87,12 @@ const BAATCHEET_GROUP = {
             createdAt: new Date(Date.now() + 5000).toISOString(),
             type: 'custom',
             user: BAATCHEET_GROUP_USER,
-            bgColor: 'from-yellow-500 to-orange-600',
-            title: 'Chat Story Replay',
-            description: 'Rewind and relive your favorite chat moments with the story replay feature.',
-            icon: '⏪',
-            caption: 'Relive the memories!',
+            bgColor: 'from-pink-500 to-rose-700',
+            title: 'AI Roast',
+            description: 'Playfully roast your friends with custom AI-generated burns!',
+            icon: '🔥',
+            instruction: "Select a message, long-press, and choose 'Roast'!",
+            caption: 'Unleash the fun!',
             viewers: []
         },
         {
@@ -94,11 +100,12 @@ const BAATCHEET_GROUP = {
             createdAt: new Date(Date.now() + 6000).toISOString(),
             type: 'custom',
             user: BAATCHEET_GROUP_USER,
-            bgColor: 'from-cyan-500 to-blue-700',
-            title: 'Group Whiteboard',
-            description: 'Collaborate in real-time with your friends using the shared group whiteboard.',
-            icon: '🎨',
-            caption: 'Get creative together!',
+            bgColor: 'from-yellow-500 to-orange-600',
+            title: 'Chat Story Replay',
+            description: 'Rewind and relive your favorite chat moments with the story replay feature.',
+            icon: '⏪',
+            instruction: "Go to your profile and tap 'Story Replay' to watch.",
+            caption: 'Relive the memories!',
             viewers: []
         },
         {
@@ -106,10 +113,24 @@ const BAATCHEET_GROUP = {
             createdAt: new Date(Date.now() + 7000).toISOString(),
             type: 'custom',
             user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-cyan-500 to-blue-700',
+            title: 'Group Whiteboard',
+            description: 'Collaborate in real-time with your friends using the shared group whiteboard.',
+            icon: '🎨',
+            instruction: 'In any group chat, tap the 🎨 icon to start drawing together.',
+            caption: 'Get creative together!',
+            viewers: []
+        },
+        {
+            _id: 'b9',
+            createdAt: new Date(Date.now() + 8000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
             bgColor: 'from-emerald-500 to-green-700',
             title: 'Table Tennis Game',
             description: 'Challenge your friends to a quick and fun game of table tennis right inside the chat!',
             icon: '🏓',
+            instruction: "Open a chat, tap the '+' menu, and select 'Play Table Tennis'.",
             caption: 'Game on!',
             viewers: []
         }
@@ -500,9 +521,12 @@ const StatusSection = () => {
                                             animate={{ scale: 1, opacity: 1 }}
                                             transition={{ type: "spring", stiffness: 200, damping: 15 }}
                                             key={`icon-${activeGroupIndex}`}
-                                            className="text-8xl mb-8 drop-shadow-2xl"
+                                            className="relative mb-8"
                                         >
-                                            {activeGroup.statuses[activeGroupIndex].icon}
+                                            <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-150"></div>
+                                            <div className="text-8xl drop-shadow-2xl relative z-10">
+                                                {activeGroup.statuses[activeGroupIndex].icon}
+                                            </div>
                                         </motion.div>
                                         <motion.h2 
                                             initial={{ y: 20, opacity: 0 }}
@@ -522,6 +546,22 @@ const StatusSection = () => {
                                         >
                                             {activeGroup.statuses[activeGroupIndex].description}
                                         </motion.p>
+                                        {activeGroup.statuses[activeGroupIndex].instruction && (
+                                            <motion.div
+                                                initial={{ y: 20, opacity: 0 }}
+                                                animate={{ y: 0, opacity: 1 }}
+                                                transition={{ delay: 0.3 }}
+                                                key={`inst-${activeGroupIndex}`}
+                                                className="mt-8 bg-black/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 max-w-sm shadow-xl w-full"
+                                            >
+                                                <div className="text-white/70 text-xs font-bold uppercase tracking-wider mb-2 text-center flex items-center justify-center gap-2">
+                                                    <span>💡</span> How to use
+                                                </div>
+                                                <p className="text-white text-sm md:text-base text-center font-medium">
+                                                    {activeGroup.statuses[activeGroupIndex].instruction}
+                                                </p>
+                                            </motion.div>
+                                        )}
                                     </div>
                                 ) : (
                                     <img src={activeGroup.statuses[activeGroupIndex].image} className="w-full h-full object-contain" alt="Status Content" />
