@@ -45,7 +45,8 @@ import {
   updateReaction,
   deleteMessageRedux,
   addMessage,
-  removeMessageRedux
+  removeMessageRedux,
+  replaceMessageRedux
 } from "../redux/messageSlice";
 
 import {
@@ -621,12 +622,46 @@ const MessageArea = () => {
       const currentReply =
         replyMessage;
 
+      // 1. CREATE OPTIMISTIC MESSAGE FOR INSTANT UI FEEDBACK
+      const tempId = "temp-" + Date.now();
+      const optimisticMessage = {
+          _id: tempId,
+          sender: userData._id,
+          message: message,
+          image: frontendImage || "",
+          voice: "",
+          replyTo: currentReply || null,
+          createdAt: new Date().toISOString(),
+          isSeen: false,
+          isDeleted: false,
+          isSystemMessage: false,
+          isAIMessage: false,
+          isAIMusic: false,
+          reactions: []
+      };
+
+      // Instantly dispatch to Redux to show it on screen
+      dispatch(addMessage(optimisticMessage));
+
+      // Capture inputs before clearing
+      const messageTextToSend = message;
+
+      // CLEAR AFTER OPTIMISTIC SUCCESS
+      setMessage("");
+      setReplyMessage(null);
+      setFrontendImage(null);
+      setBackendImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      // 2. PREPARE FORM DATA FOR SERVER
       const formData =
         new FormData();
 
       formData.append(
         "message",
-        message
+        messageTextToSend
       );
 
       if (currentReply) {
@@ -634,7 +669,6 @@ const MessageArea = () => {
           "replyTo",
           currentReply._id
         );
-        console.log("CURRENT REPLY:", currentReply);
       }
 
       if (backendImage) {
@@ -644,43 +678,27 @@ const MessageArea = () => {
         );
       }
 
-
+      // 3. SEND TO SERVER
       const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
       const res = await axios.post(
-
         endpoint,
-
         formData,
-
         {
           withCredentials: true,
-
           headers: {
             "Content-Type":
               "multipart/form-data"
           }
         }
-
       );
 
       if (res.data) {
         if (res.data.aiMessage) {
-          dispatch(addMessage(res.data.message));
+          dispatch(replaceMessageRedux({ tempId, realMessage: res.data.message }));
           dispatch(addMessage(res.data.aiMessage));
         } else if (res.data._id) {
-          dispatch(addMessage(res.data));
+          dispatch(replaceMessageRedux({ tempId, realMessage: res.data }));
         }
-      }
-
-      // CLEAR AFTER SUCCESS
-      setMessage("");
-
-      setReplyMessage(null);
-
-      setFrontendImage(null);
-      setBackendImage(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
       }
 
     }

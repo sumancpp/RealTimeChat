@@ -158,6 +158,17 @@ const messageSlice = createSlice({
             }
         },
 
+        replaceMessageRedux: (state, action) => {
+            const { tempId, realMessage } = action.payload;
+            if (Array.isArray(state.messages)) {
+                const index = state.messages.findIndex(msg => msg._id === tempId);
+                if (index !== -1) {
+                    state.messages[index] = realMessage;
+                } else {
+                    state.messages.push(realMessage);
+                }
+            }
+        },
 
         clearMessages: (
             state
@@ -187,7 +198,9 @@ export const {
     
     editMessageRedux,
 
-    removeMessageRedux
+    removeMessageRedux,
+
+    replaceMessageRedux
 
 } = messageSlice.actions;
 
