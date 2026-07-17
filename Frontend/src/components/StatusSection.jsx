@@ -177,25 +177,23 @@ const StatusSection = () => {
 
     const handleDeleteStatus = async (statusId) => {
         try {
-            await axios.delete(`${serverUrl}/status/${statusId}`, { withCredentials: true });
+            // Optimistic UI update for instant feedback
+            setStatuses(prev => prev.filter(s => s._id !== statusId));
             
-            // Remove from state
             const updatedGroup = { ...activeGroup, statuses: activeGroup.statuses.filter(s => s._id !== statusId) };
             if (updatedGroup.statuses.length === 0) {
                 setActiveGroup(null);
-                setMyStatuses([]);
-                fetchStatuses();
             } else {
                 setActiveGroup(updatedGroup);
                 setActiveGroupIndex(prev => Math.max(0, prev - 1));
-                if (updatedGroup.user._id === userData._id) {
-                    setMyStatuses(updatedGroup.statuses);
-                }
-                fetchStatuses();
             }
+
+            await axios.delete(`${serverUrl}/status/${statusId}`, { withCredentials: true });
+            
         } catch (error) {
             console.error("Failed to delete status", error);
             alert("Failed to delete status.");
+            fetchStatuses(); // Revert state if backend fails
         }
     };
 
