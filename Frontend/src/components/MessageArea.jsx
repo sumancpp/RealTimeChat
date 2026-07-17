@@ -880,7 +880,7 @@ const MessageArea = () => {
                   dispatch(setSelectedUser(null));
                 }
               }}
-              className="lg:hidden mr-3"
+              className="lg:hidden mr-3 shrink-0"
             >
 
               <ArrowLeft
@@ -891,7 +891,7 @@ const MessageArea = () => {
             </button>
 
             <div 
-              className={`flex items-center flex-1 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 py-1 px-2 -ml-2 rounded-xl transition-colors' : ''}`}
+              className={`flex items-center flex-1 min-w-0 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 py-1 px-2 -ml-2 rounded-xl transition-colors' : ''}`}
               onClick={() => {
                   if (selectedUser?.isGroup) {
                       setShowGroupInfo(true);
@@ -935,7 +935,7 @@ const MessageArea = () => {
               </div>
             </div>
 
-            <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative">
+            <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
               {selectedUser?.isGroup ? (
                 <button 
                   onClick={() => setShowDrawingCanvas(true)}
