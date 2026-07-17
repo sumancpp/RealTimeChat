@@ -539,9 +539,6 @@ const SideBar = () => {
 
                 {activeTab === "groups" && (
                     <div className="flex flex-col h-full relative">
-                        <div className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
-                            <h2 className="font-semibold text-gray-700">My Groups</h2>
-                        </div>
                         <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-2">
                             {Array.isArray(groups) && groups.map((group) => (
                                 <div

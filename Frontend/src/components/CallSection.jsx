@@ -63,10 +63,6 @@ const CallSection = () => {
 
     return (
         <div className="flex flex-col h-full relative">
-            <div className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
-                <h2 className="font-semibold text-gray-700">Calls</h2>
-            </div>
-            
             <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-2">
                 {loading ? (
                     <p className="text-center text-gray-500 mt-10">Loading...</p>
