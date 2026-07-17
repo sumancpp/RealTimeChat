@@ -8,6 +8,114 @@ import EmojiPicker from 'emoji-picker-react';
 import defaultProfile from '../assets/profile.png';
 import { setSelectedUser } from '../redux/userSlice';
 
+const BAATCHEET_GROUP_USER = {
+    _id: 'baatcheet-official',
+    name: 'Baatcheet',
+    profileImage: 'https://api.dicebear.com/7.x/bottts/svg?seed=baatcheet&backgroundColor=10b981',
+};
+
+const BAATCHEET_GROUP = {
+    user: BAATCHEET_GROUP_USER,
+    statuses: [
+        {
+            _id: 'b1',
+            createdAt: new Date().toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-blue-600 to-indigo-800',
+            title: 'Search by Username',
+            description: 'Easily find your friends by typing their unique username in the search bar! No need to share phone numbers.',
+            icon: '🔍',
+            caption: 'Find friends easily!',
+            viewers: []
+        },
+        {
+            _id: 'b2',
+            createdAt: new Date(Date.now() + 1000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-purple-600 to-fuchsia-800',
+            title: 'Baatcheet AI',
+            description: 'Chat with our smart AI assistant for instant answers, advice, and help!',
+            icon: '🤖',
+            caption: 'Your personal AI assistant.',
+            viewers: []
+        },
+        {
+            _id: 'b3',
+            createdAt: new Date(Date.now() + 2000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-green-600 to-teal-800',
+            title: 'Group Chats',
+            description: 'Create groups and bring all your friends together in one place for endless conversations.',
+            icon: '👥',
+            caption: 'The more the merrier!',
+            viewers: []
+        },
+        {
+            _id: 'b4',
+            createdAt: new Date(Date.now() + 3000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-orange-500 to-red-600',
+            title: 'Voice & Video Calls',
+            description: 'Connect face-to-face with crystal clear high-quality video and voice calls.',
+            icon: '📞',
+            caption: 'Crystal clear calls.',
+            viewers: []
+        },
+        {
+            _id: 'b5',
+            createdAt: new Date(Date.now() + 4000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-pink-500 to-rose-700',
+            title: 'AI Song & Roast',
+            description: 'Generate custom AI songs based on your mood or playfully roast your friends!',
+            icon: '🎵🔥',
+            caption: 'Unleash the fun!',
+            viewers: []
+        },
+        {
+            _id: 'b6',
+            createdAt: new Date(Date.now() + 5000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-yellow-500 to-orange-600',
+            title: 'Chat Story Replay',
+            description: 'Rewind and relive your favorite chat moments with the story replay feature.',
+            icon: '⏪',
+            caption: 'Relive the memories!',
+            viewers: []
+        },
+        {
+            _id: 'b7',
+            createdAt: new Date(Date.now() + 6000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-cyan-500 to-blue-700',
+            title: 'Group Whiteboard',
+            description: 'Collaborate in real-time with your friends using the shared group whiteboard.',
+            icon: '🎨',
+            caption: 'Get creative together!',
+            viewers: []
+        },
+        {
+            _id: 'b8',
+            createdAt: new Date(Date.now() + 7000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-emerald-500 to-green-700',
+            title: 'Table Tennis Game',
+            description: 'Challenge your friends to a quick and fun game of table tennis right inside the chat!',
+            icon: '🏓',
+            caption: 'Game on!',
+            viewers: []
+        }
+    ]
+};
+
 const StatusSection = () => {
     const dispatch = useDispatch();
     const { userData } = useSelector(state => state.user);
@@ -97,6 +205,7 @@ const StatusSection = () => {
     };
 
     const markStatusAsViewed = async (status) => {
+        if (status.type === 'custom') return;
         if (status.user?._id !== userData?._id) {
             try {
                 await axios.post(`${serverUrl}/status/view/${status._id}`, {}, { withCredentials: true });
@@ -211,7 +320,8 @@ const StatusSection = () => {
     const myGroup = userData?._id ? groupedStatuses[userData._id] : undefined;
     
     // Filter out my group from recent updates
-    const otherGroups = Object.values(groupedStatuses).filter(group => group.user?._id !== userData?._id);
+    const otherGroupsFromApi = Object.values(groupedStatuses).filter(group => group.user?._id !== userData?._id);
+    const otherGroups = [BAATCHEET_GROUP, ...otherGroupsFromApi];
     
     // Get last status of group to show time
     const getLastStatusTime = (group) => {
@@ -383,7 +493,39 @@ const StatusSection = () => {
                             <div className="absolute right-0 top-0 bottom-0 w-1/3 z-20 cursor-pointer" onClick={nextStatus}></div>
                             
                             <div className="w-full h-full flex items-center justify-center p-0">
-                                <img src={activeGroup.statuses[activeGroupIndex].image} className="w-full h-full object-contain" alt="Status Content" />
+                                {activeGroup.statuses[activeGroupIndex].type === 'custom' ? (
+                                    <div className={`w-full h-full flex flex-col items-center justify-center p-8 bg-gradient-to-br ${activeGroup.statuses[activeGroupIndex].bgColor}`}>
+                                        <motion.div 
+                                            initial={{ scale: 0.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                                            key={`icon-${activeGroupIndex}`}
+                                            className="text-8xl mb-8 drop-shadow-2xl"
+                                        >
+                                            {activeGroup.statuses[activeGroupIndex].icon}
+                                        </motion.div>
+                                        <motion.h2 
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.1 }}
+                                            key={`title-${activeGroupIndex}`}
+                                            className="text-3xl md:text-4xl font-extrabold text-white text-center mb-6 drop-shadow-md"
+                                        >
+                                            {activeGroup.statuses[activeGroupIndex].title}
+                                        </motion.h2>
+                                        <motion.p 
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.2 }}
+                                            key={`desc-${activeGroupIndex}`}
+                                            className="text-lg md:text-xl text-white/95 text-center font-medium drop-shadow-sm leading-relaxed"
+                                        >
+                                            {activeGroup.statuses[activeGroupIndex].description}
+                                        </motion.p>
+                                    </div>
+                                ) : (
+                                    <img src={activeGroup.statuses[activeGroupIndex].image} className="w-full h-full object-contain" alt="Status Content" />
+                                )}
                             </div>
 
                             {/* Caption */}
@@ -396,7 +538,7 @@ const StatusSection = () => {
                             )}
 
                             {/* Reply Button Trigger (Only if someone else's status) */}
-                            {activeGroup.user?._id !== userData?._id && !showReplySheet && (
+                            {activeGroup.user?._id !== userData?._id && activeGroup.user?._id !== 'baatcheet-official' && !showReplySheet && (
                                 <div 
                                     className="absolute bottom-4 w-full flex flex-col items-center justify-center text-white z-30 cursor-pointer drop-shadow-lg"
                                     onClick={(e) => { e.stopPropagation(); setShowReplySheet(true); }}
@@ -407,7 +549,7 @@ const StatusSection = () => {
                             )}
 
                             {/* Reply Sheet */}
-                            {activeGroup.user?._id !== userData?._id && showReplySheet && (
+                            {activeGroup.user?._id !== userData?._id && activeGroup.user?._id !== 'baatcheet-official' && showReplySheet && (
                                 <motion.div 
                                     initial={{ y: "100%" }}
                                     animate={{ y: 0 }}
