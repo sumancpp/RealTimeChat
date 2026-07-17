@@ -161,11 +161,27 @@ const messageSlice = createSlice({
         replaceMessageRedux: (state, action) => {
             const { tempId, realMessage } = action.payload;
             if (Array.isArray(state.messages)) {
-                const index = state.messages.findIndex(msg => msg._id === tempId);
-                if (index !== -1) {
-                    state.messages[index] = realMessage;
+                // Find the temporary message index
+                const tempIndex = state.messages.findIndex(msg => msg._id === tempId);
+                
+                // Check if the real message was already added by the socket listener
+                const realExistsIndex = state.messages.findIndex(msg => msg._id === realMessage._id);
+
+                if (realExistsIndex !== -1) {
+                    // Socket beat the HTTP response. The real message is already here.
+                    // Just remove the temporary message.
+                    if (tempIndex !== -1) {
+                        state.messages.splice(tempIndex, 1);
+                    }
                 } else {
-                    state.messages.push(realMessage);
+                    // HTTP response beat the socket.
+                    if (tempIndex !== -1) {
+                        // Swap temp with real in place to maintain scroll position
+                        state.messages[tempIndex] = realMessage;
+                    } else {
+                        // Fallback
+                        state.messages.push(realMessage);
+                    }
                 }
             }
         },
