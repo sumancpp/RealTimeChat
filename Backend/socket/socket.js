@@ -54,11 +54,14 @@ io.on(
         const userId =
             socket.handshake.query.userId;
 
-        if (userId) {
+        if (userId && userId !== "undefined") {
 
-            userSocketMap[
-                userId
-            ] = socket.id;
+            if (!userSocketMap[userId]) {
+                userSocketMap[userId] = [];
+            }
+            if (!userSocketMap[userId].includes(socket.id)) {
+                userSocketMap[userId].push(socket.id);
+            }
 
         }
 
@@ -372,9 +375,12 @@ io.on(
 
                 }
 
-                delete userSocketMap[
-                    userId
-                ];
+                if (userId && userSocketMap[userId]) {
+                    userSocketMap[userId] = userSocketMap[userId].filter(id => id !== socket.id);
+                    if (userSocketMap[userId].length === 0) {
+                        delete userSocketMap[userId];
+                    }
+                }
 
                 io.emit(
                     "getOnlineUsers",
