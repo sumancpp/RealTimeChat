@@ -89,6 +89,9 @@ const SideBar = () => {
     const [viewingImage, setViewingImage] = useState(null);
 
     const handleUserClick = (user) => {
+        if (navigator.vibrate) {
+            navigator.vibrate(40);
+        }
         dispatch(setSelectedUser(user));
     };
 
@@ -560,7 +563,7 @@ const SideBar = () => {
                             {Array.isArray(groups) && groups.map((group) => (
                                 <div
                                     key={group._id}
-                                    onClick={() => dispatch(setSelectedUser(group))}
+                                    onClick={() => handleUserClick(group)}
                                     className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm border border-gray-100
                                     ${selectedUser?._id === group._id ? "bg-blue-100 border-blue-300" : "bg-white hover:bg-slate-50"}`}
                                 >

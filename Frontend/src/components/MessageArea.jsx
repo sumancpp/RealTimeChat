@@ -630,6 +630,10 @@ const MessageArea = () => {
       return;
     }
 
+    if (navigator.vibrate) {
+        navigator.vibrate(30); // Light haptic tap for sending a message
+    }
+
     try {
 
       setSending(true);
