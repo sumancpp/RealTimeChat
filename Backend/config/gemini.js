@@ -8,14 +8,44 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
-const GEMINI_API_KEY_1 = process.env.GEMINI_API_KEY?.trim() || null;
-const GEMINI_API_KEY_2 = process.env.GEMINI_API_KEY_2?.trim() || null;
+const keys = [];
+if (process.env.GEMINI_API_KEY?.trim()) keys.push(process.env.GEMINI_API_KEY.trim());
+for (let i = 2; i <= 10; i++) {
+    const key = process.env[`GEMINI_API_KEY_${i}`]?.trim();
+    if (key) keys.push(key);
+}
 
-let currentKeyIndex = 1;
-let ai = GEMINI_API_KEY_1 ? new GoogleGenAI({ apiKey: GEMINI_API_KEY_1 }) : 
-         (GEMINI_API_KEY_2 ? new GoogleGenAI({ apiKey: GEMINI_API_KEY_2 }) : null);
-         
-if (!GEMINI_API_KEY_1 && GEMINI_API_KEY_2) currentKeyIndex = 2;
+const keyPool = keys.map(key => ({
+    key,
+    client: new GoogleGenAI({ apiKey: key }),
+    exhaustedUntil: 0 // Timestamp when rate limit expires
+}));
+
+let currentKeyIndex = 0;
+
+const getAvailableClient = () => {
+    if (keyPool.length === 0) return null;
+    
+    const now = Date.now();
+    for (let i = 0; i < keyPool.length; i++) {
+        const index = (currentKeyIndex + i) % keyPool.length;
+        if (now > keyPool[index].exhaustedUntil) {
+            currentKeyIndex = index;
+            return keyPool[index].client;
+        }
+    }
+    
+    let bestIndex = 0;
+    let minWait = Infinity;
+    for (let i = 0; i < keyPool.length; i++) {
+        if (keyPool[i].exhaustedUntil < minWait) {
+            minWait = keyPool[i].exhaustedUntil;
+            bestIndex = i;
+        }
+    }
+    currentKeyIndex = bestIndex;
+    return keyPool[bestIndex].client;
+};
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
@@ -46,16 +76,19 @@ const parseRetryDelayMs = (retryInfo) => {
     return null;
 };
 
-const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 4) => {
+const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5) => {
     const trimmedPrompt = prompt?.toString().trim();
     if (!trimmedPrompt) return "Sorry, I couldn't generate a response.";
-    if (!ai) return "AI replies use fallback text (Missing Key).";
+    if (keyPool.length === 0) return "AI replies use fallback text (Missing Key).";
 
     let attempt = 0;
 
     while (attempt < maxRetries) {
+        const activeClient = getAvailableClient();
+        const activeKeyIndex = currentKeyIndex;
+        
         try {
-            const response = await ai.models.generateContent({
+            const response = await activeClient.models.generateContent({
                 model: model,
                 contents: trimmedPrompt,
                 config: {
@@ -72,36 +105,44 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 4)
                 String(error.message || '').includes('RESOURCE_EXHAUSTED') || error.status === 429 || error.message?.includes("429");
 
             if (isQuotaExceeded) {
-                // Switch to backup API key if available
-                if (currentKeyIndex === 1 && GEMINI_API_KEY_2) {
-                    console.warn(`[Gemini API] Key 1 quota/rate limit hit. Switching to Key 2.`);
-                    currentKeyIndex = 2;
-                    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY_2 });
-                    continue; // Try again immediately with new key
-                } else if (currentKeyIndex === 2 && GEMINI_API_KEY_1) {
-                    console.warn(`[Gemini API] Key 2 quota/rate limit hit. Switching back to Key 1.`);
-                    currentKeyIndex = 1;
-                    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY_1 });
-                }
+                const retryDetail = Array.isArray(error.details)
+                    ? error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'))?.retryDelay
+                    : error.retryDelay || null;
+                    
+                let waitTime = parseRetryDelayMs(retryDetail) ?? 60000; 
+                
+                keyPool[activeKeyIndex].exhaustedUntil = Date.now() + waitTime;
+                console.warn(`[Gemini API] Key ${activeKeyIndex + 1} exhausted. Cooldown: ${waitTime}ms`);
 
                 if (attempt < maxRetries) {
-                    const retryDetail = Array.isArray(error.details)
-                        ? error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'))?.retryDelay
-                        : error.retryDelay || null;
-                        
-                    let waitTime = parseRetryDelayMs(retryDetail) ?? Math.pow(2, attempt) * 1000;
-                    waitTime += Math.round(Math.random() * 1000);
+                    let nextKey = null;
+                    let minWait = Infinity;
+                    const now = Date.now();
                     
-                    console.warn(`[Gemini API] Rate limit hit. Retrying ${attempt}/${maxRetries} in ${waitTime}ms`);
-                    await delay(waitTime);
+                    for (const k of keyPool) {
+                        if (now > k.exhaustedUntil) {
+                            nextKey = k;
+                            break;
+                        }
+                        if (k.exhaustedUntil - now < minWait) {
+                            minWait = k.exhaustedUntil - now;
+                        }
+                    }
+                    
+                    if (!nextKey && minWait > 0 && minWait < 120000) {
+                        console.warn(`[Gemini API] All keys exhausted. Waiting ${minWait}ms before next attempt.`);
+                        await delay(minWait + 1000); 
+                    } else if (!nextKey) {
+                        break; 
+                    }
+                    
                     continue; 
                 }
 
-                console.error('[Gemini API] Quota exceeded or resource exhausted on all keys:', error.message || error);
+                console.error('[Gemini API] Quota exceeded on all available keys:', error.message || error);
                 return 'AI temporarily unavailable: quota or billing limits reached. Please try again later.';
             }
 
-            // Otherwise log and rethrow so upstream can decide how to handle it
             console.error('Gemini SDK Permanent Error:', error);
             throw error;
         }
