@@ -5,7 +5,9 @@ import { X } from 'lucide-react';
 
 const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) => {
     const canvasRef = useRef(null);
+    const containerRef = useRef(null);
     const [score, setScore] = useState({ me: 0, opponent: 0 });
+    const [networkWarning, setNetworkWarning] = useState(false);
     const { userData } = useSelector((state) => state.user);
 
     // Game constants
@@ -52,42 +54,30 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                 return;
             }
 
-            // Distributed Authority Lag Compensation
             const localDyDirection = gameState.current.ball.dy > 0 ? 1 : -1;
             const networkDyDirection = ball.dy > 0 ? 1 : -1;
 
             if (localDyDirection !== networkDyDirection) {
-                // We missed the prediction (or it hasn't happened yet locally). Accept authoritative state.
+                // If directions are completely opposite, we just accept the authoritative network state.
                 gameState.current.ball = ball;
             } else {
-                // We successfully predicted the bounce!
-                // To prevent the Y-axis stutter (which looks like the ball goes back into the paddle),
-                // we keep our smooth local Y coordinate, and extrapolate the authoritative X coordinate.
-                let yDistance = gameState.current.ball.y - ball.y;
-                let steps = yDistance / ball.dy; 
+                // If we already optimistically bounced locally, just gracefully update the velocity.
+                // Removing the aggressive X-extrapolation fixes the "ball changing movement in middle" glitch.
                 
-                if (steps > 0 && steps < 150) { 
-                    let extrapolatedX = ball.x + (ball.dx * steps);
-                    let newDx = ball.dx;
-                    
-                    // Handle wall bounces during the extrapolated time
-                    if (extrapolatedX < BALL_SIZE) {
-                        extrapolatedX = BALL_SIZE + (BALL_SIZE - extrapolatedX);
-                        newDx *= -1; 
-                    } else if (extrapolatedX > CANVAS_WIDTH - BALL_SIZE) {
-                        extrapolatedX = (CANVAS_WIDTH - BALL_SIZE) - (extrapolatedX - (CANVAS_WIDTH - BALL_SIZE));
-                        newDx *= -1;
-                    }
-
-                    gameState.current.ball = {
-                        x: extrapolatedX,
-                        y: gameState.current.ball.y, // Maintain perfect Y smoothness
-                        dx: newDx,
-                        dy: ball.dy
-                    };
-                } else {
-                    gameState.current.ball = ball;
+                // If the local simulation deviated by more than 35 pixels from the authoritative server, 
+                // it means the network is severely lagging.
+                let diff = Math.abs(gameState.current.ball.x - ball.x);
+                if (diff > 35) {
+                    setNetworkWarning(true);
+                    setTimeout(() => setNetworkWarning(false), 2000);
                 }
+
+                // Gently blend the velocity vectors instead of teleporting X
+                gameState.current.ball.dx = ball.dx;
+                gameState.current.ball.dy = ball.dy;
+                
+                // Nudge X slightly towards authoritative position without teleporting
+                gameState.current.ball.x += (ball.x - gameState.current.ball.x) * 0.1;
             }
         });
 
@@ -117,8 +107,9 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
 
     // Handle touch/mouse movement for paddle
     useEffect(() => {
+        const container = containerRef.current;
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!container || !canvas) return;
 
         const updatePaddlePosition = (clientX) => {
             const rect = canvas.getBoundingClientRect();
@@ -158,16 +149,17 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
 
         const handleTouchStart = (e) => {
             updatePaddlePosition(e.touches[0].clientX);
+            e.preventDefault();
         };
 
-        canvas.addEventListener("mousemove", handleMouseMove);
-        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-        canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
+        container.addEventListener("mousemove", handleMouseMove);
+        container.addEventListener("touchmove", handleTouchMove, { passive: false });
+        container.addEventListener("touchstart", handleTouchStart, { passive: false });
 
         return () => {
-            canvas.removeEventListener("mousemove", handleMouseMove);
-            canvas.removeEventListener("touchmove", handleTouchMove);
-            canvas.removeEventListener("touchstart", handleTouchStart);
+            container.removeEventListener("mousemove", handleMouseMove);
+            container.removeEventListener("touchmove", handleTouchMove);
+            container.removeEventListener("touchstart", handleTouchStart);
         };
     }, [opponent._id]);
 
@@ -265,17 +257,21 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                 let topPaddleX = gameState.current.isHost ? gameState.current.opponentPaddleX : gameState.current.myPaddleX;
                 let bottomPaddleX = gameState.current.isHost ? gameState.current.myPaddleX : gameState.current.opponentPaddleX;
 
-                let hitTop = dy < 0 && 
-                             y - BALL_SIZE <= 20 && 
-                             y + BALL_SIZE >= 10 && 
-                             x + BALL_SIZE >= topPaddleX - HIT_LENIENCY && 
-                             x - BALL_SIZE <= topPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
+                let iAmTop = !gameState.current.isHost;
+                let iAmBottom = gameState.current.isHost;
 
-                let hitBottom = dy > 0 && 
-                                y + BALL_SIZE >= CANVAS_HEIGHT - 20 && 
-                                y - BALL_SIZE <= CANVAS_HEIGHT - 10 && 
-                                x + BALL_SIZE >= bottomPaddleX - HIT_LENIENCY && 
-                                x - BALL_SIZE <= bottomPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
+                // Check Y axis first
+                let hitTop = dy < 0 && y - BALL_SIZE <= 20 && y + BALL_SIZE >= 10;
+                let hitBottom = dy > 0 && y + BALL_SIZE >= CANVAS_HEIGHT - 20 && y - BALL_SIZE <= CANVAS_HEIGHT - 10;
+
+                // X axis check - we ALWAYS optimistically bounce off the opponent's paddle to prevent visual jitter.
+                // If they actually missed, they will send a scoreUpdate which will correct it.
+                if (iAmTop && hitTop) {
+                    hitTop = (x + BALL_SIZE >= topPaddleX - HIT_LENIENCY && x - BALL_SIZE <= topPaddleX + PADDLE_WIDTH + HIT_LENIENCY);
+                }
+                if (iAmBottom && hitBottom) {
+                    hitBottom = (x + BALL_SIZE >= bottomPaddleX - HIT_LENIENCY && x - BALL_SIZE <= bottomPaddleX + PADDLE_WIDTH + HIT_LENIENCY);
+                }
 
                 if (hitTop || hitBottom) {
                     let newSpeed = Math.abs(dy) * 1.05;
@@ -284,17 +280,29 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     
                     dy = dy > 0 ? -newSpeed : newSpeed;
                     
-                    let paddleCenter = hitTop ? topPaddleX + PADDLE_WIDTH / 2 : bottomPaddleX + PADDLE_WIDTH / 2;
-                    dx = (x - paddleCenter) * 0.15;
+                    let hitMyPaddle = (gameState.current.isHost && hitBottom) || (!gameState.current.isHost && hitTop);
+                    
+                    if (hitMyPaddle) {
+                        // I hit it! Calculate real dx.
+                        let paddleCenter = hitTop ? topPaddleX + PADDLE_WIDTH / 2 : bottomPaddleX + PADDLE_WIDTH / 2;
+                        dx = (x - paddleCenter) * 0.15;
+                    } else {
+                        // Optimistic bounce off opponent. Keep dx relatively the same to avoid wild mid-air corrections later.
+                        // Just gently push it towards center to avoid side-wall traps
+                        if (x < CANVAS_WIDTH / 2) dx += 0.5;
+                        else dx -= 0.5;
+                    }
+
+                    // Prevent crazy angles
+                    if (dx > 8) dx = 8;
+                    if (dx < -8) dx = -8;
                     
                     if (hitTop) y = 20 + BALL_SIZE;
                     if (hitBottom) y = CANVAS_HEIGHT - 20 - BALL_SIZE;
 
                     gameState.current.ball = { x, y, dx, dy };
                     
-                    // DISTRIBUTED AUTHORITY: If I hit my own paddle, I am the boss of this bounce.
-                    // I will emit the authoritative ball state to my opponent to correct them if they missed it.
-                    let hitMyPaddle = (gameState.current.isHost && hitBottom) || (!gameState.current.isHost && hitTop);
+                    // Emitting authority
                     if (hitMyPaddle) {
                         socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
                     }
@@ -383,12 +391,20 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     <span className="text-xl sm:text-2xl text-gray-300 font-medium">{!isHost ? "You" : (opponent.name || opponent.userName)}</span>
                 </div>
             </div>
-            <div className="w-full max-w-[1200px] flex-1 max-h-[75vh] bg-[#0b2a5b] rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(249,115,22,0.15)] border-4 border-orange-500/50 relative flex items-center justify-center">
+            <div 
+                ref={containerRef}
+                className="w-full max-w-[1200px] flex-1 max-h-[75vh] bg-[#0b2a5b] rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(249,115,22,0.15)] border-4 border-orange-500/50 relative flex items-center justify-center touch-none"
+            >
+                {networkWarning && (
+                    <div className="absolute top-4 bg-red-500/90 text-white px-4 py-2 rounded-full font-bold text-sm tracking-widest shadow-xl animate-pulse z-50">
+                        WEAK NETWORK DETECTED ⚠️
+                    </div>
+                )}
                 <canvas
                     ref={canvasRef}
                     width={CANVAS_WIDTH}
                     height={CANVAS_HEIGHT}
-                    className="w-full h-full object-contain cursor-none"
+                    className="w-full h-full object-contain cursor-none pointer-events-none"
                     style={{ maxHeight: '100%', maxWidth: '100%' }}
                 />
             </div>
