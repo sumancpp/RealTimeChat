@@ -45,8 +45,50 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         });
 
         socket.on("ballMove", ({ ball }) => {
-            // Both clients accept ball syncs from the other (distributed authority)
-            gameState.current.ball = ball;
+            const isCenterReset = ball.x === CANVAS_WIDTH / 2 && ball.y === CANVAS_HEIGHT / 2;
+            
+            if (gameState.current.isPaused || isCenterReset) {
+                gameState.current.ball = ball;
+                return;
+            }
+
+            // Distributed Authority Lag Compensation
+            const localDyDirection = gameState.current.ball.dy > 0 ? 1 : -1;
+            const networkDyDirection = ball.dy > 0 ? 1 : -1;
+
+            if (localDyDirection !== networkDyDirection) {
+                // We missed the prediction (or it hasn't happened yet locally). Accept authoritative state.
+                gameState.current.ball = ball;
+            } else {
+                // We successfully predicted the bounce!
+                // To prevent the Y-axis stutter (which looks like the ball goes back into the paddle),
+                // we keep our smooth local Y coordinate, and extrapolate the authoritative X coordinate.
+                let yDistance = gameState.current.ball.y - ball.y;
+                let steps = yDistance / ball.dy; 
+                
+                if (steps > 0 && steps < 150) { 
+                    let extrapolatedX = ball.x + (ball.dx * steps);
+                    let newDx = ball.dx;
+                    
+                    // Handle wall bounces during the extrapolated time
+                    if (extrapolatedX < BALL_SIZE) {
+                        extrapolatedX = BALL_SIZE + (BALL_SIZE - extrapolatedX);
+                        newDx *= -1; 
+                    } else if (extrapolatedX > CANVAS_WIDTH - BALL_SIZE) {
+                        extrapolatedX = (CANVAS_WIDTH - BALL_SIZE) - (extrapolatedX - (CANVAS_WIDTH - BALL_SIZE));
+                        newDx *= -1;
+                    }
+
+                    gameState.current.ball = {
+                        x: extrapolatedX,
+                        y: gameState.current.ball.y, // Maintain perfect Y smoothness
+                        dx: newDx,
+                        dy: ball.dy
+                    };
+                } else {
+                    gameState.current.ball = ball;
+                }
+            }
         });
 
         socket.on("scoreUpdate", ({ score: newScore }) => {
