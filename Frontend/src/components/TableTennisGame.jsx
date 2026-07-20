@@ -20,7 +20,9 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         opponentPaddleX: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2,
         ball: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: 5, dy: 5 },
         isHost: isHost,
-        isPaused: true // Start with a brief pause
+        isPaused: true, // Start with a brief pause
+        lastPaddleEmit: 0,
+        lastEmittedX: -1
     });
 
     useEffect(() => {
@@ -48,6 +50,10 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             if (!gameState.current.isHost) {
                 // If I am guest, the host's score is my opponent's score, host's opponent score is my score
                 setScore({ me: newScore.opponent, opponent: newScore.me });
+                gameState.current.isPaused = true;
+                setTimeout(() => {
+                    if (gameState.current) gameState.current.isPaused = false;
+                }, 2000);
             }
         });
         
@@ -85,7 +91,14 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             if (x > CANVAS_WIDTH - PADDLE_WIDTH) x = CANVAS_WIDTH - PADDLE_WIDTH;
             
             gameState.current.myPaddleX = x;
-            socket.emit("paddleMove", { to: opponent._id, x });
+            
+            const now = Date.now();
+            // Throttle to max ~30fps for paddle emits to save bandwidth on slow internet
+            if (now - gameState.current.lastPaddleEmit > 30 || Math.abs(gameState.current.lastEmittedX - x) > 20) {
+                gameState.current.lastPaddleEmit = now;
+                gameState.current.lastEmittedX = x;
+                socket.emit("paddleMove", { to: opponent._id, x });
+            }
         };
 
         const handleMouseMove = (e) => {
@@ -170,21 +183,35 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                 ctx.restore();
             }
 
-            // Host handles physics
+            // Both clients handle ball movement to prevent lag over network
+            if (!gameState.current.isPaused) {
+                let { x, y, dx, dy } = gameState.current.ball;
+                
+                x += dx;
+                y += dy;
+
+                // Bounce off left and right walls
+                if (x - BALL_SIZE < 0 || x + BALL_SIZE > CANVAS_WIDTH) {
+                    dx *= -1;
+                    if (x - BALL_SIZE < 0) x = BALL_SIZE;
+                    if (x + BALL_SIZE > CANVAS_WIDTH) x = CANVAS_WIDTH - BALL_SIZE;
+                    
+                    if (gameState.current.isHost) {
+                        gameState.current.ball = { x, y, dx, dy };
+                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
+                    }
+                }
+
+                gameState.current.ball = { x, y, dx, dy };
+            }
+
+            // Host handles paddle physics and scoring
             if (gameState.current.isHost) {
                 if (!gameState.current.isPaused) {
                     let { x, y, dx, dy } = gameState.current.ball;
                     
-                    x += dx;
-                    y += dy;
-
-                    // Bounce off left and right walls
-                    if (x - BALL_SIZE < 0 || x + BALL_SIZE > CANVAS_WIDTH) {
-                        dx *= -1;
-                    }
-
                     // Bounce off paddles
-                    const HIT_LENIENCY = 25; // Compensates for network latency
+                    const HIT_LENIENCY = 35; // Compensates for network latency
                     
                     let hitGuest = dy < 0 && 
                                    y - BALL_SIZE <= 20 && 
@@ -209,6 +236,13 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                         
                         let paddleCenter = hitGuest ? gameState.current.opponentPaddleX + PADDLE_WIDTH / 2 : gameState.current.myPaddleX + PADDLE_WIDTH / 2;
                         dx = (x - paddleCenter) * 0.15; // Add some english (reduced multiplier for better control)
+                        
+                        // Prevent ball sticking in paddle
+                        if (hitGuest) y = 20 + BALL_SIZE;
+                        if (hitHost) y = CANVAS_HEIGHT - 20 - BALL_SIZE;
+
+                        gameState.current.ball = { x, y, dx, dy };
+                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
                     }
 
                     // Scoring
@@ -240,9 +274,6 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                         setTimeout(() => {
                             if (gameState.current) gameState.current.isPaused = false;
                         }, 2000);
-                    } else {
-                        gameState.current.ball = { x, y, dx, dy };
-                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
                     }
                 }
             }
