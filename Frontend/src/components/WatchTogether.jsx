@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player/youtube';
-import { getSocket } from '../config/socket';
+import { getSocket } from '../socket';
 import { X, Play, Pause, Maximize2 } from 'lucide-react';
 
 const WatchTogether = ({ url, isHost, opponentId, isGroup, onClose }) => {
