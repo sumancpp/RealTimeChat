@@ -25,6 +25,6 @@ router.get("/messages/:groupId", isAuth, getGroupMessages);
 router.put("/leave/:groupId", isAuth, leaveGroup);
 router.put("/remove-user/:groupId/:userIdToRemove", isAuth, removeUserFromGroup);
 router.delete("/delete/:groupId", isAuth, deleteGroup);
-router.put("/edit/:groupId", isAuth, editGroupInfo);
+router.put("/edit/:groupId", isAuth, upload.single("groupProfileImage"), editGroupInfo);
 
 export default router;

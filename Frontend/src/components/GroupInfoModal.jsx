@@ -16,6 +16,8 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
     const [isEditingInfo, setIsEditingInfo] = useState(false);
     const [editGroupName, setEditGroupName] = useState("");
     const [editGroupDesc, setEditGroupDesc] = useState("");
+    const [editGroupImage, setEditGroupImage] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
 
     if (!isOpen || !group) return null;
 
@@ -73,13 +75,27 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
     const handleEditClick = () => {
         setEditGroupName(group.groupName);
         setEditGroupDesc(group.groupDescription || "");
+        setEditGroupImage(null);
+        setPreviewImage(group.groupProfileImage || defaultProfile);
         setIsEditingInfo(true);
     };
 
     const handleSaveInfo = async () => {
         try {
             setLoading(true);
-            const res = await axios.put(`${serverUrl}/group/edit/${group._id}`, { groupName: editGroupName, groupDescription: editGroupDesc }, { withCredentials: true });
+            const formData = new FormData();
+            formData.append('groupName', editGroupName);
+            formData.append('groupDescription', editGroupDesc);
+            if (editGroupImage) {
+                formData.append('groupProfileImage', editGroupImage);
+            }
+
+            const res = await axios.put(`${serverUrl}/group/edit/${group._id}`, formData, { 
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
             if (res.data) {
                 dispatch(setSelectedUser(res.data));
                 setIsEditingInfo(false);
@@ -132,11 +148,29 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
                     <X size={24} />
                 </button>
                 <div className="flex flex-col items-center mb-6 pt-4">
-                    <img 
-                        src={group.groupProfileImage || defaultProfile} 
-                        alt="Group" 
-                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-100 shadow-md mb-3"
-                    />
+                    <div className="relative">
+                        <img 
+                            src={isEditingInfo ? previewImage : (group.groupProfileImage || defaultProfile)} 
+                            alt="Group" 
+                            className="w-24 h-24 rounded-full object-cover border-4 border-gray-100 shadow-md mb-3"
+                        />
+                        {isEditingInfo && (
+                            <label className="absolute bottom-3 right-0 bg-green-500 p-1.5 rounded-full text-white cursor-pointer hover:bg-green-600 transition shadow-md">
+                                <Edit2 size={14} />
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                        if (e.target.files[0]) {
+                                            setEditGroupImage(e.target.files[0]);
+                                            setPreviewImage(URL.createObjectURL(e.target.files[0]));
+                                        }
+                                    }}
+                                />
+                            </label>
+                        )}
+                    </div>
                     
                     {!isEditingInfo ? (
                         <>

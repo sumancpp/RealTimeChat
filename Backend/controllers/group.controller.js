@@ -328,6 +328,13 @@ export const editGroupInfo = async (req, res) => {
             return res.status(403).json({ message: "Only admins can edit group info" });
         }
 
+        if (req.file) {
+            const uploadedFile = await uploadOnCloudinary(req.file.path);
+            if (req.file.mimetype.startsWith("image")) {
+                group.groupProfileImage = uploadedFile;
+            }
+        }
+
         if (groupName) group.groupName = groupName;
         if (groupDescription !== undefined) group.groupDescription = groupDescription;
         
