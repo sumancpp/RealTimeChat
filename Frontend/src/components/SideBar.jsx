@@ -86,6 +86,7 @@ const SideBar = () => {
         
     const [groups, setGroups] = useState([]);
     const [showGroupModal, setShowGroupModal] = useState(false);
+    const [viewingImage, setViewingImage] = useState(null);
 
     const handleUserClick = (user) => {
         dispatch(setSelectedUser(user));
@@ -352,7 +353,11 @@ const SideBar = () => {
                                                             defaultProfile
                                                         }
                                                         alt="profile"
-                                                        className='w-11 h-11 rounded-full border-2 border-green-500 object-cover shadow-md'
+                                                        className='w-11 h-11 rounded-full border-2 border-green-500 object-cover shadow-md hover:scale-105 transition-transform'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setViewingImage(user?.profileImage || defaultProfile);
+                                                        }}
                                                     />
 
                                                     <span
@@ -460,7 +465,11 @@ const SideBar = () => {
                                                 defaultProfile
                                             }
                                             alt="profile"
-                                            className='w-14 h-14 rounded-full object-cover'
+                                            className='w-14 h-14 rounded-full object-cover hover:scale-105 transition-transform'
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setViewingImage(user?.profileImage || defaultProfile);
+                                            }}
                                         />
 
                                         {
@@ -550,7 +559,11 @@ const SideBar = () => {
                                     <img
                                         src={group.groupProfileImage || defaultProfile}
                                         alt="group"
-                                        className="w-14 h-14 rounded-full object-cover shadow-sm"
+                                        className="w-14 h-14 rounded-full object-cover shadow-sm hover:scale-105 transition-transform"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setViewingImage(group.groupProfileImage || defaultProfile);
+                                        }}
                                     />
                                     <div className="flex-1 overflow-hidden">
                                         <h2 className="font-semibold text-[#0b2a5b] truncate">{group.groupName}</h2>
@@ -634,6 +647,35 @@ const SideBar = () => {
             )}
 
         </div>
+
+            {/* PROFILE IMAGE VIEWER MODAL */}
+            {viewingImage && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
+                    onClick={() => setViewingImage(null)}
+                >
+                    <motion.div 
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="relative max-w-sm w-full max-h-[80vh] flex items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img 
+                            src={viewingImage} 
+                            alt="Profile View" 
+                            className="w-full h-auto max-h-[70vh] object-contain rounded-none shadow-2xl bg-black"
+                        />
+                        <button 
+                            className="absolute -top-12 right-0 text-white p-2 hover:bg-white/20 rounded-full transition"
+                            onClick={() => setViewingImage(null)}
+                        >
+                            <X size={30} />
+                        </button>
+                    </motion.div>
+                </div>
+            )}
 
         </>
     );
