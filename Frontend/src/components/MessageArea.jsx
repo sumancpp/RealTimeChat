@@ -1043,23 +1043,24 @@ const MessageArea = () => {
               </div>
             </div>
 
-                    <div className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
-              <button 
-                  onClick={initiateWatchTogether}
-                  className="hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
-                  title="Watch Together (Sync Cinema)"
-              >
-                  <MonitorPlay size={24} />
-              </button>
-
+            <div className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
               {selectedUser?.isGroup ? (
-                <button 
-                  onClick={() => setShowDrawingCanvas(true)}
-                  className="hover:text-purple-500 hover:bg-purple-50 p-2 rounded-full transition-colors"
-                  title="Group Whiteboard"
-                >
-                  <Palette size={24} />
-                </button>
+                <>
+                  <button 
+                      onClick={initiateWatchTogether}
+                      className="hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                      title="Watch Together (Sync Cinema)"
+                  >
+                      <MonitorPlay size={24} />
+                  </button>
+                  <button 
+                    onClick={() => setShowDrawingCanvas(true)}
+                    className="hover:text-purple-500 hover:bg-purple-50 p-2 rounded-full transition-colors"
+                    title="Group Whiteboard"
+                  >
+                    <Palette size={24} />
+                  </button>
+                </>
               ) : (
                 <>
                   {!selectedUser?.isAI && (
@@ -1089,6 +1090,9 @@ const MessageArea = () => {
                     <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
                       <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Film size={16} /> Play Chat Story
+                      </button>
+                      <button onClick={() => { initiateWatchTogether(); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium border-b border-gray-100">
+                          <MonitorPlay size={16} /> Watch Together
                       </button>
                       <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                           <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />

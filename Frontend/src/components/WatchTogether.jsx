@@ -135,12 +135,12 @@ const WatchTogether = ({ url, isHost, opponentId, isGroup, onClose }) => {
                     width="100%" 
                     height="100%"
                     playing={playing}
-                    controls={false} // Custom controls so we can sync them easily
+                    controls={true} // Enable native controls as a fallback for autoplay policies
                     onPlay={handlePlay}
                     onPause={handlePause}
                     onProgress={handleProgress}
-                    onBuffer={() => emitSyncState(false, playerRef.current?.getCurrentTime() || 0)} // Pause for others if one person buffers
-                    onBufferEnd={() => emitSyncState(true, playerRef.current?.getCurrentTime() || 0)}
+                    onBuffer={() => {}} // Removed aggressive sync to prevent pause loops
+                    onBufferEnd={() => {}}
                     config={{
                         youtube: {
                             playerVars: { 
