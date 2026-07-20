@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactPlayer from 'react-player/youtube';
+import ReactPlayer from 'react-player';
 import { getSocket } from '../socket';
 import { X, Play, Pause, Maximize2 } from 'lucide-react';
 
