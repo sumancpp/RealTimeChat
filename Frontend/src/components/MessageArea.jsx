@@ -1768,25 +1768,29 @@ text-sm
 "
               />
 
-              {/* MUSIC MOOD */}
-              <button
-                type="button"
-                onClick={() => setMessage("@music")}
-                className="text-pink-500 hover:text-pink-600 transition mx-1"
-                title="Mood Music Suggestions"
-              >
-                <Music size={24} />
-              </button>
+              {!selectedUser?.isGroup && (
+                <>
+                  {/* MUSIC MOOD */}
+                  <button
+                    type="button"
+                    onClick={() => setMessage("@music")}
+                    className="text-pink-500 hover:text-pink-600 transition mx-1"
+                    title="Mood Music Suggestions"
+                  >
+                    <Music size={24} />
+                  </button>
 
-              {/* ROAST */}
-              <button
-                type="button"
-                onClick={() => setMessage("@roast")}
-                className="text-orange-500 hover:text-orange-600 transition mx-1"
-                title="AI Roast Mode"
-              >
-                <Flame size={24} />
-              </button>
+                  {/* ROAST */}
+                  <button
+                    type="button"
+                    onClick={() => setMessage("@roast")}
+                    className="text-orange-500 hover:text-orange-600 transition mx-1"
+                    title="AI Roast Mode"
+                  >
+                    <Flame size={24} />
+                  </button>
+                </>
+              )}
 
               {/* SEND */}
               <button
