@@ -4,7 +4,7 @@ import { getSocket } from '../socket';
 import { X, Play, Pause, Maximize2 } from 'lucide-react';
 
 const WatchTogether = ({ url, isHost, opponentId, isGroup, onClose }) => {
-    const [playing, setPlaying] = useState(true);
+    const [playing, setPlaying] = useState(false);
     const [played, setPlayed] = useState(0);
     const [seeking, setSeeking] = useState(false);
     
@@ -64,17 +64,13 @@ const WatchTogether = ({ url, isHost, opponentId, isGroup, onClose }) => {
     };
 
     const handlePlay = () => {
-        if (!playing) {
-            setPlaying(true);
-            emitSyncState(true, playerRef.current?.getCurrentTime() || 0);
-        }
+        setPlaying(true);
+        emitSyncState(true, playerRef.current?.getCurrentTime() || 0);
     };
 
     const handlePause = () => {
-        if (playing) {
-            setPlaying(false);
-            emitSyncState(false, playerRef.current?.getCurrentTime() || 0);
-        }
+        setPlaying(false);
+        emitSyncState(false, playerRef.current?.getCurrentTime() || 0);
     };
 
     const handleSeekChange = (e) => {
