@@ -22,13 +22,17 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         isHost: isHost,
         isPaused: true, // Start with a brief pause
         lastPaddleEmit: 0,
-        lastEmittedX: -1
+        lastEmittedX: -1,
+        lastFrameTime: performance.now()
     });
 
     useEffect(() => {
         // Initial pause before game starts
         const timer = setTimeout(() => {
-            if (gameState.current) gameState.current.isPaused = false;
+            if (gameState.current) {
+                gameState.current.isPaused = false;
+                gameState.current.lastFrameTime = performance.now();
+            }
         }, 2000);
         return () => clearTimeout(timer);
     }, []);
@@ -52,7 +56,10 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                 setScore({ me: newScore.opponent, opponent: newScore.me });
                 gameState.current.isPaused = true;
                 setTimeout(() => {
-                    if (gameState.current) gameState.current.isPaused = false;
+                    if (gameState.current) {
+                        gameState.current.isPaused = false;
+                        gameState.current.lastFrameTime = performance.now();
+                    }
                 }, 2000);
             }
         });
@@ -125,7 +132,17 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         const ctx = canvas.getContext('2d');
         let animationFrameId;
 
-        const render = () => {
+        gameState.current.lastFrameTime = performance.now();
+
+        const render = (time) => {
+            const dt = time - (gameState.current.lastFrameTime || time);
+            gameState.current.lastFrameTime = time;
+            
+            // Limit dt to prevent massive jumps if tab was inactive
+            const safeDt = Math.min(dt, 50); 
+            // 60 FPS is 16.66ms per frame. Multiplier is 1 at 60 FPS.
+            const timeScale = safeDt / 16.666;
+
             // Clear canvas
             ctx.fillStyle = '#0b2a5b';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -187,64 +204,56 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             if (!gameState.current.isPaused) {
                 let { x, y, dx, dy } = gameState.current.ball;
                 
-                x += dx;
-                y += dy;
+                x += dx * timeScale;
+                y += dy * timeScale;
 
                 // Bounce off left and right walls
                 if (x - BALL_SIZE < 0 || x + BALL_SIZE > CANVAS_WIDTH) {
                     dx *= -1;
                     if (x - BALL_SIZE < 0) x = BALL_SIZE;
                     if (x + BALL_SIZE > CANVAS_WIDTH) x = CANVAS_WIDTH - BALL_SIZE;
+                }
+
+                // Bounce off paddles (BOTH clients predict this for zero visual latency)
+                const HIT_LENIENCY = 45; // Increased leniency for lag
+                
+                let topPaddleX = gameState.current.isHost ? gameState.current.opponentPaddleX : gameState.current.myPaddleX;
+                let bottomPaddleX = gameState.current.isHost ? gameState.current.myPaddleX : gameState.current.opponentPaddleX;
+
+                let hitTop = dy < 0 && 
+                             y - BALL_SIZE <= 20 && 
+                             y + BALL_SIZE >= 10 && 
+                             x + BALL_SIZE >= topPaddleX - HIT_LENIENCY && 
+                             x - BALL_SIZE <= topPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
+
+                let hitBottom = dy > 0 && 
+                                y + BALL_SIZE >= CANVAS_HEIGHT - 20 && 
+                                y - BALL_SIZE <= CANVAS_HEIGHT - 10 && 
+                                x + BALL_SIZE >= bottomPaddleX - HIT_LENIENCY && 
+                                x - BALL_SIZE <= bottomPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
+
+                if (hitTop || hitBottom) {
+                    let newSpeed = Math.abs(dy) * 1.05;
+                    const MAX_SPEED = 12;
+                    if (newSpeed > MAX_SPEED) newSpeed = MAX_SPEED;
                     
-                    if (gameState.current.isHost) {
-                        gameState.current.ball = { x, y, dx, dy };
-                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
-                    }
+                    dy = dy > 0 ? -newSpeed : newSpeed;
+                    
+                    let paddleCenter = hitTop ? topPaddleX + PADDLE_WIDTH / 2 : bottomPaddleX + PADDLE_WIDTH / 2;
+                    dx = (x - paddleCenter) * 0.15;
+                    
+                    if (hitTop) y = 20 + BALL_SIZE;
+                    if (hitBottom) y = CANVAS_HEIGHT - 20 - BALL_SIZE;
                 }
 
                 gameState.current.ball = { x, y, dx, dy };
             }
 
-            // Host handles paddle physics and scoring
+            // Host handles scoring (Source of truth)
             if (gameState.current.isHost) {
                 if (!gameState.current.isPaused) {
-                    let { x, y, dx, dy } = gameState.current.ball;
+                    let { y } = gameState.current.ball;
                     
-                    // Bounce off paddles
-                    const HIT_LENIENCY = 35; // Compensates for network latency
-                    
-                    let hitGuest = dy < 0 && 
-                                   y - BALL_SIZE <= 20 && 
-                                   y + BALL_SIZE >= 10 && 
-                                   x + BALL_SIZE >= gameState.current.opponentPaddleX - HIT_LENIENCY && 
-                                   x - BALL_SIZE <= gameState.current.opponentPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
-
-                    let hitHost = dy > 0 && 
-                                  y + BALL_SIZE >= CANVAS_HEIGHT - 20 && 
-                                  y - BALL_SIZE <= CANVAS_HEIGHT - 10 && 
-                                  x + BALL_SIZE >= gameState.current.myPaddleX - HIT_LENIENCY && 
-                                  x - BALL_SIZE <= gameState.current.myPaddleX + PADDLE_WIDTH + HIT_LENIENCY;
-
-                    if (hitGuest || hitHost) {
-                        // Increase speed gradually by 5% and cap it at a maximum of 12
-                        let newSpeed = Math.abs(dy) * 1.05;
-                        const MAX_SPEED = 12;
-                        if (newSpeed > MAX_SPEED) newSpeed = MAX_SPEED;
-                        
-                        // Reverse direction with the new speed
-                        dy = dy > 0 ? -newSpeed : newSpeed;
-                        
-                        let paddleCenter = hitGuest ? gameState.current.opponentPaddleX + PADDLE_WIDTH / 2 : gameState.current.myPaddleX + PADDLE_WIDTH / 2;
-                        dx = (x - paddleCenter) * 0.15; // Add some english (reduced multiplier for better control)
-                        
-                        // Prevent ball sticking in paddle
-                        if (hitGuest) y = 20 + BALL_SIZE;
-                        if (hitHost) y = CANVAS_HEIGHT - 20 - BALL_SIZE;
-
-                        gameState.current.ball = { x, y, dx, dy };
-                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
-                    }
-
                     // Scoring
                     if (y < 0) {
                         // Host scored (ball passed Guest at top)
@@ -258,7 +267,10 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                         
                         gameState.current.isPaused = true;
                         setTimeout(() => {
-                            if (gameState.current) gameState.current.isPaused = false;
+                            if (gameState.current) {
+                                gameState.current.isPaused = false;
+                                gameState.current.lastFrameTime = performance.now();
+                            }
                         }, 2000);
                     } else if (y > CANVAS_HEIGHT) {
                         // Guest scored (ball passed Host at bottom)
@@ -272,7 +284,10 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                         
                         gameState.current.isPaused = true;
                         setTimeout(() => {
-                            if (gameState.current) gameState.current.isPaused = false;
+                            if (gameState.current) {
+                                gameState.current.isPaused = false;
+                                gameState.current.lastFrameTime = performance.now();
+                            }
                         }, 2000);
                     }
                 }
@@ -281,7 +296,7 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             animationFrameId = requestAnimationFrame(render);
         };
 
-        render();
+        animationFrameId = requestAnimationFrame(render);
 
         return () => {
             cancelAnimationFrame(animationFrameId);
