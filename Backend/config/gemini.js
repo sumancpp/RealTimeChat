@@ -8,10 +8,15 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || null;
+const GEMINI_API_KEY_1 = process.env.GEMINI_API_KEY?.trim() || null;
+const GEMINI_API_KEY_2 = process.env.GEMINI_API_KEY_2?.trim() || null;
 
-// Initialize the client
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+let currentKeyIndex = 1;
+let ai = GEMINI_API_KEY_1 ? new GoogleGenAI({ apiKey: GEMINI_API_KEY_1 }) : 
+         (GEMINI_API_KEY_2 ? new GoogleGenAI({ apiKey: GEMINI_API_KEY_2 }) : null);
+         
+if (!GEMINI_API_KEY_1 && GEMINI_API_KEY_2) currentKeyIndex = 2;
+
 const GEMINI_MODEL = "gemini-2.5-flash";
 
 // Helper function to pause execution
@@ -41,10 +46,10 @@ const parseRetryDelayMs = (retryInfo) => {
     return null;
 };
 
-const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 3) => {
+const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 4) => {
     const trimmedPrompt = prompt?.toString().trim();
     if (!trimmedPrompt) return "Sorry, I couldn't generate a response.";
-    if (!GEMINI_API_KEY) return "AI replies use fallback text (Missing Key).";
+    if (!ai) return "AI replies use fallback text (Missing Key).";
 
     let attempt = 0;
 
@@ -63,34 +68,36 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 3)
         } catch (error) {
             attempt++;
             
-            // Check if the error is a Rate Limit / Resource Exhausted (429)
-            const isRateLimit = error.status === 429 || 
-                                error.message?.includes("429") || 
-                                error.message?.includes("RESOURCE_EXHAUSTED");
-
-            if (isRateLimit && attempt < maxRetries) {
-                // Find any RetryInfo detail provided by the API
-                const retryDetail = Array.isArray(error.details)
-                    ? error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'))?.retryDelay
-                    : error.retryDelay || null;
-
-                // Parse server-suggested delay (supports strings like "59s", "10000ms" or objects)
-                let waitTime = parseRetryDelayMs(retryDetail) ?? Math.pow(2, attempt) * 1000;
-
-                // Add jitter
-                waitTime += Math.round(Math.random() * 1000);
-
-                console.warn(`[Gemini API] Rate limit hit. Retrying ${attempt}/${maxRetries} in ${waitTime}ms`);
-                await delay(waitTime);
-                continue; // Loop back and try again
-            }
-
-            // If this is a resource exhausted / quota error, return a friendly fallback message
             const isQuotaExceeded = String(error.message || '').includes('Quota') || String(error.message || '').includes('quota') ||
-                String(error.message || '').includes('RESOURCE_EXHAUSTED');
+                String(error.message || '').includes('RESOURCE_EXHAUSTED') || error.status === 429 || error.message?.includes("429");
 
             if (isQuotaExceeded) {
-                console.error('[Gemini API] Quota exceeded or resource exhausted:', error.message || error);
+                // Switch to backup API key if available
+                if (currentKeyIndex === 1 && GEMINI_API_KEY_2) {
+                    console.warn(`[Gemini API] Key 1 quota/rate limit hit. Switching to Key 2.`);
+                    currentKeyIndex = 2;
+                    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY_2 });
+                    continue; // Try again immediately with new key
+                } else if (currentKeyIndex === 2 && GEMINI_API_KEY_1) {
+                    console.warn(`[Gemini API] Key 2 quota/rate limit hit. Switching back to Key 1.`);
+                    currentKeyIndex = 1;
+                    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY_1 });
+                }
+
+                if (attempt < maxRetries) {
+                    const retryDetail = Array.isArray(error.details)
+                        ? error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'))?.retryDelay
+                        : error.retryDelay || null;
+                        
+                    let waitTime = parseRetryDelayMs(retryDetail) ?? Math.pow(2, attempt) * 1000;
+                    waitTime += Math.round(Math.random() * 1000);
+                    
+                    console.warn(`[Gemini API] Rate limit hit. Retrying ${attempt}/${maxRetries} in ${waitTime}ms`);
+                    await delay(waitTime);
+                    continue; 
+                }
+
+                console.error('[Gemini API] Quota exceeded or resource exhausted on all keys:', error.message || error);
                 return 'AI temporarily unavailable: quota or billing limits reached. Please try again later.';
             }
 
