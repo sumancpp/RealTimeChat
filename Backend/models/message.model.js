@@ -114,6 +114,11 @@ const messageSchema = new mongoose.Schema({
         default: null
     },
 
+    isAnonymous: {
+        type: Boolean,
+        default: false
+    },
+
 }, {
     timestamps: true
 });

@@ -300,6 +300,64 @@ io.on(
             }
         });
 
+        // WATCH TOGETHER EVENTS
+        socket.on("startWatchTogether", async ({ to, url, isGroup }) => {
+            if (isGroup) {
+                try {
+                    const group = await Conversation.findById(to);
+                    if (group) {
+                        group.participants.forEach(p => {
+                            if (p.toString() !== userId?.toString()) {
+                                const receiverSocketId = getReceiverSocketId(p.toString());
+                                if (receiverSocketId) io.to(receiverSocketId).emit("startWatchTogether", { url, from: userId });
+                            }
+                        });
+                    }
+                } catch(e) {}
+            } else {
+                const receiverSocketId = getReceiverSocketId(to);
+                if (receiverSocketId) io.to(receiverSocketId).emit("startWatchTogether", { url, from: userId });
+            }
+        });
+
+        socket.on("syncVideoState", async ({ to, state, isGroup }) => {
+            if (isGroup) {
+                try {
+                    const group = await Conversation.findById(to);
+                    if (group) {
+                        group.participants.forEach(p => {
+                            if (p.toString() !== userId?.toString()) {
+                                const receiverSocketId = getReceiverSocketId(p.toString());
+                                if (receiverSocketId) io.to(receiverSocketId).emit("syncVideoState", { state, from: userId });
+                            }
+                        });
+                    }
+                } catch(e) {}
+            } else {
+                const receiverSocketId = getReceiverSocketId(to);
+                if (receiverSocketId) io.to(receiverSocketId).emit("syncVideoState", { state, from: userId });
+            }
+        });
+
+        socket.on("stopWatchTogether", async ({ to, isGroup }) => {
+            if (isGroup) {
+                try {
+                    const group = await Conversation.findById(to);
+                    if (group) {
+                        group.participants.forEach(p => {
+                            if (p.toString() !== userId?.toString()) {
+                                const receiverSocketId = getReceiverSocketId(p.toString());
+                                if (receiverSocketId) io.to(receiverSocketId).emit("stopWatchTogether", { from: userId });
+                            }
+                        });
+                    }
+                } catch(e) {}
+            } else {
+                const receiverSocketId = getReceiverSocketId(to);
+                if (receiverSocketId) io.to(receiverSocketId).emit("stopWatchTogether", { from: userId });
+            }
+        });
+
         // GROUP DRAWING EVENTS
         socket.on("draw", async ({ groupId, data }) => {
             try {

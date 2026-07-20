@@ -125,7 +125,7 @@ export const sendGroupMessage = async (req, res) => {
     try {
         const sender = req.userId;
         const { groupId } = req.params;
-        const { message, replyTo } = req.body;
+        const { message, replyTo, isAnonymous } = req.body;
 
         let image = "";
         let voice = "";
@@ -153,7 +153,8 @@ export const sendGroupMessage = async (req, res) => {
             image,
             voice,
             replyTo: replyTo || null,
-            isSeen: false
+            isSeen: false,
+            isAnonymous: isAnonymous === 'true' || isAnonymous === true
         });
 
         group.messages.push(newMessage._id);

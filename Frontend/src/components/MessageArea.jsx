@@ -23,7 +23,8 @@ import {
   Palette,
   Film,
   Music,
-  Play
+  Play,
+  MonitorPlay
 } from "lucide-react";
 
 import axios from "axios";
@@ -61,6 +62,7 @@ import GroupInfoModal from "./GroupInfoModal";
 import TableTennisGame from "./TableTennisGame";
 import DrawingCanvas from "./DrawingCanvas";
 import ChatReplay from "./ChatReplay";
+import WatchTogether from "./WatchTogether";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -218,7 +220,11 @@ const MessageArea = () => {
 
   const [chatTheme, setChatTheme] = useState('default');
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [isAnonymousMode, setIsAnonymousMode] = useState(false);
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false);
+  
+  const [watchTogetherUrl, setWatchTogetherUrl] = useState(null);
+  const [isWatchHost, setIsWatchHost] = useState(false);
 
   useEffect(() => {
     if (selectedUser) {
@@ -233,6 +239,28 @@ const MessageArea = () => {
     setShowThemeMenu(false);
     setShowMenu(false);
   };
+
+  useEffect(() => {
+      if (!socket) return;
+
+      const handleStartWatchTogether = ({ url, from }) => {
+          setWatchTogetherUrl(url);
+          setIsWatchHost(false); // They received the request, they are not the host
+      };
+
+      const handleStopWatchTogether = () => {
+          setWatchTogetherUrl(null);
+          setIsWatchHost(false);
+      };
+      
+      socket.on("startWatchTogether", handleStartWatchTogether);
+      socket.on("stopWatchTogether", handleStopWatchTogether);
+      
+      return () => {
+          socket.off("startWatchTogether", handleStartWatchTogether);
+          socket.off("stopWatchTogether", handleStopWatchTogether);
+      };
+  }, [socket]);
 
 
 
@@ -707,6 +735,10 @@ const MessageArea = () => {
         );
       }
 
+      if (selectedUser?.isGroup && isAnonymousMode) {
+        formData.append("isAnonymous", "true");
+      }
+
       const isAiTriggered = messageTextToSend?.trim().toLowerCase().startsWith("@ai") ||
                             messageTextToSend?.trim().toLowerCase() === "@roast" ||
                             messageTextToSend?.trim().toLowerCase() === "@music" ||
@@ -922,6 +954,21 @@ const MessageArea = () => {
       }
   };
 
+  const initiateWatchTogether = () => {
+      const url = prompt("Enter a YouTube URL to watch together:");
+      if (url && (url.includes("youtube.com") || url.includes("youtu.be"))) {
+          setWatchTogetherUrl(url);
+          setIsWatchHost(true);
+          socket?.emit("startWatchTogether", { 
+              to: selectedUser._id, 
+              url, 
+              isGroup: selectedUser.isGroup 
+          });
+      } else if (url) {
+          alert("Please enter a valid YouTube URL.");
+      }
+  };
+
   return (
 
     <div className={`w-full h-screen flex flex-col ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
@@ -996,7 +1043,15 @@ const MessageArea = () => {
               </div>
             </div>
 
-            <div ref={menuRef} className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
+                    <div className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
+              <button 
+                  onClick={initiateWatchTogether}
+                  className="hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                  title="Watch Together (Sync Cinema)"
+              >
+                  <MonitorPlay size={24} />
+              </button>
+
               {selectedUser?.isGroup ? (
                 <button 
                   onClick={() => setShowDrawingCanvas(true)}
@@ -1076,6 +1131,19 @@ const MessageArea = () => {
              onClose={() => setShowGroupInfo(false)}
              group={selectedUser}
           />
+
+          {watchTogetherUrl && (
+              <WatchTogether 
+                  url={watchTogetherUrl}
+                  isHost={isWatchHost}
+                  opponentId={selectedUser._id}
+                  isGroup={selectedUser.isGroup}
+                  onClose={() => {
+                      setWatchTogetherUrl(null);
+                      setIsWatchHost(false);
+                  }}
+              />
+          )}
 
           {showDrawingCanvas && selectedUser?.isGroup && (
               <DrawingCanvas groupId={selectedUser._id} onClose={() => setShowDrawingCanvas(false)} />
@@ -1215,7 +1283,7 @@ const MessageArea = () => {
                   
                   {selectedUser?.isGroup && (msg.sender?._id || msg.sender)?.toString() !== userData?._id?.toString() && (
                       <p className="text-xs font-bold text-orange-500 mb-1">
-                          {msg.sender?.name || msg.sender?.userName || "Someone"}
+                          {msg.isAnonymous ? "Secret Member" : (msg.sender?.name || msg.sender?.userName || "Someone")}
                       </p>
                   )}
 
@@ -1822,6 +1890,17 @@ overflow-y-auto
 text-sm
 "
               />
+
+              {selectedUser?.isGroup && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAnonymousMode(!isAnonymousMode)}
+                    className={`transition mx-1 p-1.5 rounded-full ${isAnonymousMode ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                    title="Incognito Mode"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11v1a10 10 0 1 1-9-10 1.2 1.2 0 0 1 1.14 1.76l-1 2.24a1 1 0 0 0 .91 1.41h2.21a2 2 0 0 1 2 2z"/></svg>
+                  </button>
+              )}
 
               {!selectedUser?.isGroup && (
                 <>
