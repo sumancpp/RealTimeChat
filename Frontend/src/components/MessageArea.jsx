@@ -1485,8 +1485,8 @@ ${msg.sender?.toString() ===
 
             {isAITypingAnimation && (
               <div className="flex mb-4 justify-start">
-                <div className="relative py-2 px-4 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 border border-white/20">
-                  <div className="flex items-center text-white text-sm font-medium animate-pulse">
+                <div className="relative py-2 px-4 max-w-[80%] sm:max-w-[70%] bg-transparent">
+                  <div className="flex items-center text-gray-500 text-sm font-medium animate-pulse">
                     <span className="mr-2 text-lg">✨</span> Thinking...
                   </div>
                 </div>
