@@ -955,8 +955,11 @@ const MessageArea = () => {
   };
 
   const initiateWatchTogether = () => {
-      const url = prompt("Enter a YouTube URL to watch together:");
+      let url = prompt("Enter a YouTube URL to watch together:");
       if (url && (url.includes("youtube.com") || url.includes("youtu.be"))) {
+          if (!url.startsWith("http://") && !url.startsWith("https://")) {
+              url = "https://" + url;
+          }
           setWatchTogetherUrl(url);
           setIsWatchHost(true);
           socket?.emit("startWatchTogether", { 

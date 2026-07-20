@@ -137,16 +137,6 @@ const WatchTogether = ({ url, isHost, opponentId, isGroup, onClose }) => {
                     onProgress={handleProgress}
                     onBuffer={() => {}} // Removed aggressive sync to prevent pause loops
                     onBufferEnd={() => {}}
-                    config={{
-                        youtube: {
-                            playerVars: { 
-                                disablekb: 1, 
-                                modestbranding: 1,
-                                rel: 0,
-                                iv_load_policy: 3
-                            }
-                        }
-                    }}
                 />
                 
             </div>
