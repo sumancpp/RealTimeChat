@@ -105,11 +105,28 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5)
                 String(error.message || '').includes('RESOURCE_EXHAUSTED') || error.status === 429 || error.message?.includes("429");
 
             if (isQuotaExceeded) {
-                const retryDetail = Array.isArray(error.details)
-                    ? error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'))?.retryDelay
-                    : error.retryDelay || null;
-                    
-                let waitTime = parseRetryDelayMs(retryDetail) ?? 60000; 
+                let waitTime = 60000;
+                const messageStr = String(error.message || '');
+                
+                // First try to extract from human readable message
+                const retryMatch = messageStr.match(/retry in ([0-9.]+)s/i);
+                if (retryMatch) {
+                    waitTime = Math.round(parseFloat(retryMatch[1]) * 1000);
+                } else {
+                    // Then try to extract from JSON details dumped in the error message
+                    try {
+                        const errorJsonMatch = messageStr.match(/\{"error":.*\}/);
+                        if (errorJsonMatch) {
+                            const parsed = JSON.parse(errorJsonMatch[0]);
+                            if (parsed.error && Array.isArray(parsed.error.details)) {
+                                const retryInfo = parsed.error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'));
+                                if (retryInfo && retryInfo.retryDelay) {
+                                    waitTime = parseRetryDelayMs(retryInfo.retryDelay) ?? 60000;
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
                 
                 keyPool[activeKeyIndex].exhaustedUntil = Date.now() + waitTime;
                 console.warn(`[Gemini API] Key ${activeKeyIndex + 1} exhausted. Cooldown: ${waitTime}ms`);

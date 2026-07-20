@@ -166,6 +166,7 @@ const MessageArea = () => {
     useState(null);
 
   const [editingMessageId, setEditingMessageId] = useState(null);
+  const [isAITypingAnimation, setIsAITypingAnimation] = useState(false);
 
   useEffect(() => {
 
@@ -702,6 +703,19 @@ const MessageArea = () => {
         );
       }
 
+      const isAiTriggered = messageTextToSend?.trim().toLowerCase().startsWith("@ai") ||
+                            messageTextToSend?.trim().toLowerCase() === "@roast" ||
+                            messageTextToSend?.trim().toLowerCase() === "@music" ||
+                            selectedUser?.isAI;
+      
+      if (isAiTriggered) {
+          setIsAITypingAnimation(true);
+          // Scroll slightly down to make sure animation is visible
+          setTimeout(() => {
+              bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+          }, 50);
+      }
+
       // 3. SEND TO SERVER
       const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
       const res = await axios.post(
@@ -736,6 +750,7 @@ const MessageArea = () => {
     finally {
 
       setSending(false);
+      setIsAITypingAnimation(false);
 
     }
 
@@ -1467,6 +1482,18 @@ ${msg.sender?.toString() ===
 
               );
             })}
+
+            {isAITypingAnimation && (
+              <div className="flex mb-4 justify-start">
+                <div className="relative p-3 rounded-2xl max-w-[80%] sm:max-w-[70%] shadow-sm bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 border border-white/20">
+                  <div className="flex gap-1.5 items-center h-4 px-2">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div ref={bottomRef}></div>
 
