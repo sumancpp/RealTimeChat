@@ -45,23 +45,20 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
         });
 
         socket.on("ballMove", ({ ball }) => {
-            if (!gameState.current.isHost) {
-                gameState.current.ball = ball;
-            }
+            // Both clients accept ball syncs from the other (distributed authority)
+            gameState.current.ball = ball;
         });
 
         socket.on("scoreUpdate", ({ score: newScore }) => {
-            if (!gameState.current.isHost) {
-                // If I am guest, the host's score is my opponent's score, host's opponent score is my score
-                setScore({ me: newScore.opponent, opponent: newScore.me });
-                gameState.current.isPaused = true;
-                setTimeout(() => {
-                    if (gameState.current) {
-                        gameState.current.isPaused = false;
-                        gameState.current.lastFrameTime = performance.now();
-                    }
-                }, 2000);
-            }
+            // Both clients accept score updates from the opponent
+            setScore({ me: newScore.opponent, opponent: newScore.me });
+            gameState.current.isPaused = true;
+            setTimeout(() => {
+                if (gameState.current) {
+                    gameState.current.isPaused = false;
+                    gameState.current.lastFrameTime = performance.now();
+                }
+            }, 2000);
         });
         
         socket.on("gameEnded", () => {
@@ -117,12 +114,18 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
             e.preventDefault();
         };
 
+        const handleTouchStart = (e) => {
+            updatePaddlePosition(e.touches[0].clientX);
+        };
+
         canvas.addEventListener("mousemove", handleMouseMove);
         canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+        canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
 
         return () => {
             canvas.removeEventListener("mousemove", handleMouseMove);
             canvas.removeEventListener("touchmove", handleTouchMove);
+            canvas.removeEventListener("touchstart", handleTouchStart);
         };
     }, [opponent._id]);
 
@@ -214,7 +217,7 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     if (x + BALL_SIZE > CANVAS_WIDTH) x = CANVAS_WIDTH - BALL_SIZE;
                 }
 
-                // Bounce off paddles (BOTH clients predict this for zero visual latency)
+                // Bounce off paddles
                 const HIT_LENIENCY = 45; // Increased leniency for lag
                 
                 let topPaddleX = gameState.current.isHost ? gameState.current.opponentPaddleX : gameState.current.myPaddleX;
@@ -244,25 +247,34 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                     
                     if (hitTop) y = 20 + BALL_SIZE;
                     if (hitBottom) y = CANVAS_HEIGHT - 20 - BALL_SIZE;
-                }
 
-                gameState.current.ball = { x, y, dx, dy };
+                    gameState.current.ball = { x, y, dx, dy };
+                    
+                    // DISTRIBUTED AUTHORITY: If I hit my own paddle, I am the boss of this bounce.
+                    // I will emit the authoritative ball state to my opponent to correct them if they missed it.
+                    let hitMyPaddle = (gameState.current.isHost && hitBottom) || (!gameState.current.isHost && hitTop);
+                    if (hitMyPaddle) {
+                        socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
+                    }
+                } else {
+                    gameState.current.ball = { x, y, dx, dy };
+                }
             }
 
-            // Host handles scoring (Source of truth)
-            if (gameState.current.isHost) {
-                if (!gameState.current.isPaused) {
-                    let { y } = gameState.current.ball;
-                    
-                    // Scoring
-                    if (y < 0) {
-                        // Host scored (ball passed Guest at top)
+            // Distributed Scoring (Each player is authoritative over their own misses)
+            if (!gameState.current.isPaused) {
+                let { y } = gameState.current.ball;
+                
+                if (gameState.current.isHost) {
+                    // Host is responsible for the bottom wall (their own side)
+                    if (y > CANVAS_HEIGHT) {
+                        // Host missed! Guest scored
                         setScore(s => {
-                            const newScore = { ...s, me: s.me + 1 };
+                            const newScore = { ...s, opponent: s.opponent + 1 };
                             socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
                             return newScore;
                         });
-                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: 5, dy: 5 };
+                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: -5, dy: -5 };
                         socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
                         
                         gameState.current.isPaused = true;
@@ -272,14 +284,17 @@ const TableTennisGame = ({ opponent, isHost, activeGameMessageId, onEndGame }) =
                                 gameState.current.lastFrameTime = performance.now();
                             }
                         }, 2000);
-                    } else if (y > CANVAS_HEIGHT) {
-                        // Guest scored (ball passed Host at bottom)
+                    }
+                } else {
+                    // Guest is responsible for the top wall (their own side)
+                    if (y < 0) {
+                        // Guest missed! Host scored
                         setScore(s => {
-                            const newScore = { ...s, opponent: s.opponent + 1 };
+                            const newScore = { ...s, opponent: s.opponent + 1 }; // From Guest's perspective, opponent (Host) scored
                             socket.emit("scoreUpdate", { to: opponent._id, score: newScore });
                             return newScore;
                         });
-                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: -5, dy: -5 };
+                        gameState.current.ball = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, dx: 5, dy: 5 };
                         socket.emit("ballMove", { to: opponent._id, ball: gameState.current.ball });
                         
                         gameState.current.isPaused = true;
