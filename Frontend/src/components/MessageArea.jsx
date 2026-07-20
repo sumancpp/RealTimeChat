@@ -117,6 +117,30 @@ const THEMES = {
   }
 };
 
+const renderMessageWithLinks = (text) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, i) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a 
+                    key={i} 
+                    href={part} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline break-all underline"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {part}
+                </a>
+            );
+        }
+        return <span key={i}>{part}</span>;
+    });
+};
+
 const MessageArea = () => {
 
   const dispatch = useDispatch();
@@ -1199,7 +1223,7 @@ const MessageArea = () => {
                         <p className="text-sm truncate">
 
                           {
-                            msg.replyTo.message ||
+                            msg.replyTo.message ? renderMessageWithLinks(msg.replyTo.message) :
 
                             (msg.replyTo.image
                               ? "📷 Image"
@@ -1355,7 +1379,7 @@ ${msg.sender?.toString() ===
                         ) : msg.message && (
                           <div className="break-words whitespace-pre-wrap">
                             {msg.isAIMessage && <span className="mr-1">✨</span>}
-                            {msg.message}
+                            {renderMessageWithLinks(msg.message)}
                           </div>
                         )}
                         
@@ -1593,11 +1617,13 @@ ${msg.sender?.toString() ===
                     >
 
                       {
-                        replyMessage.message ||
+                        replyMessage.message ? renderMessageWithLinks(replyMessage.message) :
 
                         (replyMessage.image
                           ? "📷 Image"
-                          : "")
+                          : replyMessage.voice
+                            ? "🎤 Voice Message"
+                            : "")
                       }
 
                     </p>
