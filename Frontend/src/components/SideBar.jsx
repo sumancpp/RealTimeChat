@@ -92,6 +92,14 @@ const SideBar = () => {
         dispatch(setSelectedUser(user));
     };
 
+    const handleTabChange = (tab) => {
+        // Trigger haptic feedback for mobile users (vibrates for 40ms)
+        if (navigator.vibrate) {
+            navigator.vibrate(40);
+        }
+        setActiveTab(tab);
+    };
+
     useEffect(() => {
         if (activeTab === "groups") {
             fetchGroups();
@@ -597,19 +605,19 @@ const SideBar = () => {
 
             {/* BOTTOM NAV BAR */}
             <div className="absolute bottom-0 w-full bg-white border-t border-gray-300 flex justify-around items-center p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 rounded-br-none sm:rounded-br-3xl sm:rounded-bl-3xl lg:rounded-none">
-                <div onClick={() => setActiveTab("chats")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'chats' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
+                <div onClick={() => handleTabChange("chats")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'chats' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
                     <MessageCircle size={24} />
                     <span className="text-[10px] mt-1 tracking-wide">Chats</span>
                 </div>
-                <div onClick={() => setActiveTab("groups")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'groups' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
+                <div onClick={() => handleTabChange("groups")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'groups' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
                     <Users size={24} />
                     <span className="text-[10px] mt-1 tracking-wide">Groups</span>
                 </div>
-                <div onClick={() => setActiveTab("status")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'status' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
+                <div onClick={() => handleTabChange("status")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'status' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
                     <CircleDashed size={24} />
                     <span className="text-[10px] mt-1 tracking-wide">Status</span>
                 </div>
-                <div onClick={() => setActiveTab("calls")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'calls' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
+                <div onClick={() => handleTabChange("calls")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'calls' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
                     <Phone size={24} />
                     <span className="text-[10px] mt-1 tracking-wide">Calls</span>
                 </div>
