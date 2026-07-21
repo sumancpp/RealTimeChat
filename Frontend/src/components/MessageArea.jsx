@@ -278,8 +278,13 @@ const MessageArea = () => {
       const senderId = (from?._id || from)?.toString();
       const targetId = (selectedUser?._id || selectedUser)?.toString();
       if (senderId === targetId) {
-        setIsMiniGameHost(false);
-        setShowMiniGameHub(true);
+        setShowMiniGameHub(prev => {
+          if (!prev) {
+            setIsMiniGameHost(false);
+            return true;
+          }
+          return prev;
+        });
       }
     };
 
@@ -287,8 +292,13 @@ const MessageArea = () => {
       const senderId = (from?._id || from)?.toString();
       const targetId = (selectedUser?._id || selectedUser)?.toString();
       if (senderId === targetId) {
-        setIsMiniGameHost(false);
-        setShowMiniGameHub(true);
+        setShowMiniGameHub(prev => {
+          if (!prev) {
+            setIsMiniGameHost(false);
+            return true;
+          }
+          return prev;
+        });
       }
     };
 

@@ -16,7 +16,7 @@ const MiniGameHub = ({ opponent, gameType = 'tictactoe', isHost = true, onClose 
     const [board, setBoard] = useState(Array(9).fill(null));
     const [currentTurn, setCurrentTurn] = useState('X'); // X always goes first
     const [winner, setWinner] = useState(null); // 'X' | 'O' | 'Draw' | null
-    const mySymbol = isHost ? 'X' : 'O';
+    const [mySymbol] = useState(isHost ? 'X' : 'O');
 
     // RPS States
     const [myChoice, setMyChoice] = useState(null); // 'rock' | 'paper' | 'scissors'
