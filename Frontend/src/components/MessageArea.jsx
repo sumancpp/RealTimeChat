@@ -1,7 +1,8 @@
 import React, {
   useState,
   useRef,
-  useEffect
+  useEffect,
+  useLayoutEffect
 } from "react";
 
 import {
@@ -23,8 +24,7 @@ import {
   Palette,
   Film,
   Music,
-  Play,
-  MonitorPlay
+  Play
 } from "lucide-react";
 
 import axios from "axios";
@@ -62,7 +62,6 @@ import GroupInfoModal from "./GroupInfoModal";
 import TableTennisGame from "./TableTennisGame";
 import DrawingCanvas from "./DrawingCanvas";
 import ChatReplay from "./ChatReplay";
-import WatchTogether from "./WatchTogether";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -70,15 +69,15 @@ const formatLastSeen = (date) => {
     const lastSeen = new Date(date);
     const diff = Math.floor((now - lastSeen) / 60000);
     if (diff < 1) return "Just now";
-    if (diff < 60) return `Last seen ${diff}m ago`;
+    if (diff < 60) return `${diff}m ago`;
     const timeString = lastSeen.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     
     if (now.toDateString() === lastSeen.toDateString()) {
-        return `Last seen today at ${timeString}`;
+        return `Today at ${timeString}`;
     }
     
     const dateString = lastSeen.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    return `Last seen ${dateString} at ${timeString}`;
+    return `${dateString} at ${timeString}`;
 };
 
 const THEMES = {
@@ -222,9 +221,6 @@ const MessageArea = () => {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [isAnonymousMode, setIsAnonymousMode] = useState(false);
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false);
-  
-  const [watchTogetherUrl, setWatchTogetherUrl] = useState(null);
-  const [isWatchHost, setIsWatchHost] = useState(false);
 
   useEffect(() => {
     if (selectedUser) {
@@ -240,28 +236,6 @@ const MessageArea = () => {
     setShowMenu(false);
   };
 
-  useEffect(() => {
-      if (!socket) return;
-
-      const handleStartWatchTogether = ({ url, from }) => {
-          setWatchTogetherUrl(url);
-          setIsWatchHost(false); // They received the request, they are not the host
-      };
-
-      const handleStopWatchTogether = () => {
-          setWatchTogetherUrl(null);
-          setIsWatchHost(false);
-      };
-      
-      socket.on("startWatchTogether", handleStartWatchTogether);
-      socket.on("stopWatchTogether", handleStopWatchTogether);
-      
-      return () => {
-          socket.off("startWatchTogether", handleStartWatchTogether);
-          socket.off("stopWatchTogether", handleStopWatchTogether);
-      };
-  }, [socket]);
-
 
 
   const [recordingMode,
@@ -275,14 +249,28 @@ const MessageArea = () => {
   const audioChunksRef =
     useRef([]);
 
+  const lastScrolledChatIdRef = useRef(null);
+
   // AUTO SCROLL
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!messages || messages.length === 0) return;
 
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth"
-    });
+    if (lastScrolledChatIdRef.current !== selectedUser?._id) {
+      if (messageContainerRef.current) {
+        messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      }
+      bottomRef.current?.scrollIntoView({ behavior: "auto" });
+      lastScrolledChatIdRef.current = selectedUser?._id;
 
-  }, [messages]);
+      requestAnimationFrame(() => {
+        if (messageContainerRef.current) {
+          messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+      });
+    } else {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, selectedUser?._id]);
 
   // CLEAR INPUTS ON USER SWITCH
   useEffect(() => {
@@ -954,34 +942,16 @@ const MessageArea = () => {
       }
   };
 
-  const initiateWatchTogether = () => {
-      let url = prompt("Enter a YouTube URL to watch together:");
-      if (url && (url.includes("youtube.com") || url.includes("youtu.be"))) {
-          if (!url.startsWith("http://") && !url.startsWith("https://")) {
-              url = "https://" + url;
-          }
-          setWatchTogetherUrl(url);
-          setIsWatchHost(true);
-          socket?.emit("startWatchTogether", { 
-              to: selectedUser._id, 
-              url, 
-              isGroup: selectedUser.isGroup 
-          });
-      } else if (url) {
-          alert("Please enter a valid YouTube URL.");
-      }
-  };
-
   return (
 
-    <div className={`w-full h-screen flex flex-col ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
+    <div className={`w-full h-full h-[100dvh] flex flex-col overflow-hidden ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
 
       {selectedUser ? (
 
         <>
 
           {/* HEADER */}
-          <div className="w-full min-h-[70px] bg-white border-b sticky top-0 z-50 border-gray-300 flex items-center px-4 shadow-sm">
+          <div className="w-full h-[70px] min-h-[70px] shrink-0 bg-white border-b border-gray-300 flex items-center px-4 shadow-sm z-50">
 
             <button
               onClick={() => {
@@ -1048,22 +1018,13 @@ const MessageArea = () => {
 
             <div className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
               {selectedUser?.isGroup ? (
-                <>
-                  <button 
-                      onClick={initiateWatchTogether}
-                      className="hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
-                      title="Watch Together (Sync Cinema)"
-                  >
-                      <MonitorPlay size={24} />
-                  </button>
-                  <button 
-                    onClick={() => setShowDrawingCanvas(true)}
-                    className="hover:text-purple-500 hover:bg-purple-50 p-2 rounded-full transition-colors"
-                    title="Group Whiteboard"
-                  >
-                    <Palette size={24} />
-                  </button>
-                </>
+                <button 
+                  onClick={() => setShowDrawingCanvas(true)}
+                  className="hover:text-purple-500 hover:bg-purple-50 p-2 rounded-full transition-colors"
+                  title="Group Whiteboard"
+                >
+                  <Palette size={24} />
+                </button>
               ) : (
                 <>
                   {!selectedUser?.isAI && (
@@ -1093,9 +1054,6 @@ const MessageArea = () => {
                     <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
                       <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Film size={16} /> Play Chat Story
-                      </button>
-                      <button onClick={() => { initiateWatchTogether(); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium border-b border-gray-100">
-                          <MonitorPlay size={16} /> Watch Together
                       </button>
                       <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                           <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
@@ -1139,19 +1097,6 @@ const MessageArea = () => {
              group={selectedUser}
           />
 
-          {watchTogetherUrl && (
-              <WatchTogether 
-                  url={watchTogetherUrl}
-                  isHost={isWatchHost}
-                  opponentId={selectedUser._id}
-                  isGroup={selectedUser.isGroup}
-                  onClose={() => {
-                      setWatchTogetherUrl(null);
-                      setIsWatchHost(false);
-                  }}
-              />
-          )}
-
           {showDrawingCanvas && selectedUser?.isGroup && (
               <DrawingCanvas groupId={selectedUser._id} onClose={() => setShowDrawingCanvas(false)} />
           )}
@@ -1177,7 +1122,7 @@ const MessageArea = () => {
           {/* MESSAGES */}
           <div
             ref={messageContainerRef}
-            className="flex-1 overflow-y-auto px-4 py-5"
+            className="flex-1 min-h-0 overflow-y-auto px-4 py-5"
             onClick={() =>
               setActiveReactionMessage(
                 null
@@ -1657,7 +1602,7 @@ ${msg.sender?.toString() ===
           )}
 
           {/* INPUT */}
-          <div className="relative">
+          <div className="relative shrink-0">
 
             {showPicker && (
 

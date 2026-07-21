@@ -41,13 +41,13 @@ const Home = () => {
   }, [selectedUser, dispatch]);
 
   return (
-    <div className='w-full h-screen flex overflow-hidden'>
+    <div className='w-full h-screen h-[100dvh] flex overflow-hidden'>
 
       {/* Sidebar */}
       <div
         className={`
           ${selectedUser ? "hidden lg:block" : "block"}
-          w-full lg:w-[30%]
+          w-full lg:w-[30%] h-full overflow-hidden
         `}
       >
 
@@ -59,7 +59,7 @@ const Home = () => {
       <div
         className={`
           ${selectedUser ? "block" : "hidden lg:block"}
-          w-full lg:w-[70%]
+          w-full lg:w-[70%] h-full overflow-hidden
         `}
       >
 

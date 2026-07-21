@@ -49,15 +49,15 @@ const formatLastSeen = (date) => {
     const lastSeen = new Date(date);
     const diff = Math.floor((now - lastSeen) / 60000);
     if (diff < 1) return "Just now";
-    if (diff < 60) return `Last seen ${diff}m ago`;
+    if (diff < 60) return `${diff}m ago`;
     const timeString = lastSeen.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     
     if (now.toDateString() === lastSeen.toDateString()) {
-        return `Last seen today at ${timeString}`;
+        return `Today at ${timeString}`;
     }
     
     const dateString = lastSeen.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    return `Last seen ${dateString} at ${timeString}`;
+    return `${dateString} at ${timeString}`;
 };
 
 const SideBar = () => {
@@ -517,16 +517,7 @@ const SideBar = () => {
 
                                         <div className='flex items-center ml-2'>
                                             <h2 className='font-semibold text-[#0b2a5b] truncate'>
-
-                                                {
-                                                    user.unreadCount > 0
-                                                        ? `${user.unreadCount} new`
-                                                        : (
-                                                            user?.name ||
-                                                            user?.userName
-                                                        )
-                                                }
-
+                                                {user?.name || user?.userName}
                                             </h2>
                                         </div>
 
