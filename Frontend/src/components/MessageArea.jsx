@@ -1058,6 +1058,9 @@ const MessageArea = () => {
                       <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Film size={16} /> Play Chat Story
                       </button>
+                      <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-2 font-medium border-b border-gray-100 ${isGhostMode ? 'bg-purple-100 text-purple-700 font-bold' : 'text-purple-600 hover:bg-purple-50'}`}>
+                          <Ghost size={16} /> {isGhostMode ? "Ghost Ink Mode (ON)" : "Ghost Ink Mode"}
+                      </button>
                       <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                           <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
                           {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
@@ -1866,16 +1869,6 @@ text-sm
 transition-all
 `}
               />
-
-              {/* GHOST INK */}
-              <button
-                type="button"
-                onClick={() => setIsGhostMode(!isGhostMode)}
-                className={`transition mx-1 p-1.5 rounded-full ${isGhostMode ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse' : 'text-purple-500 hover:text-purple-600 hover:bg-purple-50'}`}
-                title="Ghost Ink Mode (Disintegrates 5s after reading)"
-              >
-                <Ghost size={22} />
-              </button>
 
               {selectedUser?.isGroup && (
                   <button
