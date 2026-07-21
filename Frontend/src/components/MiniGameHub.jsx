@@ -216,11 +216,10 @@ const MiniGameHub = ({ opponent, gameType = 'tictactoe', isHost = true, onClose 
                                     <button
                                         key={idx}
                                         onClick={() => handleCellClick(idx)}
-                                        disabled={!!cell || !!winner || currentTurn !== mySymbol}
-                                        className={`rounded-xl flex items-center justify-center text-3xl font-extrabold transition-all duration-200 ${
+                                        className={`rounded-xl flex items-center justify-center text-3xl font-extrabold transition-all duration-200 select-none ${
                                             !cell && currentTurn === mySymbol && !winner
-                                                ? 'bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700/50'
-                                                : 'bg-slate-900 border border-slate-800'
+                                                ? 'bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700/50 cursor-pointer'
+                                                : 'bg-slate-900 border border-slate-800 cursor-not-allowed opacity-90'
                                         } ${
                                             cell === 'X' ? 'text-amber-400 shadow-amber-500/20' : 'text-cyan-400 shadow-cyan-500/20'
                                         }`}
@@ -278,11 +277,12 @@ const MiniGameHub = ({ opponent, gameType = 'tictactoe', isHost = true, onClose 
                                     <button
                                         key={item.id}
                                         onClick={() => handleRPSSelect(item.id)}
-                                        disabled={!!myChoice}
-                                        className={`w-20 h-24 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                                        className={`w-20 h-24 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all select-none ${
                                             myChoice === item.id
                                                 ? 'bg-amber-500/20 border-amber-500 scale-105 ring-2 ring-amber-500/50 shadow-lg shadow-amber-500/20'
-                                                : 'bg-slate-900 border-slate-800 hover:bg-slate-800 hover:border-slate-700 active:scale-95'
+                                                : myChoice
+                                                    ? 'bg-slate-900 border-slate-800 opacity-60 cursor-not-allowed'
+                                                    : 'bg-slate-900 border-slate-800 hover:bg-slate-800 hover:border-slate-700 active:scale-95 cursor-pointer'
                                         }`}
                                     >
                                         <span className="text-3xl">{item.emoji}</span>
