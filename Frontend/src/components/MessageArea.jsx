@@ -1016,11 +1016,11 @@ const MessageArea = () => {
               </div>
             </div>
 
-            <div className="ml-auto flex items-center gap-4 text-gray-500 relative shrink-0">
+            <div className="ml-auto flex items-center gap-1 sm:gap-4 text-gray-500 relative shrink-0">
               {selectedUser?.isGroup ? (
                 <button 
                   onClick={() => setShowDrawingCanvas(true)}
-                  className="hover:text-purple-500 hover:bg-purple-50 p-2 rounded-full transition-colors"
+                  className="hover:text-purple-500 hover:bg-purple-50 p-1.5 sm:p-2 rounded-full transition-colors"
                   title="Group Whiteboard"
                 >
                   <Palette size={24} />
@@ -1031,13 +1031,13 @@ const MessageArea = () => {
                     <>
                       <button 
                         onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'video' } }))}
-                        className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                        className="hover:text-green-500 hover:bg-green-50 p-1.5 sm:p-2 rounded-full transition-colors"
                       >
                         <Video size={24} />
                       </button>
                       <button 
                         onClick={() => window.dispatchEvent(new CustomEvent('startCall', { detail: { userToCall: selectedUser, type: 'voice' } }))}
-                        className="hover:text-green-500 hover:bg-green-50 p-2 rounded-full transition-colors"
+                        className="hover:text-green-500 hover:bg-green-50 p-1.5 sm:p-2 rounded-full transition-colors"
                       >
                         <Phone size={22} />
                       </button>
@@ -1045,7 +1045,7 @@ const MessageArea = () => {
                   )}
                   <button 
                     onClick={() => setShowMenu(!showMenu)} 
-                    className="hover:text-gray-700 hover:bg-gray-50 p-2 rounded-full transition-colors"
+                    className="hover:text-gray-700 hover:bg-gray-50 p-1.5 sm:p-2 rounded-full transition-colors"
                   >
                     <MoreVertical size={24} />
                   </button>
