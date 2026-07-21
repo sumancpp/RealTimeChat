@@ -24,7 +24,8 @@ import {
   Palette,
   Film,
   Music,
-  Play
+  Play,
+  Ghost
 } from "lucide-react";
 
 import axios from "axios";
@@ -63,6 +64,7 @@ import TableTennisGame from "./TableTennisGame";
 import DrawingCanvas from "./DrawingCanvas";
 import ChatReplay from "./ChatReplay";
 import VoiceStudioModal from "./VoiceStudioModal";
+import GhostMessageBubble from "./GhostMessageBubble";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -243,6 +245,7 @@ const MessageArea = () => {
     setRecordingMode] =
     useState(false);
   const [recordedAudioBlob, setRecordedAudioBlob] = useState(null);
+  const [isGhostMode, setIsGhostMode] = useState(false);
 
 
   const mediaRecorderRef =
@@ -677,6 +680,7 @@ const MessageArea = () => {
           isSystemMessage: false,
           isAIMessage: false,
           isAIMusic: false,
+          isGhost: isGhostMode || message?.startsWith('@ghost'),
           reactions: []
       };
 
@@ -720,6 +724,10 @@ const MessageArea = () => {
 
       if (selectedUser?.isGroup && isAnonymousMode) {
         formData.append("isAnonymous", "true");
+      }
+
+      if (isGhostMode) {
+        formData.append("isGhost", "true");
       }
 
       const isAiTriggered = messageTextToSend?.trim().toLowerCase().startsWith("@ai") ||
@@ -1187,6 +1195,15 @@ const MessageArea = () => {
                               <div className="text-[11px] font-medium bg-[#f2f2f2] text-[#54656f] px-3 py-1 rounded-lg text-center shadow-sm max-w-[85%]">
                                   {msg.message}
                               </div>
+                          </div>
+                      );
+                  }
+
+                  if (msg.isGhost || (typeof msg.message === 'string' && msg.message.startsWith('@ghost'))) {
+                      const isOwn = (msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString();
+                      return (
+                          <div key={msg._id || index} className={`flex mb-4 ${isOwn ? "justify-end" : "justify-start"}`}>
+                              <GhostMessageBubble msg={msg} isOwn={isOwn} renderMessageWithLinks={renderMessageWithLinks} />
                           </div>
                       );
                   }
@@ -1833,8 +1850,8 @@ ${msg.sender?.toString() ===
                   }, 1000);
 
                 }}
-                placeholder="Type a message"
-                className="
+                placeholder={isGhostMode ? "Ghost Ink Mode 👻 (Disintegrates 5s after reading)" : "Type a message"}
+                className={`
 flex-1
 min-w-0
 resize-none
@@ -1842,12 +1859,23 @@ max-h-32
 px-4
 py-3
 rounded-3xl
-bg-slate-100
+${isGhostMode ? 'bg-purple-50 border-2 border-purple-500/80 text-purple-950 font-medium' : 'bg-slate-100'}
 outline-none
 overflow-y-auto
 text-sm
-"
+transition-all
+`}
               />
+
+              {/* GHOST INK */}
+              <button
+                type="button"
+                onClick={() => setIsGhostMode(!isGhostMode)}
+                className={`transition mx-1 p-1.5 rounded-full ${isGhostMode ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 animate-pulse' : 'text-purple-500 hover:text-purple-600 hover:bg-purple-50'}`}
+                title="Ghost Ink Mode (Disintegrates 5s after reading)"
+              >
+                <Ghost size={22} />
+              </button>
 
               {selectedUser?.isGroup && (
                   <button

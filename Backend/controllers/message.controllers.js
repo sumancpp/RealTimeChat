@@ -172,6 +172,7 @@ await Message.create({
     isAIMessage,
     isAIMusic,
     musicQuery,
+    isGhost: req.body.isGhost === 'true' || req.body.isGhost === true || (finalMessage && finalMessage.startsWith('@ghost')),
 
     image,
 

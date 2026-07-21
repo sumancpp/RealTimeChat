@@ -119,6 +119,11 @@ const messageSchema = new mongoose.Schema({
         default: false
     },
 
+    isGhost: {
+        type: Boolean,
+        default: false
+    },
+
 }, {
     timestamps: true
 });
