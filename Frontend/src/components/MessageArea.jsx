@@ -62,6 +62,7 @@ import GroupInfoModal from "./GroupInfoModal";
 import TableTennisGame from "./TableTennisGame";
 import DrawingCanvas from "./DrawingCanvas";
 import ChatReplay from "./ChatReplay";
+import VoiceStudioModal from "./VoiceStudioModal";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -241,6 +242,7 @@ const MessageArea = () => {
   const [recordingMode,
     setRecordingMode] =
     useState(false);
+  const [recordedAudioBlob, setRecordedAudioBlob] = useState(null);
 
 
   const mediaRecorderRef =
@@ -567,28 +569,21 @@ const MessageArea = () => {
 
         mediaRecorder.onstop =
           async () => {
-
             const audioBlob =
               new Blob(
-
                 audioChunksRef.current,
-
                 {
                   type:
                     "audio/webm"
                 }
-
               );
-
             console.log(
               "Voice Size:",
               audioBlob.size
             );
-
-            await sendVoiceMessage(
-              audioBlob
-            );
-
+            if (audioBlob.size > 0) {
+              setRecordedAudioBlob(audioBlob);
+            }
           };
 
         mediaRecorder.start(1000);
@@ -1107,6 +1102,17 @@ const MessageArea = () => {
                   currentUser={userData} 
                   selectedUser={selectedUser} 
                   onClose={() => setShowChatReplay(false)} 
+              />
+          )}
+
+          {recordedAudioBlob && (
+              <VoiceStudioModal 
+                  audioBlob={recordedAudioBlob}
+                  onSend={async (finalBlob) => {
+                      setRecordedAudioBlob(null);
+                      await sendVoiceMessage(finalBlob);
+                  }}
+                  onClose={() => setRecordedAudioBlob(null)}
               />
           )}
 
