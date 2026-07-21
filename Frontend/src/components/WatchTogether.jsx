@@ -131,14 +131,41 @@ const WatchTogether = ({ url, isHost, opponentId, isGroup, onClose }) => {
                     width="100%" 
                     height="100%"
                     playing={playing}
-                    controls={true} // Enable native controls as a fallback for autoplay policies
+                    controls={false} // Use custom controls to prevent native control race conditions
                     onPlay={handlePlay}
                     onPause={handlePause}
                     onProgress={handleProgress}
-                    onBuffer={() => {}} // Removed aggressive sync to prevent pause loops
+                    onBuffer={() => {}} 
                     onBufferEnd={() => {}}
                 />
                 
+                {/* Custom Sync Controls Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end">
+                    <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step="any"
+                        value={played}
+                        onMouseDown={handleSeekMouseDown}
+                        onChange={handleSeekChange}
+                        onMouseUp={handleSeekMouseUp}
+                        onTouchStart={handleSeekMouseDown}
+                        onTouchEnd={handleSeekMouseUp}
+                        className="w-full h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer mb-3 accent-red-500"
+                    />
+                    <div className="flex items-center justify-between">
+                        <button 
+                            onClick={playing ? handlePause : handlePlay}
+                            className="text-white hover:text-red-400 transition-colors"
+                        >
+                            {playing ? <Pause size={24} /> : <Play size={24} />}
+                        </button>
+                        <div className="text-xs text-white/50 bg-black/40 px-2 py-1 rounded-md">
+                            Synced via Baatcheet
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
