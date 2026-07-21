@@ -301,6 +301,13 @@ io.on(
         });
 
         // IN-CHAT MINI GAMES EVENTS
+        socket.on("startMiniGame", ({ to, gameType }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("startMiniGame", { gameType, from: userId });
+            }
+        });
+
         socket.on("ticTacToeMove", ({ to, index, symbol, board, nextTurn, winner }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {

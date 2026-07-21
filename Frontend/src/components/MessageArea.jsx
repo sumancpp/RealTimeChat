@@ -249,6 +249,8 @@ const MessageArea = () => {
   const [recordedAudioBlob, setRecordedAudioBlob] = useState(null);
   const [isGhostMode, setIsGhostMode] = useState(false);
   const [showMiniGameHub, setShowMiniGameHub] = useState(false);
+  const [isMiniGameHost, setIsMiniGameHost] = useState(true);
+  const [miniGameType, setMiniGameType] = useState('tictactoe');
 
 
   const mediaRecorderRef =
@@ -258,6 +260,48 @@ const MessageArea = () => {
     useRef([]);
 
   const lastScrolledChatIdRef = useRef(null);
+
+  useEffect(() => {
+    if (!socket || !selectedUser) return;
+
+    const handleStartMiniGame = ({ from, gameType }) => {
+      const senderId = (from?._id || from)?.toString();
+      const targetId = (selectedUser?._id || selectedUser)?.toString();
+      if (senderId === targetId) {
+        setIsMiniGameHost(false);
+        if (gameType) setMiniGameType(gameType);
+        setShowMiniGameHub(true);
+      }
+    };
+
+    const handleTTTMove = ({ from }) => {
+      const senderId = (from?._id || from)?.toString();
+      const targetId = (selectedUser?._id || selectedUser)?.toString();
+      if (senderId === targetId) {
+        setIsMiniGameHost(false);
+        setShowMiniGameHub(true);
+      }
+    };
+
+    const handleRPSChoice = ({ from }) => {
+      const senderId = (from?._id || from)?.toString();
+      const targetId = (selectedUser?._id || selectedUser)?.toString();
+      if (senderId === targetId) {
+        setIsMiniGameHost(false);
+        setShowMiniGameHub(true);
+      }
+    };
+
+    socket.on("startMiniGame", handleStartMiniGame);
+    socket.on("ticTacToeMove", handleTTTMove);
+    socket.on("rpsChoice", handleRPSChoice);
+
+    return () => {
+      socket.off("startMiniGame", handleStartMiniGame);
+      socket.off("ticTacToeMove", handleTTTMove);
+      socket.off("rpsChoice", handleRPSChoice);
+    };
+  }, [socket, selectedUser]);
 
   // AUTO SCROLL
   useLayoutEffect(() => {
@@ -1061,7 +1105,14 @@ const MessageArea = () => {
                       <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Film size={16} /> Play Chat Story
                       </button>
-                      <button onClick={() => { setShowMiniGameHub(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
+                      <button onClick={() => { 
+                          setIsMiniGameHost(true);
+                          setShowMiniGameHub(true); 
+                          setShowMenu(false); 
+                          if (socket && selectedUser?._id) {
+                              socket.emit("startMiniGame", { to: selectedUser._id, gameType: 'tictactoe' });
+                          }
+                      }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Swords size={16} /> Play Mini-Game Duel
                       </button>
                       <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-2 font-medium border-b border-gray-100 ${isGhostMode ? 'bg-purple-100 text-purple-700 font-bold' : 'text-purple-600 hover:bg-purple-50'}`}>
@@ -1136,7 +1187,8 @@ const MessageArea = () => {
           {showMiniGameHub && selectedUser && (
               <MiniGameHub 
                   opponent={selectedUser}
-                  isHost={true}
+                  gameType={miniGameType}
+                  isHost={isMiniGameHost}
                   onClose={() => setShowMiniGameHub(false)}
               />
           )}
