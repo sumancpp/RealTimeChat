@@ -300,6 +300,21 @@ io.on(
             }
         });
 
+        // IN-CHAT MINI GAMES EVENTS
+        socket.on("ticTacToeMove", ({ to, index, symbol, board, nextTurn, winner }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("ticTacToeMove", { index, symbol, board, nextTurn, winner, from: userId });
+            }
+        });
+
+        socket.on("rpsChoice", ({ to, choice }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("rpsChoice", { choice, from: userId });
+            }
+        });
+
         // GROUP DRAWING EVENTS
         socket.on("draw", async ({ groupId, data }) => {
             try {

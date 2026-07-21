@@ -25,7 +25,8 @@ import {
   Film,
   Music,
   Play,
-  Ghost
+  Ghost,
+  Swords
 } from "lucide-react";
 
 import axios from "axios";
@@ -65,6 +66,7 @@ import DrawingCanvas from "./DrawingCanvas";
 import ChatReplay from "./ChatReplay";
 import VoiceStudioModal from "./VoiceStudioModal";
 import GhostMessageBubble from "./GhostMessageBubble";
+import MiniGameHub from "./MiniGameHub";
 
 const formatLastSeen = (date) => {
     if (!date) return "Offline";
@@ -246,6 +248,7 @@ const MessageArea = () => {
     useState(false);
   const [recordedAudioBlob, setRecordedAudioBlob] = useState(null);
   const [isGhostMode, setIsGhostMode] = useState(false);
+  const [showMiniGameHub, setShowMiniGameHub] = useState(false);
 
 
   const mediaRecorderRef =
@@ -1058,6 +1061,9 @@ const MessageArea = () => {
                       <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                           <Film size={16} /> Play Chat Story
                       </button>
+                      <button onClick={() => { setShowMiniGameHub(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
+                          <Swords size={16} /> Play Mini-Game Duel
+                      </button>
                       <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-2 font-medium border-b border-gray-100 ${isGhostMode ? 'bg-purple-100 text-purple-700 font-bold' : 'text-purple-600 hover:bg-purple-50'}`}>
                           <Ghost size={16} /> {isGhostMode ? "Ghost Ink Mode (ON)" : "Ghost Ink Mode"}
                       </button>
@@ -1124,6 +1130,14 @@ const MessageArea = () => {
                       await sendVoiceMessage(finalBlob);
                   }}
                   onClose={() => setRecordedAudioBlob(null)}
+              />
+          )}
+
+          {showMiniGameHub && selectedUser && (
+              <MiniGameHub 
+                  opponent={selectedUser}
+                  isHost={true}
+                  onClose={() => setShowMiniGameHub(false)}
               />
           )}
 
