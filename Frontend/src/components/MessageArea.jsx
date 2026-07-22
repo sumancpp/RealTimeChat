@@ -35,6 +35,16 @@ import EmojiPicker from "emoji-picker-react";
 
 import defaultProfile from "../assets/profile.png";
 
+const IncognitoIcon = ({ size = 22, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M2 11c.5 0 2.5-.5 5-1 2.5 1 5 1.5 5 1.5s2.5-.5 5-1.5c2.5.5 4.5 1 5 1 1 0 1-1 0-1-1.5-.5-3.5-1.5-5.5-2.5C15 6 14.5 4 12 4S9 6 7.5 9C5.5 10 3.5 11 2 11.5c-1 0-1 1 0 1z" />
+    <circle cx="7.5" cy="16.5" r="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="16.5" cy="16.5" r="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
+    <path d="M10 16.5h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+
 import { serverUrl } from "../config";
 
 import {
@@ -49,6 +59,7 @@ import {
   deleteMessageRedux,
   addMessage,
   removeMessageRedux,
+  revealGhostMessageRedux,
   replaceMessageRedux
 } from "../redux/messageSlice";
 
@@ -250,7 +261,10 @@ const MessageArea = () => {
   const [isGhostMode, setIsGhostMode] = useState(false);
   const [showMiniGameHub, setShowMiniGameHub] = useState(false);
   const [isMiniGameHost, setIsMiniGameHost] = useState(true);
-  const [miniGameType, setMiniGameType] = useState('tictactoe');
+  const [miniGameType, setMiniGameType] = useState('tabletennis');
+  const [incomingGameInvite, setIncomingGameInvite] = useState(null);
+  const [gameInviteSent, setGameInviteSent] = useState(false);
+
 
 
   const mediaRecorderRef =
@@ -383,31 +397,49 @@ const MessageArea = () => {
   useEffect(() => {
       const activeSocket = getSocket() || socket;
       if (!activeSocket) return;
+
+      const handleGameInvite = ({ from, gameType }) => {
+          const senderUser = (otherUsers && Array.isArray(otherUsers)) 
+              ? otherUsers.find(u => (u._id?.toString() || u?.toString()) === (from?._id?.toString() || from?.toString()))
+              : null;
+          const fromUserObj = senderUser || (selectedUser && (selectedUser._id?.toString() === from?.toString()) ? selectedUser : { _id: from, name: "Opponent" });
+          setIncomingGameInvite({ fromUser: fromUserObj, gameType: gameType || 'tabletennis' });
+      };
       
-      const handleGameAccepted = ({ messageId }) => {
-          setInGameMode(true);
-          setIsGameHost(true);
-          setActiveGameMessageId(messageId);
+      const handleGameAccepted = ({ gameType, messageId }) => {
+          setGameInviteSent(false);
+          setIsMiniGameHost(true);
+          setMiniGameType(gameType || 'tabletennis');
+          setShowMiniGameHub(true);
+          if (messageId) {
+              setInGameMode(true);
+              setIsGameHost(true);
+              setActiveGameMessageId(messageId);
+          }
       };
       
       const handleGameDeclined = () => {
-          alert("Your game invite was declined.");
+          setGameInviteSent(false);
+          alert("Your game duel invitation was declined.");
       };
 
       const handleGameMessageDeleted = ({ messageId }) => {
           dispatch(removeMessageRedux(messageId));
       };
 
+      activeSocket.on("gameInvite", handleGameInvite);
       activeSocket.on("gameAccepted", handleGameAccepted);
       activeSocket.on("gameDeclined", handleGameDeclined);
       activeSocket.on("gameMessageDeleted", handleGameMessageDeleted);
 
       return () => {
+          activeSocket.off("gameInvite", handleGameInvite);
           activeSocket.off("gameAccepted", handleGameAccepted);
           activeSocket.off("gameDeclined", handleGameDeclined);
           activeSocket.off("gameMessageDeleted", handleGameMessageDeleted);
       };
-  }, [dispatch]);
+  }, [dispatch, otherUsers, selectedUser]);
+
 
   useEffect(() => {
 
@@ -898,6 +930,20 @@ const MessageArea = () => {
       }
     );
 
+    socket.on(
+      "ghostMessageDisintegrated",
+      ({ messageId }) => {
+        dispatch(removeMessageRedux(messageId));
+      }
+    );
+
+    socket.on(
+      "ghostMessageRevealed",
+      ({ messageId, ghostRevealedAt }) => {
+        dispatch(revealGhostMessageRedux({ messageId, ghostRevealedAt }));
+      }
+    );
+
     return () => {
 
       socket.off(
@@ -908,9 +954,35 @@ const MessageArea = () => {
         "messageDeleted"
       );
 
+      socket.off(
+        "ghostMessageDisintegrated"
+      );
+
+      socket.off(
+        "ghostMessageRevealed"
+      );
+
     };
 
   }, [dispatch]);
+
+  const handleRevealGhostMessage = (messageId) => {
+    const activeSocket = getSocket() || socket;
+    if (activeSocket) {
+      activeSocket.emit("revealGhostMessage", { messageId });
+    }
+    axios.post(`${serverUrl}/message/reveal-ghost/${messageId}`, {}, { withCredentials: true }).catch(() => {});
+  };
+
+  const handleDisintegrateGhostMessage = (messageId) => {
+    dispatch(removeMessageRedux(messageId));
+    const activeSocket = getSocket() || socket;
+    if (activeSocket) {
+      activeSocket.emit("disintegrateGhostMessage", { messageId });
+    }
+    axios.delete(`${serverUrl}/message/ghost/${messageId}`, { withCredentials: true }).catch(() => {});
+  };
+
 
   const reactToMessage =
     async (
@@ -1103,28 +1175,32 @@ const MessageArea = () => {
                       </button>
                     </>
                   )}
-                  <button 
-                    onClick={() => setShowMenu(!showMenu)} 
-                    className="hover:text-gray-700 hover:bg-gray-50 p-1.5 sm:p-2 rounded-full transition-colors"
-                  >
-                    <MoreVertical size={24} />
-                  </button>
+                  <div ref={menuRef} className="relative">
+                    <button 
+                      onClick={() => setShowMenu(!showMenu)} 
+                      className="hover:text-gray-700 hover:bg-gray-50 p-1.5 sm:p-2 rounded-full transition-colors"
+                    >
+                      <MoreVertical size={24} />
+                    </button>
 
-                  {showMenu && (
-                    <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
-                      <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
-                          <Film size={16} /> Play Chat Story
-                      </button>
-                      <button onClick={() => { 
-                          setIsMiniGameHost(true);
-                          setShowMiniGameHub(true); 
-                          setShowMenu(false); 
-                          if (socket && selectedUser?._id) {
-                              socket.emit("startMiniGame", { to: selectedUser._id, gameType: 'tictactoe' });
-                          }
-                      }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
-                          <Swords size={16} /> Play Mini-Game Duel
-                      </button>
+                    {showMenu && (
+                      <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
+                        <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
+                            <Film size={16} /> Play Chat Story
+                        </button>
+                        <button onClick={() => { 
+                            setShowMenu(false); 
+                            if (selectedUser?._id) {
+                                setGameInviteSent(true);
+                                const activeSocket = getSocket() || socket;
+                                if (activeSocket) {
+                                    activeSocket.emit("gameInvite", { to: selectedUser._id, gameType: 'tabletennis' });
+                                }
+                            }
+                        }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
+                            <Swords size={16} /> Play Mini-Game Duel
+                        </button>
+
                       <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-2 font-medium border-b border-gray-100 ${isGhostMode ? 'bg-purple-100 text-purple-700 font-bold' : 'text-purple-600 hover:bg-purple-50'}`}>
                           <Ghost size={16} /> {isGhostMode ? "Ghost Ink Mode (ON)" : "Ghost Ink Mode"}
                       </button>
@@ -1158,8 +1234,10 @@ const MessageArea = () => {
                       </button>
                     </div>
                   )}
+                  </div>
                 </>
               )}
+
             </div>
 
           </div>
@@ -1202,6 +1280,73 @@ const MessageArea = () => {
                   onClose={() => setShowMiniGameHub(false)}
               />
           )}
+
+          {/* GAME DUEL INVITATION PERMISSION MODAL */}
+          {incomingGameInvite && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+                  <div className="bg-slate-900 border border-amber-500/50 rounded-3xl p-6 max-w-sm w-full text-center text-white shadow-2xl animate-in zoom-in-95">
+                      <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30 animate-bounce">
+                          <Swords size={32} />
+                      </div>
+                      <h3 className="font-extrabold text-xl text-white">Mini-Game Duel Invite!</h3>
+                      <p className="text-sm text-slate-300 my-3">
+                          <span className="font-bold text-amber-400">{incomingGameInvite.fromUser?.name || incomingGameInvite.fromUser?.userName || "Opponent"}</span> wants to duel with you in <span className="font-semibold text-amber-300">{incomingGameInvite.gameType === 'tictactoe' ? 'Tic-Tac-Toe' : incomingGameInvite.gameType === 'rps' ? 'Rock-Paper-Scissors' : 'Table Tennis'}</span>!
+                      </p>
+                      <div className="flex gap-3 mt-6">
+                          <button
+                              onClick={() => {
+                                  const fromId = incomingGameInvite.fromUser?._id || incomingGameInvite.fromUser;
+                                  const gType = incomingGameInvite.gameType || 'tabletennis';
+                                  const activeSocket = getSocket() || socket;
+                                  if (activeSocket) {
+                                      activeSocket.emit("acceptGame", { to: fromId, gameType: gType });
+                                  }
+                                  setIsMiniGameHost(false);
+                                  setMiniGameType(gType);
+                                  setShowMiniGameHub(true);
+                                  setIncomingGameInvite(null);
+                              }}
+                              className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-sm rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
+                          >
+                              Accept & Play 🎮
+                          </button>
+                          <button
+                              onClick={() => {
+                                  const fromId = incomingGameInvite.fromUser?._id || incomingGameInvite.fromUser;
+                                  const activeSocket = getSocket() || socket;
+                                  if (activeSocket) {
+                                      activeSocket.emit("declineGame", { to: fromId });
+                                  }
+                                  setIncomingGameInvite(null);
+                              }}
+                              className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-2xl transition-all active:scale-95 cursor-pointer"
+                          >
+                              Decline
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {/* SENDER WAITING FOR ACCEPTANCE BANNER */}
+          {gameInviteSent && (
+              <div className="fixed top-20 right-4 z-50 bg-slate-900/90 border border-amber-500/60 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-top duration-300">
+                  <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl animate-spin">
+                      <Swords size={20} />
+                  </div>
+                  <div className="text-xs">
+                      <p className="font-bold text-amber-300">Game Duel Invitation Sent!</p>
+                      <p className="text-slate-400">Waiting for {selectedUser?.name || selectedUser?.userName} to accept...</p>
+                  </div>
+                  <button
+                      onClick={() => setGameInviteSent(false)}
+                      className="ml-2 text-slate-400 hover:text-white text-xs font-bold px-2 py-1 bg-slate-800 rounded-lg hover:bg-slate-700 cursor-pointer"
+                  >
+                      Cancel
+                  </button>
+              </div>
+          )}
+
 
           {inGameMode ? (
               <TableTennisGame 
@@ -1282,7 +1427,13 @@ const MessageArea = () => {
                       const isOwn = (msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString();
                       return (
                           <div key={msg._id || index} className={`flex mb-4 ${isOwn ? "justify-end" : "justify-start"}`}>
-                              <GhostMessageBubble msg={msg} isOwn={isOwn} renderMessageWithLinks={renderMessageWithLinks} />
+                              <GhostMessageBubble 
+                                  msg={msg} 
+                                  isOwn={isOwn} 
+                                  renderMessageWithLinks={renderMessageWithLinks} 
+                                  onReveal={handleRevealGhostMessage}
+                                  onDisintegrate={handleDisintegrateGhostMessage}
+                              />
                           </div>
                       );
                   }
@@ -1950,12 +2101,13 @@ transition-all
                   <button
                     type="button"
                     onClick={() => setIsAnonymousMode(!isAnonymousMode)}
-                    className={`transition mx-1 p-1.5 rounded-full ${isAnonymousMode ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-                    title="Incognito Mode"
+                    className={`transition mx-1 p-2 rounded-full flex items-center justify-center ${isAnonymousMode ? 'bg-slate-900 text-amber-400 shadow-md ring-2 ring-amber-500/50 scale-105' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                    title={isAnonymousMode ? "Incognito Mode (ON - Secret Member)" : "Enable Incognito Mode"}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11v1a10 10 0 1 1-9-10 1.2 1.2 0 0 1 1.14 1.76l-1 2.24a1 1 0 0 0 .91 1.41h2.21a2 2 0 0 1 2 2z"/></svg>
+                    <IncognitoIcon size={22} className={isAnonymousMode ? "text-amber-400" : "text-gray-600"} />
                   </button>
               )}
+
 
               {!selectedUser?.isGroup && (
                 <>

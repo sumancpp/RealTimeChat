@@ -139,6 +139,55 @@ io.on(
             }
         );
 
+        // GHOST MESSAGE EVENTS
+        socket.on("revealGhostMessage", async ({ messageId }) => {
+            try {
+                const message = await Message.findById(messageId);
+                if (message && !message.isGhostRevealed) {
+                    message.isGhostRevealed = true;
+                    message.ghostRevealedAt = new Date();
+                    await message.save();
+
+                    const senderSocketId = getReceiverSocketId(message.sender);
+                    const receiverSocketId = getReceiverSocketId(message.receiver);
+
+                    if (senderSocketId) io.to(senderSocketId).emit("ghostMessageRevealed", { messageId, ghostRevealedAt: message.ghostRevealedAt });
+                    if (receiverSocketId) io.to(receiverSocketId).emit("ghostMessageRevealed", { messageId, ghostRevealedAt: message.ghostRevealedAt });
+                }
+            } catch (err) {
+                console.log("revealGhostMessage error:", err.message);
+            }
+        });
+
+        socket.on("disintegrateGhostMessage", async ({ messageId }) => {
+            try {
+                const message = await Message.findById(messageId);
+                if (message) {
+                    const senderId = message.sender?.toString();
+                    const receiverId = message.receiver?.toString();
+
+                    await Conversation.updateMany(
+                        { messages: messageId },
+                        { $pull: { messages: messageId } }
+                    );
+
+                    await Message.findByIdAndDelete(messageId);
+
+                    if (senderId) {
+                        const senderSocketId = getReceiverSocketId(senderId);
+                        if (senderSocketId) io.to(senderSocketId).emit("ghostMessageDisintegrated", { messageId });
+                    }
+
+                    if (receiverId) {
+                        const receiverSocketId = getReceiverSocketId(receiverId);
+                        if (receiverSocketId) io.to(receiverSocketId).emit("ghostMessageDisintegrated", { messageId });
+                    }
+                }
+            } catch (err) {
+                console.log("disintegrateGhostMessage error:", err.message);
+            }
+        });
+
         // TYPING
         socket.on(
             "typing",
@@ -230,17 +279,17 @@ io.on(
         });
 
         // GAME EVENTS
-        socket.on("gameInvite", ({ to }) => {
+        socket.on("gameInvite", ({ to, gameType }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
-                io.to(receiverSocketId).emit("gameInvite", { from: userId });
+                io.to(receiverSocketId).emit("gameInvite", { from: userId, gameType: gameType || 'tabletennis' });
             }
         });
 
-        socket.on("acceptGame", ({ to, messageId }) => {
+        socket.on("acceptGame", ({ to, gameType, messageId }) => {
             const receiverSocketId = getReceiverSocketId(to);
             if (receiverSocketId) {
-                io.to(receiverSocketId).emit("gameAccepted", { from: userId, messageId });
+                io.to(receiverSocketId).emit("gameAccepted", { from: userId, gameType, messageId });
             }
         });
 

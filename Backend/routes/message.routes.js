@@ -11,7 +11,9 @@ import {
   reactToMessage,
   deleteMessage,
   deleteConversation,
-  editMessage
+  editMessage,
+  revealGhostMessage,
+  disintegrateGhostMessage
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -59,4 +61,18 @@ messageRouter.put(
     isAuth,
     editMessage
 );
+
+// GHOST MESSAGE ACTIONS
+messageRouter.post(
+    "/reveal-ghost/:messageId",
+    isAuth,
+    revealGhostMessage
+);
+
+messageRouter.delete(
+    "/ghost/:messageId",
+    isAuth,
+    disintegrateGhostMessage
+);
+
 export default messageRouter;

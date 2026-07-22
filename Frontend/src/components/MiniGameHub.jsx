@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSocket } from '../socket';
 import { X, RotateCcw, Trophy, Swords, Zap } from 'lucide-react';
+import TableTennisGame from './TableTennisGame';
 
 const WINNING_COMBOS = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -8,9 +9,10 @@ const WINNING_COMBOS = [
     [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
 
-const MiniGameHub = ({ opponent, gameType = 'tictactoe', isHost = true, onClose }) => {
+const MiniGameHub = ({ opponent, gameType = 'tabletennis', isHost = true, onClose }) => {
     const socket = getSocket();
-    const [activeTab, setActiveTab] = useState(gameType); // 'tictactoe' | 'rps'
+    const [activeTab, setActiveTab] = useState(gameType || 'tabletennis'); // 'tabletennis' | 'tictactoe' | 'rps'
+
 
     // Tic-Tac-Toe States
     const [board, setBoard] = useState(Array(9).fill(null));
@@ -163,10 +165,20 @@ const MiniGameHub = ({ opponent, gameType = 'tictactoe', isHost = true, onClose 
                 </div>
 
                 {/* Game Tabs */}
-                <div className="flex bg-slate-950 p-1.5 border-b border-slate-800">
+                <div className="flex bg-slate-950 p-1.5 border-b border-slate-800 gap-1">
+                    <button
+                        onClick={() => setActiveTab('tabletennis')}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            activeTab === 'tabletennis'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md'
+                                : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                    >
+                        🏓 Table Tennis
+                    </button>
                     <button
                         onClick={() => setActiveTab('tictactoe')}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                             activeTab === 'tictactoe'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md'
                                 : 'text-slate-400 hover:text-slate-200'
@@ -176,19 +188,26 @@ const MiniGameHub = ({ opponent, gameType = 'tictactoe', isHost = true, onClose 
                     </button>
                     <button
                         onClick={() => setActiveTab('rps')}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                             activeTab === 'rps'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md'
                                 : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
-                        ✊✋✌️ Rock Paper Scissors
+                        ✊✋✌️ RPS
                     </button>
                 </div>
 
                 {/* GAME BODY */}
-                <div className="p-6 bg-slate-950/70 flex flex-col items-center justify-center min-h-[340px]">
+                <div className="p-4 sm:p-6 bg-slate-950/70 flex flex-col items-center justify-center min-h-[340px]">
                     
+                    {/* TABLE TENNIS TAB */}
+                    {activeTab === 'tabletennis' && (
+                        <div className="w-full flex flex-col items-center">
+                            <TableTennisGame opponent={opponent} isHost={isHost} onEndGame={onClose} />
+                        </div>
+                    )}
+
                     {/* TIC-TAC-TOE TAB */}
                     {activeTab === 'tictactoe' && (
                         <div className="w-full flex flex-col items-center">

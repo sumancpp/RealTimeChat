@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Ghost, Sparkles, Flame } from 'lucide-react';
 
-const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks }) => {
+const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks, onReveal, onDisintegrate }) => {
     const [revealed, setRevealed] = useState(false);
     const [countdown, setCountdown] = useState(5);
     const [disintegrated, setDisintegrated] = useState(false);
+
+    useEffect(() => {
+        if (msg.isGhostRevealed || msg.ghostRevealedAt) {
+            const revealedAt = new Date(msg.ghostRevealedAt || Date.now()).getTime();
+            const elapsed = Math.floor((Date.now() - revealedAt) / 1000);
+            const remaining = 5 - elapsed;
+
+            if (remaining <= 0) {
+                setDisintegrated(true);
+                if (onDisintegrate && msg._id) {
+                    onDisintegrate(msg._id);
+                }
+            } else {
+                setRevealed(true);
+                setCountdown(remaining);
+            }
+        }
+    }, [msg._id, msg.isGhostRevealed, msg.ghostRevealedAt]);
 
     useEffect(() => {
         let timer = null;
@@ -14,6 +32,9 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks }) => {
                     if (prev <= 1) {
                         clearInterval(timer);
                         setDisintegrated(true);
+                        if (onDisintegrate && msg._id) {
+                            onDisintegrate(msg._id);
+                        }
                         return 0;
                     }
                     return prev - 1;
@@ -23,15 +44,22 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks }) => {
         return () => {
             if (timer) clearInterval(timer);
         };
-    }, [revealed, disintegrated]);
+    }, [revealed, disintegrated, msg._id, onDisintegrate]);
 
     const handleReveal = () => {
         if (!revealed && !disintegrated) {
             setRevealed(true);
+            if (onReveal && msg._id) {
+                onReveal(msg._id);
+            }
         }
     };
 
-    const textContent = msg.message.startsWith('@ghost')
+    if (disintegrated) {
+        return null;
+    }
+
+    const textContent = typeof msg.message === 'string' && msg.message.startsWith('@ghost')
         ? msg.message.replace('@ghost', '').trim()
         : msg.message;
 
@@ -41,11 +69,9 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks }) => {
             className={`relative group max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl cursor-pointer transition-all duration-300 shadow-md ${
                 isOwn ? 'ml-auto rounded-tr-none' : 'mr-auto rounded-tl-none'
             } ${
-                disintegrated 
-                    ? 'bg-slate-900/60 border border-purple-900/40 text-purple-400/60 italic' 
-                    : revealed
-                        ? 'bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-purple-500/50 shadow-purple-500/20'
-                        : 'bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-950 border border-purple-400/60 hover:border-purple-400 hover:shadow-purple-500/30 animate-pulse'
+                revealed
+                    ? 'bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-purple-500/50 shadow-purple-500/20'
+                    : 'bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-950 border border-purple-400/60 hover:border-purple-400 hover:shadow-purple-500/30 animate-pulse'
             }`}
         >
             {/* Header Badge */}
@@ -62,12 +88,7 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks }) => {
             </div>
 
             {/* Content Body */}
-            {disintegrated ? (
-                <div className="flex items-center gap-2 py-1 text-xs text-purple-400/50">
-                    <Flame size={14} className="text-purple-500/40" />
-                    <span>[ Message Disintegrated ]</span>
-                </div>
-            ) : !revealed ? (
+            {!revealed ? (
                 <div className="py-2 text-center text-xs font-semibold text-purple-200 tracking-wide flex items-center justify-center gap-2 select-none">
                     <Sparkles size={14} className="text-purple-400" />
                     <span>Tap to Reveal Ghost Message</span>
@@ -89,3 +110,4 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks }) => {
 };
 
 export default GhostMessageBubble;
+

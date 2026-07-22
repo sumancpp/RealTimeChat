@@ -124,6 +124,16 @@ const messageSchema = new mongoose.Schema({
         default: false
     },
 
+    isGhostRevealed: {
+        type: Boolean,
+        default: false
+    },
+
+    ghostRevealedAt: {
+        type: Date,
+        default: null
+    },
+
 }, {
     timestamps: true
 });

@@ -158,6 +158,23 @@ const messageSlice = createSlice({
             }
         },
 
+        revealGhostMessageRedux: (state, action) => {
+            if (Array.isArray(state.messages)) {
+                const { messageId, ghostRevealedAt } = action.payload;
+                state.messages = state.messages.map(msg => {
+                    if (msg._id === messageId) {
+                        return {
+                            ...msg,
+                            isGhostRevealed: true,
+                            ghostRevealedAt
+                        };
+                    }
+                    return msg;
+                });
+            }
+        },
+
+
         replaceMessageRedux: (state, action) => {
             const { tempId, realMessage } = action.payload;
             if (Array.isArray(state.messages)) {
@@ -215,6 +232,8 @@ export const {
     editMessageRedux,
 
     removeMessageRedux,
+
+    revealGhostMessageRedux,
 
     replaceMessageRedux
 

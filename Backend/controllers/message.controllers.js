@@ -518,9 +518,24 @@ export const getMessage = async (
 
         }
 
+        // Clean up any ghost messages that have expired (revealed > 5s ago)
+        const validMessages = [];
+        const now = Date.now();
+        for (const msg of conversation.messages) {
+            if (msg.isGhost && msg.isGhostRevealed && msg.ghostRevealedAt) {
+                const elapsed = now - new Date(msg.ghostRevealedAt).getTime();
+                if (elapsed >= 5000) {
+                    await Message.findByIdAndDelete(msg._id);
+                    await Conversation.updateOne({ _id: conversation._id }, { $pull: { messages: msg._id } });
+                    continue;
+                }
+            }
+            validMessages.push(msg);
+        }
+
         return res.status(200)
             .json(
-                conversation.messages
+                validMessages
             );
 
     } catch (error) {
@@ -971,4 +986,74 @@ export const editMessage = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: error.message });
       }
+};
+
+// REVEAL GHOST MESSAGE
+export const revealGhostMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        if (!message.isGhostRevealed) {
+            message.isGhostRevealed = true;
+            message.ghostRevealedAt = new Date();
+            await message.save();
+
+            const senderSocketId = getReceiverSocketId(message.sender);
+            const receiverSocketId = getReceiverSocketId(message.receiver);
+
+            if (senderSocketId) {
+                io.to(senderSocketId).emit("ghostMessageRevealed", { messageId, ghostRevealedAt: message.ghostRevealedAt });
+            }
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("ghostMessageRevealed", { messageId, ghostRevealedAt: message.ghostRevealedAt });
+            }
+        }
+
+        return res.status(200).json(message);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// DISINTEGRATE GHOST MESSAGE
+export const disintegrateGhostMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(200).json({ success: true, message: "Already disintegrated" });
+        }
+
+        const senderId = message.sender?.toString();
+        const receiverId = message.receiver?.toString();
+
+        await Conversation.updateMany(
+            { messages: messageId },
+            { $pull: { messages: messageId } }
+        );
+
+        await Message.findByIdAndDelete(messageId);
+
+        if (senderId) {
+            const senderSocketId = getReceiverSocketId(senderId);
+            if (senderSocketId) {
+                io.to(senderSocketId).emit("ghostMessageDisintegrated", { messageId });
+            }
+        }
+
+        if (receiverId) {
+            const receiverSocketId = getReceiverSocketId(receiverId);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("ghostMessageDisintegrated", { messageId });
+            }
+        }
+
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 };
