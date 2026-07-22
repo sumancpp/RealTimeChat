@@ -126,16 +126,43 @@ const BAATCHEET_GROUP = {
             createdAt: new Date(Date.now() + 8000).toISOString(),
             type: 'custom',
             user: BAATCHEET_GROUP_USER,
-            bgColor: 'from-emerald-500 to-green-700',
-            title: 'Live Table Tennis',
-            description: 'Challenge your friends to an interactive multiplayer table tennis game right inside the chat.',
-            icon: '🏓',
-            instruction: "Type '@game' as a message and hit send to invite your friend to a match.",
-            caption: 'Game on!',
+            bgColor: 'from-purple-600 to-indigo-900',
+            title: 'Ghost Ink Mode',
+            description: 'Send secret self-destructing messages that disintegrate 5s after reveal, displaying real-time "Ghost SMS is seen" status badge to both users.',
+            icon: '👻',
+            instruction: 'Open 3-dot (⋮) menu in chat → select Ghost Ink Mode, or type "@ghost your message".',
+            caption: 'Self-destructing secret messages!',
+            viewers: []
+        },
+        {
+            _id: 'b10',
+            createdAt: new Date(Date.now() + 9000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-amber-600 to-orange-700',
+            title: 'Mini-Game Duel Hub',
+            description: 'Challenge chat partners to 2-player Table Tennis 🏓, Tic-Tac-Toe ❌⭕, or Rock Paper Scissors ✊✋✌️ with real-time duel permission prompts.',
+            icon: '⚔️',
+            instruction: 'Open 3-dot (⋮) menu in chat → click "Play Mini-Game Duel" → select a game to send invite!',
+            caption: 'Challenge your friends to a duel!',
+            viewers: []
+        },
+        {
+            _id: 'b11',
+            createdAt: new Date(Date.now() + 10000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-slate-700 to-slate-900',
+            title: 'Group Incognito Mode',
+            description: 'Send anonymous messages in group chats masked as "Secret Member" with an incognito avatar.',
+            icon: '🕶️',
+            instruction: 'In group chat input bar, tap the Fedora Hat & Sunglasses icon to toggle Incognito Mode.',
+            caption: 'Stay completely anonymous in groups!',
             viewers: []
         }
     ]
 };
+
 
 const StatusSection = () => {
     const dispatch = useDispatch();

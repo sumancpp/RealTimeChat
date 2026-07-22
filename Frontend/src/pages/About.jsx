@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Send, Sparkles, Gamepad2, Film, Palette, Music, Phone, Users, CheckCheck, Image, Trash2, Reply } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Gamepad2, Film, Palette, Music, Phone, Users, CheckCheck, Image, Trash2, Reply, Ghost, Swords, Eye, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const About = () => {
@@ -19,6 +19,21 @@ const About = () => {
     };
 
     const crazyFeatures = [
+        { 
+            icon: <Ghost size={20} className="text-purple-500" />, 
+            text: "Ghost Ink Mode: Send self-destructing secret messages that disintegrate 5 seconds after being revealed, displaying a real-time 'Ghost SMS is seen' status badge to both users.",
+            usage: "Open the 3-dot (⋮) menu in any 1-on-1 chat and click 'Ghost Ink Mode', or type '@ghost your message' and send. When revealed, both users see 'Ghost SMS is seen ⏳ 5s' before complete deletion." 
+        },
+        { 
+            icon: <Swords size={20} className="text-amber-500" />, 
+            text: "Mini-Game Duel Hub: Challenge your chat partner to 3 interactive 2-player duels (Table Tennis 🏓, Tic-Tac-Toe ❌⭕, Rock-Paper-Scissors ✊✋✌️) with real-time permission prompts.",
+            usage: "Open the 3-dot (⋮) menu in any 1-on-1 chat, click 'Play Mini-Game Duel', and choose a game. An instant invitation modal ('Accept & Play / Decline') pops up on your opponent's screen!" 
+        },
+        { 
+            icon: <ShieldAlert size={20} className="text-emerald-500" />, 
+            text: "Group Incognito Mode: Send anonymous messages in group chats where your identity is masked as 'Secret Member' with a classic incognito avatar.",
+            usage: "In any Group Chat, click the Fedora Hat & Sunglasses Incognito icon in the message input bar to toggle Incognito Mode ON or OFF." 
+        },
         { 
             icon: <Music size={20} className="text-pink-500" />, 
             text: "AI Mood Music: Automatically detects chat vibes and suggests playable YouTube Music cards.",
@@ -40,11 +55,6 @@ const About = () => {
             usage: "Click the Palette (🎨) icon at the top right of any Group Chat." 
         },
         { 
-            icon: <Gamepad2 size={20} className="text-green-500" />, 
-            text: "Live Table Tennis: Challenge your friends to an interactive multiplayer table tennis game right inside the chat.",
-            usage: "Type '@game' as a message and hit send to invite your friend to a match." 
-        },
-        { 
             icon: <Palette size={20} className="text-indigo-500" />, 
             text: "Custom Theming Engine: Personalize every chat with animated backgrounds like Cyberpunk or Sunset.",
             usage: "Open the 3-dot (⋮) menu in any 1-on-1 chat, select 'Theme', and choose your favorite." 
@@ -60,6 +70,7 @@ const About = () => {
         { icon: <Trash2 size={20} className="text-red-500" />, text: "Edit & Delete Messages: Correct typos or delete messages for everyone instantly." },
         { icon: <Reply size={20} className="text-gray-600" />, text: "Reply & Reactions: Threaded replies and quick emoji reactions to individual messages." }
     ];
+
 
     return (
         <div className="min-h-screen bg-slate-50 overflow-y-auto pb-20">

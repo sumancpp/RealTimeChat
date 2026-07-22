@@ -28,8 +28,10 @@ const io = new Server(server, {
 
 });
 
-// ONLINE USERS
+// ONLINE USERS & GROUP CACHE
 export const userSocketMap = {};
+const groupCacheMap = {};
+
 
 // GET USER SOCKET
 export const getReceiverSocketId = (
@@ -371,14 +373,28 @@ io.on(
             }
         });
 
-        // GROUP DRAWING EVENTS
+        // IN-MEMORY GROUP PARTICIPANT CACHE FOR ZERO-DB DRAWING LATENCY
+        socket.on("joinGroupRoom", ({ groupId }) => {
+            if (groupId) socket.join(groupId.toString());
+        });
+
         socket.on("draw", async ({ groupId, data }) => {
             try {
-                const group = await Conversation.findById(groupId);
-                if (group && group.isGroup) {
-                    group.participants.forEach(p => {
-                        if (p.toString() !== userId?.toString()) {
-                            const receiverSocketId = getReceiverSocketId(p.toString());
+                if (!groupId) return;
+                socket.to(groupId.toString()).emit("draw", { groupId, data });
+
+                let participants = groupCacheMap[groupId];
+                if (!participants) {
+                    const group = await Conversation.findById(groupId).select("participants isGroup");
+                    if (group && group.isGroup) {
+                        participants = group.participants.map(p => p.toString());
+                        groupCacheMap[groupId] = participants;
+                    }
+                }
+                if (participants) {
+                    participants.forEach(pId => {
+                        if (pId !== userId?.toString()) {
+                            const receiverSocketId = getReceiverSocketId(pId);
                             if (receiverSocketId) {
                                 io.to(receiverSocketId).emit("draw", { groupId, data });
                             }
@@ -386,17 +402,27 @@ io.on(
                     });
                 }
             } catch (err) {
-                console.log(err);
+                console.log("draw event error:", err.message);
             }
         });
 
         socket.on("clearCanvas", async ({ groupId }) => {
             try {
-                const group = await Conversation.findById(groupId);
-                if (group && group.isGroup) {
-                    group.participants.forEach(p => {
-                        if (p.toString() !== userId?.toString()) {
-                            const receiverSocketId = getReceiverSocketId(p.toString());
+                if (!groupId) return;
+                socket.to(groupId.toString()).emit("clearCanvas", { groupId });
+
+                let participants = groupCacheMap[groupId];
+                if (!participants) {
+                    const group = await Conversation.findById(groupId).select("participants isGroup");
+                    if (group && group.isGroup) {
+                        participants = group.participants.map(p => p.toString());
+                        groupCacheMap[groupId] = participants;
+                    }
+                }
+                if (participants) {
+                    participants.forEach(pId => {
+                        if (pId !== userId?.toString()) {
+                            const receiverSocketId = getReceiverSocketId(pId);
                             if (receiverSocketId) {
                                 io.to(receiverSocketId).emit("clearCanvas", { groupId });
                             }
@@ -404,9 +430,10 @@ io.on(
                     });
                 }
             } catch (err) {
-                console.log(err);
+                console.log("clearCanvas error:", err.message);
             }
         });
+
 
         // DISCONNECT
         socket.on(

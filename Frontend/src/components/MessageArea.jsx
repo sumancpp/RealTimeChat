@@ -720,20 +720,19 @@ const MessageArea = () => {
     recordingRef.current = false;
 
     if (
-
-      mediaRecorderRef.current &&
-
-      mediaRecorderRef.current.state === "recording"
-
+      mediaRecorderRef.current
     ) {
-
-      mediaRecorderRef.current.stop();
-
+      if (mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+      if (mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
     }
 
     setRecordingMode(false);
-
   };
+
 
 
 

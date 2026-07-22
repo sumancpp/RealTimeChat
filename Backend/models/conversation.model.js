@@ -46,6 +46,9 @@ const conversationSchema = new mongoose.Schema({
     timestamps: true
 });
 
+conversationSchema.index({ participants: 1 });
+conversationSchema.index({ isGroup: 1 });
+
 const Conversation = mongoose.model(
     "Conversation",
     conversationSchema

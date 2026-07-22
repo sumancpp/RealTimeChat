@@ -25,13 +25,17 @@ export const connectSocket = (
             },
 
             transports: [
-                "websocket"
+                "websocket",
+                "polling"
             ],
 
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
             withCredentials: true
-
         }
     );
+
 
     return socket;
 
