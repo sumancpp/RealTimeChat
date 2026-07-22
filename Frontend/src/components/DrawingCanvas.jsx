@@ -26,9 +26,18 @@ const DrawingCanvas = ({ groupId, onClose }) => {
 
         const activeSocket = getSocket() || socket;
 
+        if (activeSocket && groupId) {
+            activeSocket.emit("joinGroupRoom", { groupId });
+        }
+
         const handleDraw = ({ groupId: incomingGroupId, data }) => {
-            if (incomingGroupId === groupId) {
-                drawLine(data.x0, data.y0, data.x1, data.y1, data.color, false);
+            if (incomingGroupId === groupId && canvasRef.current) {
+                const c = canvasRef.current;
+                const rx0 = data.nx0 !== undefined ? data.nx0 * c.width : data.x0;
+                const ry0 = data.ny0 !== undefined ? data.ny0 * c.height : data.y0;
+                const rx1 = data.nx1 !== undefined ? data.nx1 * c.width : data.x1;
+                const ry1 = data.ny1 !== undefined ? data.ny1 * c.height : data.y1;
+                drawLine(rx0, ry0, rx1, ry1, data.color, false);
             }
         };
 
@@ -66,9 +75,17 @@ const DrawingCanvas = ({ groupId, onClose }) => {
         const activeSocket = getSocket() || socket;
         activeSocket.emit('draw', {
             groupId,
-            data: { x0, y0, x1, y1, color: strokeColor }
+            data: {
+                x0, y0, x1, y1,
+                nx0: x0 / canvas.width,
+                ny0: y0 / canvas.height,
+                nx1: x1 / canvas.width,
+                ny1: y1 / canvas.height,
+                color: strokeColor
+            }
         });
     };
+
 
     const posRef = useRef({ x: 0, y: 0 });
 

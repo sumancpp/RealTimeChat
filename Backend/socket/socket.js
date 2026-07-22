@@ -393,11 +393,14 @@ io.on(
                 }
                 if (participants) {
                     participants.forEach(pId => {
-                        if (pId !== userId?.toString()) {
-                            const receiverSocketId = getReceiverSocketId(pId);
-                            if (receiverSocketId) {
-                                io.to(receiverSocketId).emit("draw", { groupId, data });
-                            }
+                        const receiverSockets = getReceiverSocketId(pId);
+                        if (receiverSockets) {
+                            const socketsList = Array.isArray(receiverSockets) ? receiverSockets : [receiverSockets];
+                            socketsList.forEach(sId => {
+                                if (sId !== socket.id) {
+                                    io.to(sId).emit("draw", { groupId, data });
+                                }
+                            });
                         }
                     });
                 }
@@ -421,11 +424,14 @@ io.on(
                 }
                 if (participants) {
                     participants.forEach(pId => {
-                        if (pId !== userId?.toString()) {
-                            const receiverSocketId = getReceiverSocketId(pId);
-                            if (receiverSocketId) {
-                                io.to(receiverSocketId).emit("clearCanvas", { groupId });
-                            }
+                        const receiverSockets = getReceiverSocketId(pId);
+                        if (receiverSockets) {
+                            const socketsList = Array.isArray(receiverSockets) ? receiverSockets : [receiverSockets];
+                            socketsList.forEach(sId => {
+                                if (sId !== socket.id) {
+                                    io.to(sId).emit("clearCanvas", { groupId });
+                                }
+                            });
                         }
                     });
                 }
@@ -433,6 +439,7 @@ io.on(
                 console.log("clearCanvas error:", err.message);
             }
         });
+
 
 
         // DISCONNECT
