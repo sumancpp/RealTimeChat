@@ -215,10 +215,11 @@ const MessageArea = () => {
   const [isGameHost, setIsGameHost] = useState(false);
   const [activeGameMessageId, setActiveGameMessageId] = useState(null);
 
-  const { onlineUsers } =
+  const { onlineUsers, otherUsers } =
     useSelector(
       state => state.user
     );
+
 
   const pickerRef = useRef(null);
   const menuRef = useRef(null);
