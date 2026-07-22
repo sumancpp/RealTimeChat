@@ -26,8 +26,10 @@ import {
   Music,
   Play,
   Ghost,
-  Swords
+  Swords,
+  X
 } from "lucide-react";
+
 
 import axios from "axios";
 
@@ -265,6 +267,8 @@ const MessageArea = () => {
   const [miniGameType, setMiniGameType] = useState('tabletennis');
   const [incomingGameInvite, setIncomingGameInvite] = useState(null);
   const [gameInviteSent, setGameInviteSent] = useState(false);
+  const [showGamePicker, setShowGamePicker] = useState(false);
+
 
 
 
@@ -328,26 +332,40 @@ const MessageArea = () => {
     };
   }, [socket, selectedUser]);
 
-  // AUTO SCROLL
+  // AUTO SCROLL (Smart: Only scroll if near bottom or user switched chat / sent message)
   useLayoutEffect(() => {
     if (!messages || messages.length === 0) return;
 
-    if (lastScrolledChatIdRef.current !== selectedUser?._id) {
-      if (messageContainerRef.current) {
-        messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    const container = messageContainerRef.current;
+    const isUserSwitch = lastScrolledChatIdRef.current !== selectedUser?._id;
+
+    if (isUserSwitch) {
+      if (container) {
+        container.scrollTop = container.scrollHeight;
       }
       bottomRef.current?.scrollIntoView({ behavior: "auto" });
       lastScrolledChatIdRef.current = selectedUser?._id;
 
       requestAnimationFrame(() => {
-        if (messageContainerRef.current) {
-          messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
         }
       });
     } else {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      // Check if user is near bottom (within 150px)
+      const isNearBottom = container
+        ? container.scrollHeight - container.scrollTop - container.clientHeight < 150
+        : true;
+
+      const lastMsg = messages[messages.length - 1];
+      const isMyLastMsg = (lastMsg?.sender?._id || lastMsg?.sender)?.toString() === userData?._id?.toString();
+
+      if (isNearBottom || isMyLastMsg) {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
     }
-  }, [messages, selectedUser?._id]);
+  }, [messages, selectedUser?._id, userData?._id]);
+
 
   // CLEAR INPUTS ON USER SWITCH
   useEffect(() => {
@@ -1192,15 +1210,12 @@ const MessageArea = () => {
                         <button onClick={() => { 
                             setShowMenu(false); 
                             if (selectedUser?._id) {
-                                setGameInviteSent(true);
-                                const activeSocket = getSocket() || socket;
-                                if (activeSocket) {
-                                    activeSocket.emit("gameInvite", { to: selectedUser._id, gameType: 'tabletennis' });
-                                }
+                                setShowGamePicker(true);
                             }
                         }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
                             <Swords size={16} /> Play Mini-Game Duel
                         </button>
+
 
                       <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-2 font-medium border-b border-gray-100 ${isGhostMode ? 'bg-purple-100 text-purple-700 font-bold' : 'text-purple-600 hover:bg-purple-50'}`}>
                           <Ghost size={16} /> {isGhostMode ? "Ghost Ink Mode (ON)" : "Ghost Ink Mode"}
@@ -1273,6 +1288,60 @@ const MessageArea = () => {
               />
           )}
 
+          {/* GAME SELECTION MODAL */}
+          {showGamePicker && selectedUser && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+                  <div className="bg-slate-900 border border-slate-700/80 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col text-white">
+                      <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                              <div className="p-2 bg-amber-500/20 text-amber-300 rounded-xl border border-amber-500/30">
+                                  <Swords size={22} className="animate-bounce" />
+                              </div>
+                              <div>
+                                  <h2 className="font-bold text-base text-white">Choose Mini-Game Duel</h2>
+                                  <p className="text-xs text-amber-200/80">Challenge {selectedUser?.name || selectedUser?.userName}</p>
+                              </div>
+                          </div>
+                          <button onClick={() => setShowGamePicker(false)} className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                              <X size={18} />
+                          </button>
+                      </div>
+
+                      <div className="p-5 grid grid-cols-1 gap-3.5 bg-slate-950">
+                          {[
+                              { id: 'tabletennis', icon: '🏓', title: 'Table Tennis', desc: 'Real-time 2D paddle duel' },
+                              { id: 'tictactoe', icon: '❌⭕', title: 'Tic-Tac-Toe', desc: '3x3 grid turn-based strategy' },
+                              { id: 'rps', icon: '✊✋✌️', title: 'Rock Paper Scissors', desc: 'Quick choice weapon duel' }
+                          ].map(game => (
+                              <button
+                                  key={game.id}
+                                  onClick={() => {
+                                      setShowGamePicker(false);
+                                      setGameInviteSent(true);
+                                      const activeSocket = getSocket() || socket;
+                                      if (activeSocket) {
+                                          activeSocket.emit("gameInvite", { to: selectedUser._id, gameType: game.id });
+                                      }
+                                  }}
+                                  className="flex items-center gap-4 p-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 transition-all text-left group active:scale-98 cursor-pointer"
+                              >
+                                  <div className="text-3xl p-3 bg-slate-950 rounded-xl border border-slate-800 group-hover:scale-110 transition-transform">
+                                      {game.icon}
+                                  </div>
+                                  <div className="flex-1">
+                                      <h3 className="font-bold text-sm text-white group-hover:text-amber-400 transition-colors">{game.title}</h3>
+                                      <p className="text-xs text-slate-400 mt-0.5">{game.desc}</p>
+                                  </div>
+                                  <div className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity font-bold text-xs">
+                                      Send Invite →
+                                  </div>
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
+          )}
+
           {showMiniGameHub && selectedUser && (
               <MiniGameHub 
                   opponent={selectedUser}
@@ -1284,6 +1353,7 @@ const MessageArea = () => {
 
           {/* GAME DUEL INVITATION PERMISSION MODAL */}
           {incomingGameInvite && (
+
               <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
                   <div className="bg-slate-900 border border-amber-500/50 rounded-3xl p-6 max-w-sm w-full text-center text-white shadow-2xl animate-in zoom-in-95">
                       <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30 animate-bounce">

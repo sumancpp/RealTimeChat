@@ -521,20 +521,21 @@ const SideBar = () => {
                                             </h2>
                                         </div>
 
-                                        <p className='text-sm text-gray-500 truncate ml-2'>
-
+                                        <p className={`text-sm truncate ml-2 ${user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS') ? 'text-pink-500 font-semibold' : 'text-gray-500'}`}>
                                             {
-                                                (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
-                                                    ? "Online"
-                                                    : (
-                                                        user.lastMessage ||
-                                                        formatLastSeen(
-                                                            user.lastSeen
+                                                (user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS'))
+                                                    ? "Ghost SMS 👻"
+                                                    : (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
+                                                        ? "Online"
+                                                        : (
+                                                            user.lastMessage ||
+                                                            formatLastSeen(
+                                                                user.lastSeen
+                                                            )
                                                         )
-                                                    )
                                             }
-
                                         </p>
+
 
                                     </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Ghost, Sparkles, Flame } from 'lucide-react';
+import { Ghost, Sparkles, Eye, Flame } from 'lucide-react';
 
 const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks, onReveal, onDisintegrate }) => {
     const [revealed, setRevealed] = useState(false);
@@ -47,7 +47,7 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks, onReveal, onDi
     }, [revealed, disintegrated, msg._id, onDisintegrate]);
 
     const handleReveal = () => {
-        if (!revealed && !disintegrated) {
+        if (!isOwn && !revealed && !disintegrated) {
             setRevealed(true);
             if (onReveal && msg._id) {
                 onReveal(msg._id);
@@ -63,13 +63,15 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks, onReveal, onDi
         ? msg.message.replace('@ghost', '').trim()
         : msg.message;
 
+    const isSeenState = revealed || msg.isGhostRevealed;
+
     return (
         <div 
             onClick={handleReveal}
             className={`relative group max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl cursor-pointer transition-all duration-300 shadow-md ${
                 isOwn ? 'ml-auto rounded-tr-none' : 'mr-auto rounded-tl-none'
             } ${
-                revealed
+                isSeenState
                     ? 'bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-purple-500/50 shadow-purple-500/20'
                     : 'bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-950 border border-purple-400/60 hover:border-purple-400 hover:shadow-purple-500/30 animate-pulse'
             }`}
@@ -77,22 +79,38 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks, onReveal, onDi
             {/* Header Badge */}
             <div className="flex items-center justify-between gap-2 mb-1.5 text-xs font-semibold text-purple-300/80 border-b border-purple-500/20 pb-1">
                 <div className="flex items-center gap-1.5">
-                    <Ghost size={14} className="text-purple-400 animate-bounce" />
-                    <span>Ghost Ink</span>
+                    {isSeenState ? (
+                        <>
+                            <Eye size={14} className="text-pink-400 animate-pulse" />
+                            <span className="text-pink-300 font-bold">Ghost SMS is seen</span>
+                        </>
+                    ) : (
+                        <>
+                            <Ghost size={14} className="text-purple-400 animate-bounce" />
+                            <span>Ghost Ink</span>
+                        </>
+                    )}
                 </div>
-                {revealed && !disintegrated && (
-                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/40 font-mono animate-pulse">
+                {isSeenState && !disintegrated && (
+                    <span className="text-[10px] bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded-full border border-pink-500/40 font-mono animate-pulse">
                         ⏳ {countdown}s
                     </span>
                 )}
             </div>
 
             {/* Content Body */}
-            {!revealed ? (
-                <div className="py-2 text-center text-xs font-semibold text-purple-200 tracking-wide flex items-center justify-center gap-2 select-none">
-                    <Sparkles size={14} className="text-purple-400" />
-                    <span>Tap to Reveal Ghost Message</span>
-                </div>
+            {!isSeenState ? (
+                isOwn ? (
+                    <div className="py-2 text-center text-xs font-medium text-purple-300/90 italic tracking-wide flex items-center justify-center gap-2 select-none">
+                        <Ghost size={14} className="text-purple-400 opacity-80" />
+                        <span>Ghost SMS sent. Waiting for recipient to open.</span>
+                    </div>
+                ) : (
+                    <div className="py-2 text-center text-xs font-semibold text-purple-200 tracking-wide flex items-center justify-center gap-2 select-none">
+                        <Sparkles size={14} className="text-purple-400" />
+                        <span>Tap to Reveal Ghost Message</span>
+                    </div>
+                )
             ) : (
                 <div 
                     className="text-sm font-medium text-purple-100 transition-all duration-700 break-words"
@@ -110,4 +128,5 @@ const GhostMessageBubble = ({ msg, isOwn, renderMessageWithLinks, onReveal, onDi
 };
 
 export default GhostMessageBubble;
+
 

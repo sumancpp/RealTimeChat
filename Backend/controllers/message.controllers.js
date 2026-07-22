@@ -645,27 +645,19 @@ export const getSortedUsers = async (
 
                             });
 
+                        const isLastGhost = lastMessage?.isGhost || (typeof lastMessage?.message === 'string' && lastMessage?.message.startsWith('@ghost'));
+                        const formattedLastMessage = isLastGhost
+                            ? "Ghost SMS 👻"
+                            : (lastMessage?.message || (lastMessage?.image ? "📷 Image" : lastMessage?.voice ? "🎤 Voice Message" : ""));
+
                         return {
-
                             ...user.toObject(),
-
-                            lastMessage:
-                                lastMessage?.message ||
-
-                                (lastMessage?.image
- ? "📷 Image"
- : lastMessage?.voice
- ? "🎤 Voice Message"
- : ""),
-
-                            lastMessageTime:
-                                lastMessage?.createdAt ||
-
-                                null,
-
+                            lastMessage: formattedLastMessage,
+                            isLastGhost,
+                            lastMessageTime: lastMessage?.createdAt || null,
                             unreadCount
-
                         };
+
 
                     }
                 )
