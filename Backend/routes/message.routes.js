@@ -17,7 +17,10 @@ import {
   generateAISummary,
   generateSmartReplies,
   translateTextMessage,
-  openViewOnceMessage
+  openViewOnceMessage,
+  getChatSentiment,
+  reviewCodeSnippet,
+  transcribeVoiceMessage
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -27,6 +30,9 @@ messageRouter.get("/ai-summary/:receiver", isAuth, generateAISummary);
 messageRouter.get("/ai-smart-replies/:receiver", isAuth, generateSmartReplies);
 messageRouter.post("/translate-message", isAuth, translateTextMessage);
 messageRouter.post("/open-view-once/:messageId", isAuth, openViewOnceMessage);
+messageRouter.get("/ai-sentiment/:targetUserId", isAuth, getChatSentiment);
+messageRouter.post("/ai-code-review", isAuth, reviewCodeSnippet);
+messageRouter.post("/ai-transcribe", isAuth, transcribeVoiceMessage);
 
 messageRouter.post(
   "/send/:receiver",

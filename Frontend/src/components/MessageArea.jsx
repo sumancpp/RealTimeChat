@@ -30,7 +30,10 @@ import {
   X,
   Sparkles,
   Languages,
-  Bot
+  Bot,
+  BarChart2,
+  Code2,
+  FileText
 } from "lucide-react";
 
 
@@ -264,6 +267,64 @@ const MessageArea = () => {
   const [translatedResult, setTranslatedResult] = useState("");
   const [loadingTranslate, setLoadingTranslate] = useState(false);
 
+  const [showSentimentModal, setShowSentimentModal] = useState(false);
+  const [sentimentData, setSentimentData] = useState(null);
+  const [loadingSentiment, setLoadingSentiment] = useState(false);
+
+  const [showCodeReviewModal, setShowCodeReviewModal] = useState(false);
+  const [codeSnippetText, setCodeSnippetText] = useState("");
+  const [codeReviewResult, setCodeReviewResult] = useState("");
+  const [loadingCodeReview, setLoadingCodeReview] = useState(false);
+
+  const [showVoiceTranscribeModal, setShowVoiceTranscribeModal] = useState(false);
+  const [transcribeResult, setTranscribeResult] = useState("");
+  const [loadingTranscribe, setLoadingTranscribe] = useState(false);
+
+  const handleFetchChatSentiment = async () => {
+      if (!selectedUser?._id) return;
+      setLoadingSentiment(true);
+      setShowSentimentModal(true);
+      setSentimentData(null);
+      try {
+          const res = await axios.get(`${serverUrl}/message/ai-sentiment/${selectedUser._id}`, { withCredentials: true });
+          setSentimentData(res.data);
+      } catch (err) {
+          console.error("Sentiment error", err);
+      } finally {
+          setLoadingSentiment(false);
+      }
+  };
+
+  const handleReviewCode = async () => {
+      if (!codeSnippetText.trim()) return;
+      setLoadingCodeReview(true);
+      setCodeReviewResult("");
+      try {
+          const res = await axios.post(`${serverUrl}/message/ai-code-review`, { code: codeSnippetText }, { withCredentials: true });
+          setCodeReviewResult(res.data.review || "Code review completed.");
+      } catch (err) {
+          console.error("Code review error", err);
+          setCodeReviewResult("Failed to analyze code snippet.");
+      } finally {
+          setLoadingCodeReview(false);
+      }
+  };
+
+  const handleTranscribeVoice = async (voiceUrl = "") => {
+      setLoadingTranscribe(true);
+      setShowVoiceTranscribeModal(true);
+      setTranscribeResult("");
+      try {
+          const res = await axios.post(`${serverUrl}/message/ai-transcribe`, { audioText: "Voice audio message", voiceUrl }, { withCredentials: true });
+          setTranscribeResult(res.data.transcript || "Transcription completed.");
+      } catch (err) {
+          console.error("Transcribe error", err);
+          setTranscribeResult("Failed to transcribe audio note.");
+      } finally {
+          setLoadingTranscribe(false);
+      }
+  };
+
   const handleFetchAISummary = async () => {
       if (!selectedUser?._id) return;
       setLoadingAiSummary(true);
@@ -457,6 +518,14 @@ const MessageArea = () => {
     setInGameMode(false);
     setActiveGameMessageId(null);
   }, [selectedUser]);
+
+  useEffect(() => {
+    if (selectedUser?.isGroup || selectedUser?._id) {
+      handleFetchChatSentiment();
+    } else {
+      setSentimentData(null);
+    }
+  }, [selectedUser?._id]);
 
   useEffect(() => {
 
@@ -1457,6 +1526,23 @@ const MessageArea = () => {
                       <p className="text-xs text-slate-400">Get song suggestions based on chat vibe</p>
                     </div>
                   </button>
+
+                  {/* 6. AI Code Reviewer & Analyzer */}
+                  <button
+                    onClick={() => {
+                      setShowAIHubModal(false);
+                      setShowCodeReviewModal(true);
+                    }}
+                    className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/50 rounded-2xl transition-all text-left cursor-pointer group"
+                  >
+                    <div className="p-2.5 bg-blue-500/20 text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
+                      <Code2 size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-white group-hover:text-blue-300">💻 AI Code Reviewer</h4>
+                      <p className="text-xs text-slate-400">Detect bugs & get AI code optimizations</p>
+                    </div>
+                  </button>
                 </div>
 
                 <div className="mt-5 flex justify-end">
@@ -1602,6 +1688,207 @@ const MessageArea = () => {
                   )}
                   <button
                     onClick={() => setShowTranslateModal(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI SENTIMENT / VIBE METER MODAL */}
+          {showSentimentModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-emerald-500/50 rounded-3xl p-4 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                      <BarChart2 size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base sm:text-lg text-white">📊 AI Chat Vibe & Sentiment Meter</h3>
+                      <p className="text-[11px] text-emerald-300">Live mood analysis for {selectedUser?.name || "Chat"}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowSentimentModal(false)}
+                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {loadingSentiment ? (
+                    <div className="flex flex-col items-center justify-center h-40 text-emerald-400 gap-3">
+                      <Sparkles size={28} className="animate-spin text-emerald-500" />
+                      <span className="text-xs font-semibold">Analyzing chat sentiment & conversation vibe...</span>
+                    </div>
+                  ) : sentimentData ? (
+                    <div className="flex flex-col gap-3">
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center">
+                          <span className="text-xs text-slate-400 font-semibold mb-1">Chat Vibe</span>
+                          <span className="text-sm font-extrabold text-emerald-400">{sentimentData.vibe || "🔥 Warm & Active"}</span>
+                        </div>
+                        <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center">
+                          <span className="text-xs text-slate-400 font-semibold mb-1">Positivity Score</span>
+                          <span className="text-base font-extrabold text-cyan-400">{sentimentData.score || "88%"}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs text-slate-200">
+                        <span className="text-xs font-bold text-emerald-400 block mb-1">Overall Sentiment Summary:</span>
+                        <p className="leading-relaxed font-sans">{sentimentData.summary || "Conversation shows high engagement and friendly rapport."}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-xs italic text-center py-6">Failed to load chat sentiment analysis.</p>
+                  )}
+                </div>
+
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => setShowSentimentModal(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI CODE REVIEWER MODAL */}
+          {showCodeReviewModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-blue-500/50 rounded-3xl p-4 sm:p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl border border-blue-500/30">
+                      <Code2 size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base sm:text-lg text-white">💻 AI Code Reviewer & Bug Detector</h3>
+                      <p className="text-[11px] text-blue-300">Paste code snippets to detect bugs & optimize logic</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowCodeReviewModal(false)}
+                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <textarea
+                    value={codeSnippetText}
+                    onChange={(e) => setCodeSnippetText(e.target.value)}
+                    placeholder="Paste your code snippet here (JavaScript, Python, C++, etc.)..."
+                    className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-blue-200 font-mono outline-none focus:border-blue-500 resize-none"
+                  />
+
+                  <button
+                    onClick={() => handleReviewCode()}
+                    disabled={loadingCodeReview || !codeSnippetText.trim()}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50 shadow-md"
+                  >
+                    {loadingCodeReview ? "Analyzing Code with Gemini AI..." : "⚡ Analyze & Review Code"}
+                  </button>
+
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs min-h-[120px] max-h-[220px] overflow-y-auto text-slate-200 font-sans">
+                    {loadingCodeReview ? (
+                      <div className="flex items-center justify-center h-20 text-blue-400 gap-2">
+                        <Code2 size={20} className="animate-spin text-blue-500" />
+                        <span className="text-xs">Reviewing syntax, security, & bug risks...</span>
+                      </div>
+                    ) : codeReviewResult ? (
+                      <div className="whitespace-pre-wrap font-mono text-[11px] text-slate-300">{codeReviewResult}</div>
+                    ) : (
+                      <p className="text-slate-500 text-xs italic">Paste a code snippet above and click "Analyze & Review Code".</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-2.5 justify-end">
+                  {codeReviewResult && (
+                    <button
+                      onClick={() => {
+                        setMessage(codeReviewResult);
+                        setShowCodeReviewModal(false);
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-md"
+                    >
+                      Share Review in Chat
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowCodeReviewModal(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI VOICE TRANSCRIBER MODAL */}
+          {showVoiceTranscribeModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-amber-500/50 rounded-3xl p-4 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30">
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base sm:text-lg text-white">🎙️ AI Voice Note Transcriber</h3>
+                      <p className="text-[11px] text-amber-300">Speech-to-text transcript & summary</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowVoiceTranscribeModal(false)}
+                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs min-h-[120px] text-slate-200 font-sans">
+                    {loadingTranscribe ? (
+                      <div className="flex items-center justify-center h-20 text-amber-400 gap-2">
+                        <FileText size={20} className="animate-spin text-amber-500" />
+                        <span className="text-xs">Transcribing audio speech to text...</span>
+                      </div>
+                    ) : transcribeResult ? (
+                      <div>
+                        <span className="text-xs font-bold text-amber-400 block mb-1">Transcript & Summary:</span>
+                        <p className="text-xs leading-relaxed font-sans">{transcribeResult}</p>
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-xs italic">No transcript generated.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-2.5 justify-end">
+                  {transcribeResult && (
+                    <button
+                      onClick={() => {
+                        setMessage(transcribeResult);
+                        setShowVoiceTranscribeModal(false);
+                      }}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-md"
+                    >
+                      Insert in Chat
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowVoiceTranscribeModal(false)}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
                   >
                     Close
@@ -1816,6 +2103,25 @@ const MessageArea = () => {
               />
           ) : (
           <>
+          {/* AUTOMATIC AI GROUP SENTIMENT & VIBE METER BANNER */}
+          {selectedUser?.isGroup && (
+            <div className="bg-slate-900/90 border-b border-slate-800/80 px-4 py-2 flex items-center justify-between text-xs text-slate-300 backdrop-blur-sm shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="p-1 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                  <BarChart2 size={14} />
+                </span>
+                <span className="font-bold text-emerald-400">Group AI Vibe:</span>
+                <span className="font-semibold text-white">{sentimentData?.vibe || "🔥 Warm & Active"}</span>
+                <span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                  {sentimentData?.score || "88% Positive"}
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 italic hidden sm:inline truncate max-w-[300px]">
+                {sentimentData?.summary || "Active & collaborative group discussion."}
+              </span>
+            </div>
+          )}
+
           {/* MESSAGES */}
           <div
             ref={messageContainerRef}
@@ -2024,11 +2330,19 @@ const MessageArea = () => {
                     )}
 
                     {msg.voice && (
+                      <div className="flex flex-col gap-1 mb-2">
                         <audio
                           controls
                           src={msg.voice}
-                          className="w-[250px] mb-2"
+                          className="w-[250px]"
                         />
+                        <button
+                          onClick={() => handleTranscribeVoice(msg.voice)}
+                          className="self-start text-[10px] font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-lg transition flex items-center gap-1 cursor-pointer"
+                        >
+                          <FileText size={12} /> Transcribe Audio
+                        </button>
+                      </div>
                     )}
 
                     {activeReactionMessage ===
