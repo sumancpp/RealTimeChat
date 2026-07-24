@@ -1518,16 +1518,16 @@ const MessageArea = () => {
 
           {/* AI TRANSLATION MODAL */}
           {showTranslateModal && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-              <div className="bg-slate-900 border border-cyan-500/50 rounded-3xl p-6 max-w-lg w-full text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-2xl border border-cyan-500/30">
-                      <Languages size={24} />
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-cyan-500/50 rounded-3xl p-4 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-cyan-500/20 text-cyan-400 rounded-xl border border-cyan-500/30">
+                      <Languages size={20} />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-lg text-white">🌐 AI Real-Time Translator</h3>
-                      <p className="text-xs text-cyan-300">Translate messages instantly into any language</p>
+                      <h3 className="font-extrabold text-base sm:text-lg text-white">🌐 AI Real-Time Translator</h3>
+                      <p className="text-[11px] text-cyan-300">Translate messages instantly into any language</p>
                     </div>
                   </div>
                   <button 
@@ -1542,43 +1542,45 @@ const MessageArea = () => {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-semibold text-slate-400">Text to Translate:</label>
                     <textarea
-                      value={translateInputText}
+                      value={translateInputText || ""}
                       onChange={(e) => setTranslateInputText(e.target.value)}
                       placeholder="Type or paste any text to translate..."
-                      className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-cyan-500 resize-none font-sans"
+                      className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-cyan-500 resize-none font-sans"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-semibold text-slate-400">Target Language:</label>
-                    <select
-                      value={targetLang}
-                      onChange={(e) => setTargetLang(e.target.value)}
-                      className="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 outline-none focus:border-cyan-500 cursor-pointer"
-                    >
-                      {["English", "Bengali", "Hindi", "Spanish", "French", "German", "Japanese", "Mandarin", "Arabic", "Russian", "Italian", "Portuguese"].map((lang) => (
-                        <option key={lang} value={lang}>{lang === "Bengali" ? "Bengali (বাংলা)" : lang}</option>
-                      ))}
-                    </select>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs font-semibold text-slate-400 whitespace-nowrap">Target:</label>
+                      <select
+                        value={targetLang}
+                        onChange={(e) => setTargetLang(e.target.value)}
+                        className="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 outline-none focus:border-cyan-500 cursor-pointer w-full"
+                      >
+                        {["English", "Bengali", "Hindi", "Spanish", "French", "German", "Japanese", "Mandarin", "Arabic", "Russian", "Italian", "Portuguese"].map((lang) => (
+                          <option key={lang} value={lang}>{lang === "Bengali" ? "Bengali (বাংলা)" : lang}</option>
+                        ))}
+                      </select>
+                    </div>
                     <button
                       onClick={() => handleTranslateText()}
                       disabled={loadingTranslate}
-                      className="ml-auto px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50 shadow-md"
+                      className="w-full sm:w-auto px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50 shadow-md whitespace-nowrap"
                     >
                       {loadingTranslate ? "Translating..." : "Translate Now"}
                     </button>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-sm min-h-[100px] text-slate-200 font-sans">
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-sm min-h-[100px] max-h-[160px] overflow-y-auto text-slate-200 font-sans">
                     {loadingTranslate ? (
                       <div className="flex items-center justify-center h-20 text-cyan-400 gap-2">
                         <Languages size={20} className="animate-spin text-cyan-500" />
-                        <span className="text-xs">Translating with Gemini AI...</span>
+                        <span className="text-xs">Translating...</span>
                       </div>
                     ) : translatedResult ? (
                       <div>
                         <span className="text-xs font-bold text-cyan-400 block mb-1">Result ({targetLang}):</span>
-                        <p className="text-sm font-medium">{translatedResult}</p>
+                        <p className="text-sm font-medium whitespace-pre-wrap">{translatedResult}</p>
                       </div>
                     ) : (
                       <p className="text-slate-500 text-xs italic">Select a language and click "Translate Now" to translate the message.</p>
@@ -1586,14 +1588,14 @@ const MessageArea = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 flex gap-3 justify-end">
+                <div className="mt-4 flex gap-2.5 justify-end">
                   {translatedResult && (
                     <button
                       onClick={() => {
                         setMessage(translatedResult);
                         setShowTranslateModal(false);
                       }}
-                      className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-md"
+                      className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-md"
                     >
                       Insert in Chat
                     </button>

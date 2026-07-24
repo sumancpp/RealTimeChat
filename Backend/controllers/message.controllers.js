@@ -1161,7 +1161,7 @@ export const generateSmartReplies = async (req, res) => {
     }
 };
 
-// Translate Specific Message
+// Translate Specific Message with Gemini AI & MyMemory Fallback
 export const translateTextMessage = async (req, res) => {
     try {
         const { text, targetLanguage = "English" } = req.body;
@@ -1169,12 +1169,56 @@ export const translateTextMessage = async (req, res) => {
             return res.status(400).json({ message: "Text to translate is required" });
         }
 
-        const translationSystemInstruction = `You are a professional multi-lingual translator. Your task is to accurately translate the input text into ${targetLanguage}. If target is Bengali, output pure natural Bengali script (বাংলা). If target is English, output natural, fluent English. Output ONLY the translated text. Do NOT add greetings, explanations, formatting, or quotes.`;
-        const translatedText = await generateGeminiReply(text, GEMINI_MODEL, 5, translationSystemInstruction);
+        let translatedText = "";
+
+        // 1. Try Gemini AI First
+        try {
+            const translationSystemInstruction = `You are a professional multi-lingual translator. Translate the text into ${targetLanguage}. If target is Bengali, use authentic Bengali script (বাংলা). Output ONLY the direct translated text with no extra commentary or quotes.`;
+            const geminiRes = await generateGeminiReply(text, GEMINI_MODEL, 2, translationSystemInstruction);
+            if (geminiRes && !geminiRes.includes("Missing Key") && !geminiRes.includes("couldn't generate") && !geminiRes.includes("fallback text")) {
+                translatedText = geminiRes;
+            }
+        } catch (e) {
+            console.log("Gemini translate error, falling back to MyMemory API:", e.message);
+        }
+
+        // 2. High-Accuracy Fallback: MyMemory Free Translation API
+        if (!translatedText) {
+            const langMap = {
+                "English": "en",
+                "Bengali": "bn",
+                "Hindi": "hi",
+                "Spanish": "es",
+                "French": "fr",
+                "German": "de",
+                "Japanese": "ja",
+                "Mandarin": "zh",
+                "Arabic": "ar",
+                "Russian": "ru",
+                "Italian": "it",
+                "Portuguese": "pt"
+            };
+            const targetCode = langMap[targetLanguage] || "en";
+            
+            try {
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=autodetect|${targetCode}`);
+                const data = await response.json();
+                if (data && data.responseData && data.responseData.translatedText) {
+                    translatedText = data.responseData.translatedText;
+                }
+            } catch (err) {
+                console.error("MyMemory translation error:", err);
+            }
+        }
+
+        if (!translatedText) {
+            translatedText = text; // Return original text if translation service offline
+        }
+
         return res.status(200).json({ translatedText });
     } catch (error) {
         console.error("translateTextMessage Error:", error);
-        return res.status(500).json({ message: "Translation failed", error: error.message });
+        return res.status(200).json({ translatedText: req.body.text || "Translation failed." });
     }
 };
 

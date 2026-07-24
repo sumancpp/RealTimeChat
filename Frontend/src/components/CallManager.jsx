@@ -261,7 +261,7 @@ const CallManager = () => {
         }
 
         if (!navigator.mediaDevices || typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
-            alert("Screen Sharing Feature Notice: Modern web browsers require a Secure Context (HTTPS or http://localhost) to enable screen recording. If accessing over HTTP on a network IP, please open via http://localhost or use an HTTPS connection.");
+            alert("🖥️ Screen Sharing Notice:\n\nScreen sharing is a Desktop WebRTC feature. Mobile operating systems (Android Chrome / iOS Safari) do not allow website screen recording in mobile web browsers.\n\nPlease open BaatCheet on a laptop or desktop computer (Windows/Mac/Linux) to use 1-Click Screen Sharing!");
             return;
         }
 
