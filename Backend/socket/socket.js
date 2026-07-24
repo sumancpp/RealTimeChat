@@ -280,6 +280,13 @@ io.on(
             }
         });
 
+        socket.on("stopScreenShareSignal", ({ to }) => {
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("screenShareStopped");
+            }
+        });
+
         // GAME EVENTS
         socket.on("gameInvite", ({ to, gameType }) => {
             const receiverSocketId = getReceiverSocketId(to);

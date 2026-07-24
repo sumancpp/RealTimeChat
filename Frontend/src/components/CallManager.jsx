@@ -124,6 +124,17 @@ const CallManager = () => {
             endCallLocally();
         });
 
+        socket.on("screenShareStopped", () => {
+            if (remoteStream) {
+                const videoTracks = remoteStream.getVideoTracks();
+                videoTracks.forEach(track => {
+                    track.stop();
+                    remoteStream.removeTrack(track);
+                });
+                setRemoteStream(new MediaStream(remoteStream.getAudioTracks()));
+            }
+        });
+
         return () => {
             window.removeEventListener('startCall', handleStartCall);
             socket.off("incomingCall");
@@ -131,6 +142,7 @@ const CallManager = () => {
             socket.off("callAccepted");
             socket.off("webrtcSignal");
             socket.off("callEnded");
+            socket.off("screenShareStopped");
         };
     }, [callState, otherUsers, onlineUsers]);
 
@@ -318,8 +330,14 @@ const CallManager = () => {
         if (peerConnectionRef.current) {
             const senders = peerConnectionRef.current.getSenders();
             const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-            if (videoSender && cameraTrack) {
-                await videoSender.replaceTrack(cameraTrack);
+            if (videoSender) {
+                if (cameraTrack) {
+                    await videoSender.replaceTrack(cameraTrack);
+                } else {
+                    try {
+                        peerConnectionRef.current.removeTrack(videoSender);
+                    } catch(e) {}
+                }
             }
         }
 
@@ -328,6 +346,12 @@ const CallManager = () => {
         }
 
         setIsScreenSharing(false);
+
+        // Notify remote user via Socket.IO so screen sharing stops on BOTH devices instantly!
+        const socket = getSocket();
+        if (socket && remoteUser?._id) {
+            socket.emit("stopScreenShareSignal", { to: remoteUser._id });
+        }
     };
 
     const toggleMic = () => {
