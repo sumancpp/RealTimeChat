@@ -63,10 +63,7 @@ const Profile = () => {
             `${serverUrl}/user/profile`,
             updatedData,
             {
-                withCredentials: true,
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
+                withCredentials: true
             }
         )
 

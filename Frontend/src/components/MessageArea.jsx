@@ -941,11 +941,7 @@ const MessageArea = () => {
         endpoint,
         formData,
         {
-          withCredentials: true,
-          headers: {
-            "Content-Type":
-              "multipart/form-data"
-          }
+          withCredentials: true
         }
       );
 
@@ -2099,6 +2095,21 @@ ${msg.sender?.toString() ===
 
 
 
+                          )}
+
+                          {msg.message && !msg.isDeleted && (
+                            <button
+                              title="Translate Message"
+                              onClick={() => {
+                                setTranslateInputText(msg.message);
+                                setShowTranslateModal(true);
+                                setActiveReactionMessage(null);
+                                handleTranslateText(msg.message);
+                              }}
+                              className="text-cyan-600 hover:text-cyan-500 font-bold px-1.5 transition cursor-pointer flex items-center gap-1"
+                            >
+                              <Languages size={18} />
+                            </button>
                           )}
 
                           {msg.sender?.toString() ===

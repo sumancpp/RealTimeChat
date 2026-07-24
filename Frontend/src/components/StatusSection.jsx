@@ -238,8 +238,7 @@ const StatusSection = () => {
         setLoading(true);
         try {
             await axios.post(`${serverUrl}/status/upload`, formData, {
-                withCredentials: true,
-                headers: { "Content-Type": "multipart/form-data" }
+                withCredentials: true
             });
             fetchStatuses();
             setSelectedFile(null);
@@ -318,8 +317,7 @@ const StatusSection = () => {
         formData.append("message", `*Replying to status:* \n${replyText}`);
         try {
             await axios.post(`${serverUrl}/message/send/${activeGroup.user._id}`, formData, {
-                withCredentials: true,
-                headers: { "Content-Type": "multipart/form-data" }
+                withCredentials: true
             });
             setReplyText("");
             setShowReplySheet(false);

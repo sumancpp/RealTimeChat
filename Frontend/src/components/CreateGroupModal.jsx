@@ -44,8 +44,7 @@ const CreateGroupModal = ({ isOpen, onClose, otherUsers, onGroupCreated }) => {
             }
 
             const res = await axios.post(`${serverUrl}/group/create`, formData, {
-                withCredentials: true,
-                headers: { 'Content-Type': 'multipart/form-data' }
+                withCredentials: true
             });
 
             if (res.data) {

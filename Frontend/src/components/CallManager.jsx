@@ -293,6 +293,9 @@ const CallManager = () => {
             };
         } catch (err) {
             console.error("Screen sharing cancelled or error:", err);
+            if (err.name !== 'NotAllowedError') {
+                alert("Screen Share Error: " + (err.message || "Failed to start screen sharing"));
+            }
         }
     };
 

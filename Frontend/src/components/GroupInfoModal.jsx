@@ -91,10 +91,7 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
             }
 
             const res = await axios.put(`${serverUrl}/group/edit/${group._id}`, formData, { 
-                withCredentials: true,
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
+                withCredentials: true
             });
             if (res.data) {
                 dispatch(setSelectedUser(res.data));
