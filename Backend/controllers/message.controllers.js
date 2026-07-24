@@ -3,7 +3,7 @@ import uploadOnCloudinary from "../config/cloudinary.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
-import generateGeminiReply from "../config/gemini.js";
+import generateGeminiReply, { GEMINI_MODEL } from "../config/gemini.js";
 import webpush from "../config/webpush.js";
 
 import {

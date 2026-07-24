@@ -47,7 +47,7 @@ const getAvailableClient = () => {
     return keyPool[bestIndex].client;
 };
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+export const GEMINI_MODEL = "gemini-2.5-flash";
 
 // Helper function to pause execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
