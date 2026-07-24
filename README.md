@@ -37,25 +37,29 @@
 - **How to Use**:
   - In any Group Chat input bar, click the **Fedora Hat & Sunglasses (Incognito)** icon to toggle Incognito Mode ON or OFF.
 
-### 🎵 4. AI Mood Music Detector
-- **Description**: Analyzes chat sentiment and suggests interactive YouTube Music cards playable right inside the chat window.
-- **How to Use**: Click the Music (🎵) icon next to the chat input or type `@music` and send.
+### 🤖 4. Real AI Suite (Google Gemini 2.5 API)
+- **Description**: Real-time AI intelligence built directly into messaging:
+  - ✨ **AI Chat Summaries**: Instant 3-bullet recap of long conversations. Click the Sparkles (`✨`) icon in the chat header or send `@summarize`.
+  - 💡 **AI Smart Reply Chips**: Contextual 1-tap quick replies suggested dynamically using Gemini API.
+  - 🌐 **AI Live Multi-Language Translator**: Instant translation into Spanish, Hindi, French, German, Japanese, and 5+ languages. Send `@translate <lang>` or click `🌐 AI Live Translator`.
+  - 🔥 **AI Roast Mode**: Contextual AI burns via `@roast` or Flame icon.
+  - 🎵 **AI Mood Music**: Sentiment-aware YouTube music curation via `@music` or Music icon.
 
-### 🔥 5. AI Roast Mode
-- **Description**: Generates hilarious, context-aware AI burns to roast your friends.
-- **How to Use**: Click the Flame (🔥) icon next to the chat input or type `@roast` and send.
+### 🖥️ 5. WebRTC Audio/Video Calls & 1-Click Screen Sharing
+- **Description**: High-definition peer-to-peer audio/video calls equipped with 1-click Screen Sharing (`getDisplayMedia`) and hot-swapping between camera and screen tracks.
+- **How to Use**: Click the Phone (📞) or Video (📹) icon to initiate a call, then tap the Screen Share (🖥️) button to present your desktop/window live.
 
-### ⏪ 6. Chat Story Replay
+### 🕶️ 6. Group Incognito Mode
+- **Description**: Send anonymous messages in group chats where your avatar and username are masked as **Secret Member**.
+- **How to Use**: In any Group Chat input bar, click the **Fedora Hat & Sunglasses (Incognito)** icon.
+
+### ⏪ 7. Chat Story Replay
 - **Description**: Plays back your last 48 hours of messages as a cinematic, animated story reel.
 - **How to Use**: Open the 3-dot (`⋮`) menu in any 1-on-1 chat and click **Play Chat Story**.
 
-### 🎨 7. Real-Time Shared Whiteboard
+### 🎨 8. Real-Time Shared Whiteboard
 - **Description**: Collaborative canvas allowing all group members to draw, erase, and brainstorm live.
 - **How to Use**: Click the Palette (🎨) icon in the group chat top header bar.
-
-### 📞 8. WebRTC Audio & Video Calls
-- **Description**: High-definition peer-to-peer audio and video calling with incoming call ringers and mute/camera controls.
-- **How to Use**: Click the Phone (📞) or Camera (📹) icon in the top header of any 1-on-1 chat.
 
 ---
 

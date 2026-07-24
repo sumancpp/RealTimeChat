@@ -27,7 +27,10 @@ import {
   Play,
   Ghost,
   Swords,
-  X
+  X,
+  Sparkles,
+  Languages,
+  Bot
 } from "lucide-react";
 
 
@@ -240,6 +243,65 @@ const MessageArea = () => {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [isAnonymousMode, setIsAnonymousMode] = useState(false);
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false);
+
+  // REAL AI INTEGRATION STATES
+  const [showAIHubModal, setShowAIHubModal] = useState(false);
+  const [aiSummaryModal, setAiSummaryModal] = useState(false);
+  const [aiSummaryText, setAiSummaryText] = useState("");
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+
+  const [smartReplies, setSmartReplies] = useState([]);
+  const [loadingSmartReplies, setLoadingSmartReplies] = useState(false);
+
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
+  const [targetLang, setTargetLang] = useState("Spanish");
+  const [translatedResult, setTranslatedResult] = useState("");
+  const [loadingTranslate, setLoadingTranslate] = useState(false);
+
+  const handleFetchAISummary = async () => {
+      if (!selectedUser?._id) return;
+      setLoadingAiSummary(true);
+      setAiSummaryModal(true);
+      setAiSummaryText("");
+      try {
+          const res = await axios.get(`${serverUrl}/message/ai-summary/${selectedUser._id}`, { withCredentials: true });
+          setAiSummaryText(res.data.summary || "No summary available.");
+      } catch (err) {
+          console.error("AI Summary error", err);
+          setAiSummaryText("Failed to generate AI summary.");
+      } finally {
+          setLoadingAiSummary(false);
+      }
+  };
+
+  const handleFetchSmartReplies = async () => {
+      if (!selectedUser?._id) return;
+      setLoadingSmartReplies(true);
+      try {
+          const res = await axios.get(`${serverUrl}/message/ai-smart-replies/${selectedUser._id}`, { withCredentials: true });
+          setSmartReplies(res.data.suggestions || []);
+      } catch (err) {
+          console.error("Smart replies error", err);
+      } finally {
+          setLoadingSmartReplies(false);
+      }
+  };
+
+  const handleTranslateText = async (textToTranslate) => {
+      const text = textToTranslate || message || (messages && messages.length > 0 ? messages[messages.length - 1].message : "Hello");
+      if (!text) return;
+      setLoadingTranslate(true);
+      setTranslatedResult("");
+      try {
+          const res = await axios.post(`${serverUrl}/message/translate-message`, { text, targetLanguage: targetLang }, { withCredentials: true });
+          setTranslatedResult(res.data.translatedText || "Translation failed.");
+      } catch (err) {
+          console.error("Translation error", err);
+          setTranslatedResult("Translation failed.");
+      } finally {
+          setLoadingTranslate(false);
+      }
+  };
 
   useEffect(() => {
     if (selectedUser) {
@@ -1203,6 +1265,9 @@ const MessageArea = () => {
 
                     {showMenu && (
                       <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
+                        <button onClick={() => { setShowMenu(false); setShowAIHubModal(true); }} className="w-full text-left px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 flex items-center gap-2 font-bold border-b border-gray-100 bg-purple-50/50">
+                            <Sparkles size={16} className="text-purple-600 animate-pulse" /> 🤖 AI Features Hub
+                        </button>
                         <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
                             <Film size={16} /> Play Chat Story
                         </button>
@@ -1262,6 +1327,255 @@ const MessageArea = () => {
              onClose={() => setShowGroupInfo(false)}
              group={selectedUser}
           />
+
+          {/* AI FEATURES HUB MODAL */}
+          {showAIHubModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-purple-500/50 rounded-3xl p-6 max-w-md w-full text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white rounded-2xl shadow-lg shadow-purple-500/30">
+                      <Sparkles size={24} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-lg text-white">🤖 AI Features Hub</h3>
+                      <p className="text-xs text-purple-300">Powered by Google Gemini API</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowAIHubModal(false)}
+                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                  {/* 1. AI Summary */}
+                  <button
+                    onClick={() => {
+                      setShowAIHubModal(false);
+                      handleFetchAISummary();
+                    }}
+                    className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl transition-all text-left cursor-pointer group"
+                  >
+                    <div className="p-2.5 bg-purple-500/20 text-purple-400 rounded-xl group-hover:scale-110 transition-transform">
+                      <Sparkles size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-white group-hover:text-purple-300">✨ AI Conversation Summary</h4>
+                      <p className="text-xs text-slate-400">Summarize recent chat in 3 bullet points</p>
+                    </div>
+                  </button>
+
+                  {/* 2. Smart Replies */}
+                  <button
+                    onClick={() => {
+                      setShowAIHubModal(false);
+                      handleFetchSmartReplies();
+                    }}
+                    className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/50 rounded-2xl transition-all text-left cursor-pointer group"
+                  >
+                    <div className="p-2.5 bg-indigo-500/20 text-indigo-400 rounded-xl group-hover:scale-110 transition-transform">
+                      <Bot size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-white group-hover:text-indigo-300">💡 AI Smart Replies</h4>
+                      <p className="text-xs text-slate-400">Generate 3 contextual quick-reply options</p>
+                    </div>
+                  </button>
+
+                  {/* 3. Live Translator */}
+                  <button
+                    onClick={() => {
+                      setShowAIHubModal(false);
+                      setShowTranslateModal(true);
+                    }}
+                    className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-2xl transition-all text-left cursor-pointer group"
+                  >
+                    <div className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-xl group-hover:scale-110 transition-transform">
+                      <Languages size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-white group-hover:text-cyan-300">🌐 AI Live Translator</h4>
+                      <p className="text-xs text-slate-400">Translate messages into 10+ languages</p>
+                    </div>
+                  </button>
+
+                  {/* 4. AI Roast Mode */}
+                  <button
+                    onClick={() => {
+                      setShowAIHubModal(false);
+                      setMessage("@roast");
+                    }}
+                    className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/50 rounded-2xl transition-all text-left cursor-pointer group"
+                  >
+                    <div className="p-2.5 bg-orange-500/20 text-orange-400 rounded-xl group-hover:scale-110 transition-transform">
+                      <Flame size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-white group-hover:text-orange-300">🔥 AI Roast Mode</h4>
+                      <p className="text-xs text-slate-400">Generate a friendly roast burn for your friend</p>
+                    </div>
+                  </button>
+
+                  {/* 5. AI Mood Music */}
+                  <button
+                    onClick={() => {
+                      setShowAIHubModal(false);
+                      setMessage("@music");
+                    }}
+                    className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-pink-500/50 rounded-2xl transition-all text-left cursor-pointer group"
+                  >
+                    <div className="p-2.5 bg-pink-500/20 text-pink-400 rounded-xl group-hover:scale-110 transition-transform">
+                      <Music size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-white group-hover:text-pink-300">🎵 AI Mood Music</h4>
+                      <p className="text-xs text-slate-400">Get song suggestions based on chat vibe</p>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    onClick={() => setShowAIHubModal(false)}
+                    className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI SUMMARY MODAL */}
+          {aiSummaryModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-purple-500/50 rounded-3xl p-6 max-w-lg w-full text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-purple-500/20 text-purple-400 rounded-2xl border border-purple-500/30">
+                      <Sparkles size={24} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-lg text-white">✨ AI Conversation Summary</h3>
+                      <p className="text-xs text-purple-300">Powered by Google Gemini 2.5</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setAiSummaryModal(false)}
+                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="flex-1 min-h-[160px] max-h-[300px] overflow-y-auto bg-slate-950 p-4 rounded-2xl border border-slate-800/80 text-sm leading-relaxed text-slate-200">
+                  {loadingAiSummary ? (
+                    <div className="flex flex-col items-center justify-center h-40 text-purple-400 gap-3">
+                      <Sparkles size={32} className="animate-spin text-purple-500" />
+                      <p className="text-xs font-semibold animate-pulse">Analyzing conversation context & generating summary...</p>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap font-sans">{aiSummaryText}</div>
+                  )}
+                </div>
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    onClick={() => setAiSummaryModal(false)}
+                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-purple-600/30 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI TRANSLATION MODAL */}
+          {showTranslateModal && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-cyan-500/50 rounded-3xl p-6 max-w-lg w-full text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-2xl border border-cyan-500/30">
+                      <Languages size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-lg text-white">🌐 AI Real-Time Translator</h3>
+                      <p className="text-xs text-cyan-300">Translate messages instantly into any language</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowTranslateModal(false)}
+                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-semibold text-slate-400">Target Language:</label>
+                    <select
+                      value={targetLang}
+                      onChange={(e) => setTargetLang(e.target.value)}
+                      className="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 outline-none focus:border-cyan-500 cursor-pointer"
+                    >
+                      {["Spanish", "Hindi", "French", "German", "Japanese", "Mandarin", "Arabic", "Russian", "Italian", "Portuguese"].map((lang) => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => handleTranslateText()}
+                      disabled={loadingTranslate}
+                      className="ml-auto px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
+                    >
+                      {loadingTranslate ? "Translating..." : "Translate Now"}
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-sm min-h-[100px] text-slate-200 font-sans">
+                    {loadingTranslate ? (
+                      <div className="flex items-center justify-center h-20 text-cyan-400 gap-2">
+                        <Languages size={20} className="animate-spin text-cyan-500" />
+                        <span className="text-xs">Translating with Gemini AI...</span>
+                      </div>
+                    ) : translatedResult ? (
+                      <div>
+                        <span className="text-xs font-bold text-cyan-400 block mb-1">Result ({targetLang}):</span>
+                        <p className="text-sm font-medium">{translatedResult}</p>
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-xs italic">Select a language and click "Translate Now" to translate the message.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-5 flex gap-3 justify-end">
+                  {translatedResult && (
+                    <button
+                      onClick={() => {
+                        setMessage(translatedResult);
+                        setShowTranslateModal(false);
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-md"
+                    >
+                      Insert in Chat
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowTranslateModal(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showDrawingCanvas && selectedUser?.isGroup && (
               <DrawingCanvas groupId={selectedUser._id} onClose={() => setShowDrawingCanvas(false)} />
@@ -2075,12 +2389,41 @@ ${msg.sender?.toString() ===
                 </div>
               </form>
             ) : (
-            <form
-              onSubmit={
-                handleSendMessage
-              }
-              className="w-full bg-white px-2 sm:px-3 py-2 border-t border-gray-300 flex items-center gap-2"
-            >
+            <>
+              {smartReplies && smartReplies.length > 0 && (
+                <div className="w-full bg-purple-50/90 border-t border-purple-200 px-3 py-2 flex items-center gap-2 flex-wrap text-xs shadow-inner animate-in slide-in-from-bottom-2">
+                  <span className="font-bold text-purple-700 flex items-center gap-1">
+                    <Sparkles size={14} className="text-purple-600 animate-pulse" /> AI Smart Replies:
+                  </span>
+                  {smartReplies.map((reply, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setMessage(reply);
+                        setSmartReplies([]);
+                      }}
+                      className="bg-white hover:bg-purple-600 hover:text-white text-purple-800 border border-purple-300 px-3 py-1 rounded-full font-medium shadow-sm transition-all cursor-pointer active:scale-95"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setSmartReplies([])}
+                    className="ml-auto text-gray-400 hover:text-gray-600 font-bold px-1.5 py-0.5 rounded cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              <form
+                onSubmit={
+                  handleSendMessage
+                }
+                className="w-full bg-white px-2 sm:px-3 py-2 border-t border-gray-300 flex items-center gap-2"
+              >
 
               {/* EMOJI */}
               <button
@@ -2150,7 +2493,13 @@ ${msg.sender?.toString() ===
                   }, 1000);
 
                 }}
-                placeholder={isGhostMode ? "Ghost Ink Mode 👻 (Disintegrates 5s after reading)" : "Type a message"}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
+                placeholder={isGhostMode ? "Ghost Ink Mode 👻 (Disintegrates 5s after reading)" : "Type a message..."}
                 className={`
 flex-1
 min-w-0
@@ -2176,31 +2525,6 @@ transition-all
                   >
                     <IncognitoIcon size={22} className={isAnonymousMode ? "text-amber-400" : "text-gray-600"} />
                   </button>
-              )}
-
-
-              {!selectedUser?.isGroup && (
-                <>
-                  {/* MUSIC MOOD */}
-                  <button
-                    type="button"
-                    onClick={() => setMessage("@music")}
-                    className="text-pink-500 hover:text-pink-600 transition mx-1"
-                    title="Mood Music Suggestions"
-                  >
-                    <Music size={24} />
-                  </button>
-
-                  {/* ROAST */}
-                  <button
-                    type="button"
-                    onClick={() => setMessage("@roast")}
-                    className="text-orange-500 hover:text-orange-600 transition mx-1"
-                    title="AI Roast Mode"
-                  >
-                    <Flame size={24} />
-                  </button>
-                </>
               )}
 
               {/* SEND */}
@@ -2244,6 +2568,7 @@ transition-all
               </button>
 
             </form>
+            </>
             )}
 
           </div>

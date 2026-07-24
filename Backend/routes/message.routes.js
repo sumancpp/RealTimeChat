@@ -13,10 +13,18 @@ import {
   deleteConversation,
   editMessage,
   revealGhostMessage,
-  disintegrateGhostMessage
+  disintegrateGhostMessage,
+  generateAISummary,
+  generateSmartReplies,
+  translateTextMessage
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
+
+// AI ROUTES
+messageRouter.get("/ai-summary/:receiver", isAuth, generateAISummary);
+messageRouter.get("/ai-smart-replies/:receiver", isAuth, generateSmartReplies);
+messageRouter.post("/translate-message", isAuth, translateTextMessage);
 
 messageRouter.post(
   "/send/:receiver",

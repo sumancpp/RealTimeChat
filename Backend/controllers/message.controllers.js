@@ -158,6 +158,55 @@ if (req.file) {
                 console.error("Music generation failed", err);
                 finalMessage = "🎧 I tried to find some mood music, but my headphones are tangled!";
             }
+        } else if (finalMessage?.trim().toLowerCase() === "@summarize") {
+            isAIMessage = true;
+            let historyStr = "";
+            if (conversation && conversation.messages && conversation.messages.length > 0) {
+                try {
+                    const populatedConv = await Conversation.findById(conversation._id).populate({
+                        path: 'messages',
+                        options: { limit: 15, sort: { createdAt: -1 } }
+                    });
+                    if (populatedConv && populatedConv.messages) {
+                        historyStr = populatedConv.messages
+                            .reverse()
+                            .map(m => m.message)
+                            .filter(Boolean)
+                            .join("\n");
+                    }
+                } catch (err) {
+                    console.error("Error fetching history for summary", err);
+                }
+            }
+            const summaryPrompt = `Summarize the following recent chat conversation in 3 concise, key bullet points with emojis:\n\n${historyStr || 'No history recorded yet.'}`;
+            try {
+                const aiSummary = await generateGeminiReply(summaryPrompt);
+                finalMessage = `✨ **AI Conversation Summary**:\n\n${aiSummary || 'No recent messages to summarize.'}`;
+            } catch (err) {
+                console.error("Summary generation failed", err);
+                finalMessage = "✨ AI summary is currently unavailable.";
+            }
+        } else if (finalMessage?.trim().toLowerCase().startsWith("@translate")) {
+            isAIMessage = true;
+            const parts = finalMessage.trim().split(" ");
+            const targetLang = parts[1] || "English";
+            const textToTranslate = parts.slice(2).join(" ");
+            let historyLastMsg = "";
+            if (!textToTranslate && conversation && conversation.messages && conversation.messages.length > 0) {
+                try {
+                    const lastMsgObj = await Message.findById(conversation.messages[conversation.messages.length - 1]);
+                    if (lastMsgObj) historyLastMsg = lastMsgObj.message;
+                } catch (e) {}
+            }
+            const sourceText = textToTranslate || historyLastMsg || "Hello! How are you?";
+            const translatePrompt = `Translate the following text into ${targetLang}. Return ONLY the direct translation without extra quotes:\n"${sourceText}"`;
+            try {
+                const translated = await generateGeminiReply(translatePrompt);
+                finalMessage = `🌐 **AI Translation (${targetLang})**:\n${translated}`;
+            } catch (err) {
+                console.error("Translation failed", err);
+                finalMessage = "🌐 AI translation failed.";
+            }
         }
 
         const newMessage =
@@ -1047,5 +1096,104 @@ export const disintegrateGhostMessage = async (req, res) => {
         return res.status(200).json({ success: true });
     } catch (error) {
         return res.status(500).json({ message: error.message });
+    }
+};
+
+// AI CONTROLLER FUNCTIONS FOR DIRECT API CALLS
+
+// Generate AI Summary for a conversation
+export const generateAISummary = async (req, res) => {
+    try {
+        const sender = req.userId;
+        const { receiver } = req.params;
+        const conversation = await Conversation.findOne({
+            participants: { $all: [sender, receiver] }
+        }).populate({
+            path: 'messages',
+            options: { limit: 20, sort: { createdAt: -1 } },
+            populate: { path: 'sender', select: 'name userName' }
+        });
+
+        if (!conversation || !conversation.messages || conversation.messages.length === 0) {
+            return res.status(200).json({ summary: "No chat history available to summarize yet!" });
+        }
+
+        const chatLogs = conversation.messages
+            .reverse()
+            .map(m => `${m.sender?.name || 'User'}: ${m.message || '[Media]'}`)
+            .join("\n");
+
+        const prompt = `Below is the recent chat transcript between two users:\n${chatLogs}\n\nProvide a clear, engaging 3-bullet point summary of what they discussed and key highlights. Keep it concise.`;
+
+        const summary = await generateGeminiReply(prompt);
+        return res.status(200).json({ summary });
+    } catch (error) {
+        console.error("generateAISummary Error:", error);
+        return res.status(500).json({ message: "Failed to generate AI Summary", error: error.message });
+    }
+};
+
+// Generate AI Smart Replies
+export const generateSmartReplies = async (req, res) => {
+    try {
+        const sender = req.userId;
+        const { receiver } = req.params;
+        const conversation = await Conversation.findOne({
+            participants: { $all: [sender, receiver] }
+        }).populate({
+            path: 'messages',
+            options: { limit: 5, sort: { createdAt: -1 } }
+        });
+
+        if (!conversation || !conversation.messages || conversation.messages.length === 0) {
+            return res.status(200).json({ suggestions: ["Hey there! 👋", "How's it going?", "What's up?"] });
+        }
+
+        const lastMessages = conversation.messages
+            .reverse()
+            .map(m => m.message)
+            .filter(Boolean)
+            .join(" | ");
+
+        const prompt = `Based on these recent chat messages: "${lastMessages}", suggest 3 short, natural, conversational quick-reply options for the user. Return ONLY a valid JSON array of 3 strings like ["Reply 1", "Reply 2", "Reply 3"], with no extra text or markdown formatting.`;
+
+        const rawReply = await generateGeminiReply(prompt);
+        let suggestions = [];
+        try {
+            const cleanJson = rawReply.replace(/```json|```/g, '').trim();
+            suggestions = JSON.parse(cleanJson);
+        } catch (e) {
+            suggestions = rawReply
+                .split("\n")
+                .map(s => s.replace(/^[-*0-9.]+\s*/, '').trim())
+                .filter(Boolean)
+                .slice(0, 3);
+        }
+
+        if (!Array.isArray(suggestions) || suggestions.length === 0) {
+            suggestions = ["Sounds good! 👍", "Tell me more!", "Got it, thanks!"];
+        }
+
+        return res.status(200).json({ suggestions });
+    } catch (error) {
+        console.error("generateSmartReplies Error:", error);
+        return res.status(500).json({ suggestions: ["Sounds good! 👍", "Tell me more!", "Got it, thanks!"] });
+    }
+};
+
+// Translate Specific Message
+export const translateTextMessage = async (req, res) => {
+    try {
+        const { text, targetLanguage = "English" } = req.body;
+        if (!text) {
+            return res.status(400).json({ message: "Text to translate is required" });
+        }
+
+        const prompt = `Translate the following text into ${targetLanguage}. Return ONLY the direct translation, nothing else:\n"${text}"`;
+        const translatedText = await generateGeminiReply(prompt);
+        return res.status(200).json({ translatedText });
+    } catch (error) {
+        console.error("translateTextMessage Error:", error);
+        return res.status(500).json({ message: "Translation failed", error: error.message });
     }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, Video, PhoneOff, Mic, MicOff, Camera as CameraIcon, CameraOff } from 'lucide-react';
+import { Phone, Video, PhoneOff, Mic, MicOff, Camera as CameraIcon, CameraOff, MonitorUp, MonitorOff } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { serverUrl } from '../config';
 import { getSocket } from '../socket'; 
@@ -18,12 +18,14 @@ const CallManager = () => {
     const [remoteStream, setRemoteStream] = useState(null);
     const [micMuted, setMicMuted] = useState(false);
     const [videoMuted, setVideoMuted] = useState(false);
+    const [isScreenSharing, setIsScreenSharing] = useState(false);
 
     // Refs
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
     const peerConnectionRef = useRef(null);
     const localStreamRef = useRef(null);
+    const screenStreamRef = useRef(null);
     const iceCandidateQueue = useRef([]);
 
     useEffect(() => {
@@ -233,6 +235,11 @@ const CallManager = () => {
         setCallState('idle');
         setRemoteUser(null);
         setRemoteStream(null);
+        if (screenStreamRef.current) {
+            screenStreamRef.current.getTracks().forEach(track => track.stop());
+            screenStreamRef.current = null;
+        }
+        setIsScreenSharing(false);
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             setLocalStream(null);
@@ -245,6 +252,61 @@ const CallManager = () => {
         iceCandidateQueue.current = [];
         setMicMuted(false);
         setVideoMuted(false);
+    };
+
+    const toggleScreenShare = async () => {
+        if (isScreenSharing) {
+            stopScreenShare();
+            return;
+        }
+
+        try {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            screenStreamRef.current = screenStream;
+            const screenTrack = screenStream.getVideoTracks()[0];
+
+            if (peerConnectionRef.current) {
+                const senders = peerConnectionRef.current.getSenders();
+                const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                if (videoSender) {
+                    await videoSender.replaceTrack(screenTrack);
+                }
+            }
+
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = screenStream;
+            }
+
+            setIsScreenSharing(true);
+
+            screenTrack.onended = () => {
+                stopScreenShare();
+            };
+        } catch (err) {
+            console.error("Screen sharing cancelled or error:", err);
+        }
+    };
+
+    const stopScreenShare = async () => {
+        if (screenStreamRef.current) {
+            screenStreamRef.current.getTracks().forEach(track => track.stop());
+            screenStreamRef.current = null;
+        }
+
+        const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
+        if (peerConnectionRef.current && cameraTrack) {
+            const senders = peerConnectionRef.current.getSenders();
+            const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+            if (videoSender) {
+                await videoSender.replaceTrack(cameraTrack);
+            }
+        }
+
+        if (localVideoRef.current && localStreamRef.current) {
+            localVideoRef.current.srcObject = localStreamRef.current;
+        }
+
+        setIsScreenSharing(false);
     };
 
     const toggleMic = () => {
@@ -312,6 +374,12 @@ const CallManager = () => {
                             <h2 className="text-2xl font-bold drop-shadow-md">{remoteUser?.name || remoteUser?.userName}</h2>
                             <p className="text-gray-300 drop-shadow-md">{callState === 'calling' ? 'Calling...' : '00:00'}</p>
                         </div>
+                        {isScreenSharing && (
+                            <div className="bg-blue-600/90 text-white px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg backdrop-blur-md">
+                                <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                                Screen Sharing Active
+                            </div>
+                        )}
                     </div>
 
                     {/* Video / Audio Area */}
@@ -347,16 +415,26 @@ const CallManager = () => {
 
                     {/* Controls */}
                     <div className="absolute bottom-0 w-full p-8 flex justify-center items-center gap-8 bg-gradient-to-t from-black/80 to-transparent">
-                        <button onClick={toggleMic} className={`p-4 rounded-full transition ${micMuted ? 'bg-red-500/20 text-red-500' : 'bg-gray-700/50 text-white hover:bg-gray-600'}`}>
+                        <button onClick={toggleMic} className={`p-4 rounded-full transition ${micMuted ? 'bg-red-500/20 text-red-500' : 'bg-gray-700/50 text-white hover:bg-gray-600'}`} title="Toggle Mute">
                             {micMuted ? <MicOff size={28} /> : <Mic size={28} />}
                         </button>
                         
-                        <button onClick={endCall} className="bg-red-500 p-5 rounded-full hover:bg-red-600 transition shadow-lg shadow-red-500/30">
+                        {callState === 'connected' && (
+                            <button 
+                                onClick={toggleScreenShare} 
+                                className={`p-4 rounded-full transition ${isScreenSharing ? 'bg-blue-600 text-white ring-4 ring-blue-400/50' : 'bg-gray-700/50 text-white hover:bg-gray-600'}`}
+                                title={isScreenSharing ? "Stop Sharing Screen" : "Share Screen"}
+                            >
+                                {isScreenSharing ? <MonitorOff size={28} /> : <MonitorUp size={28} />}
+                            </button>
+                        )}
+
+                        <button onClick={endCall} className="bg-red-500 p-5 rounded-full hover:bg-red-600 transition shadow-lg shadow-red-500/30" title="End Call">
                             <PhoneOff size={32} className="text-white" />
                         </button>
 
                         {callType === 'video' && (
-                            <button onClick={toggleVideo} className={`p-4 rounded-full transition ${videoMuted ? 'bg-red-500/20 text-red-500' : 'bg-gray-700/50 text-white hover:bg-gray-600'}`}>
+                            <button onClick={toggleVideo} className={`p-4 rounded-full transition ${videoMuted ? 'bg-red-500/20 text-red-500' : 'bg-gray-700/50 text-white hover:bg-gray-600'}`} title="Toggle Video">
                                 {videoMuted ? <CameraOff size={28} /> : <CameraIcon size={28} />}
                             </button>
                         )}
