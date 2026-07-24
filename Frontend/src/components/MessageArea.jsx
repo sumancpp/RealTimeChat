@@ -260,6 +260,7 @@ const MessageArea = () => {
 
   const [showTranslateModal, setShowTranslateModal] = useState(false);
   const [targetLang, setTargetLang] = useState("English");
+  const [translateInputText, setTranslateInputText] = useState("");
   const [translatedResult, setTranslatedResult] = useState("");
   const [loadingTranslate, setLoadingTranslate] = useState(false);
 
