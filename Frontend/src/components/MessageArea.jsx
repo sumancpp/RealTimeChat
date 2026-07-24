@@ -65,7 +65,8 @@ import {
   addMessage,
   removeMessageRedux,
   revealGhostMessageRedux,
-  replaceMessageRedux
+  replaceMessageRedux,
+  updateViewOnceRedux
 } from "../redux/messageSlice";
 
 import {
@@ -244,6 +245,10 @@ const MessageArea = () => {
   const [isAnonymousMode, setIsAnonymousMode] = useState(false);
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false);
 
+  // VIEW ONCE & IMAGE STATES
+  const [isViewOnceMode, setIsViewOnceMode] = useState(false);
+  const [viewOnceModalMedia, setViewOnceModalMedia] = useState(null);
+
   // REAL AI INTEGRATION STATES
   const [showAIHubModal, setShowAIHubModal] = useState(false);
   const [aiSummaryModal, setAiSummaryModal] = useState(false);
@@ -254,7 +259,7 @@ const MessageArea = () => {
   const [loadingSmartReplies, setLoadingSmartReplies] = useState(false);
 
   const [showTranslateModal, setShowTranslateModal] = useState(false);
-  const [targetLang, setTargetLang] = useState("Spanish");
+  const [targetLang, setTargetLang] = useState("English");
   const [translatedResult, setTranslatedResult] = useState("");
   const [loadingTranslate, setLoadingTranslate] = useState(false);
 
@@ -383,14 +388,20 @@ const MessageArea = () => {
       }
     };
 
+    const handleViewOnceOpened = ({ messageId }) => {
+      dispatch(updateViewOnceRedux({ messageId }));
+    };
+
     socket.on("startMiniGame", handleStartMiniGame);
     socket.on("ticTacToeMove", handleTTTMove);
     socket.on("rpsChoice", handleRPSChoice);
+    socket.on("viewOnceOpened", handleViewOnceOpened);
 
     return () => {
       socket.off("startMiniGame", handleStartMiniGame);
       socket.off("ticTacToeMove", handleTTTMove);
       socket.off("rpsChoice", handleRPSChoice);
+      socket.off("viewOnceOpened", handleViewOnceOpened);
     };
   }, [socket, selectedUser]);
 
@@ -850,6 +861,8 @@ const MessageArea = () => {
           isAIMessage: false,
           isAIMusic: false,
           isGhost: isGhostMode || message?.startsWith('@ghost'),
+          isViewOnce: isViewOnceMode,
+          isViewOnceOpened: false,
           reactions: []
       };
 
@@ -864,6 +877,7 @@ const MessageArea = () => {
       setReplyMessage(null);
       setFrontendImage(null);
       setBackendImage(null);
+      setIsViewOnceMode(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -897,6 +911,10 @@ const MessageArea = () => {
 
       if (isGhostMode) {
         formData.append("isGhost", "true");
+      }
+
+      if (isViewOnceMode) {
+        formData.append("isViewOnce", "true");
       }
 
       const isAiTriggered = messageTextToSend?.trim().toLowerCase().startsWith("@ai") ||
@@ -1524,8 +1542,8 @@ const MessageArea = () => {
                       onChange={(e) => setTargetLang(e.target.value)}
                       className="bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-1.5 outline-none focus:border-cyan-500 cursor-pointer"
                     >
-                      {["Spanish", "Hindi", "French", "German", "Japanese", "Mandarin", "Arabic", "Russian", "Italian", "Portuguese"].map((lang) => (
-                        <option key={lang} value={lang}>{lang}</option>
+                      {["English", "Bengali", "Hindi", "Spanish", "French", "German", "Japanese", "Mandarin", "Arabic", "Russian", "Italian", "Portuguese"].map((lang) => (
+                        <option key={lang} value={lang}>{lang === "Bengali" ? "Bengali (বাংলা)" : lang}</option>
                       ))}
                     </select>
                     <button
@@ -1573,6 +1591,47 @@ const MessageArea = () => {
                     Close
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW ONCE MEDIA MODAL */}
+          {viewOnceModalMedia && (
+            <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-4 max-w-lg w-full text-white shadow-2xl flex flex-col items-center relative animate-in zoom-in-95">
+                <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                    <span className="w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-[11px] font-extrabold">1</span>
+                    <span>View Once Photo</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const msgId = viewOnceModalMedia._id;
+                      setViewOnceModalMedia(null);
+                      if (msgId) {
+                        try {
+                          await axios.post(`${serverUrl}/message/open-view-once/${msgId}`, {}, { withCredentials: true });
+                          dispatch(updateViewOnceRedux({ messageId: msgId }));
+                        } catch (e) {
+                          console.error("Error opening view once message", e);
+                        }
+                      }
+                    }}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md"
+                  >
+                    Close & Disintegrate ✕
+                  </button>
+                </div>
+
+                <img
+                  src={viewOnceModalMedia.image}
+                  alt="View once photo"
+                  className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain border border-slate-800 shadow-2xl"
+                />
+
+                <p className="text-xs text-slate-400 mt-3 italic">
+                  ⚠️ This photo will disappear once closed and cannot be viewed again.
+                </p>
               </div>
             </div>
           )}
@@ -1916,12 +1975,36 @@ const MessageArea = () => {
 
                     {/* IMAGE */}
                     {msg.image && (
+                      msg.isViewOnce ? (
+                        msg.isViewOnceOpened ? (
+                          <div className="flex items-center gap-2 bg-slate-200/80 text-slate-600 px-3 py-2 rounded-xl text-xs font-semibold mb-2 border border-slate-300">
+                            <span className="w-4 h-4 rounded-full border border-slate-500 flex items-center justify-center text-[10px] font-bold">1</span>
+                            <span>Photo • Opened 👁️</span>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if ((msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString()) {
+                                alert("View Once photo sent (Waiting for recipient to open)");
+                              } else {
+                                setViewOnceModalMedia(msg);
+                              }
+                            }}
+                            className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 px-3.5 py-2 rounded-xl text-xs font-bold mb-2 transition cursor-pointer shadow-sm active:scale-95"
+                          >
+                            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-extrabold">1</span>
+                            <span>{(msg.sender?._id || msg.sender)?.toString() === userData?._id?.toString() ? "Photo (View Once Sent)" : "Photo (Tap to View 👁️)"}</span>
+                          </button>
+                        )
+                      ) : (
                         <img
                           src={msg.image}
                           alt="chat"
                           onClick={() => setSelectedImage(msg.image)}
                           className="max-w-[200px] sm:max-w-[250px] max-h-[250px] rounded-xl object-cover mb-2 cursor-pointer hover:opacity-90 transition"
                         />
+                      )
                     )}
 
                     {msg.voice && (
@@ -2161,18 +2244,44 @@ ${msg.sender?.toString() ===
           {/* IMAGE PREVIEW */}
           {frontendImage && (
             <div className="px-4 py-2 relative w-max flex flex-col gap-2">
-              <div className="relative">
+              <div className="relative group">
                 <img
                   src={frontendImage}
                   alt="preview"
-                  className={`w-32 h-32 rounded-lg object-cover ${sending ? 'opacity-50' : ''}`}
+                  className={`w-32 h-32 rounded-2xl object-cover border-2 border-orange-400 shadow-md ${sending ? 'opacity-50' : ''}`}
                 />
+                {!sending && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFrontendImage(null);
+                      setBackendImage(null);
+                      setIsViewOnceMode(false);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-transform hover:scale-110 cursor-pointer z-10"
+                    title="Unselect Image"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
                 {sending && (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
                     <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
+
+              {/* VIEW ONCE TOGGLE BUTTON */}
+              <button
+                type="button"
+                onClick={() => setIsViewOnceMode(!isViewOnceMode)}
+                className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm w-fit ${isViewOnceMode ? 'bg-emerald-600 text-white ring-2 ring-emerald-400 scale-105' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                title="Toggle View Once (Recipient can view photo only 1 time)"
+              >
+                <span className="w-4 h-4 rounded-full border-2 border-current flex items-center justify-center text-[10px] font-extrabold">1</span>
+                {isViewOnceMode ? "View Once ON" : "View Once"}
+              </button>
             </div>
           )}
 

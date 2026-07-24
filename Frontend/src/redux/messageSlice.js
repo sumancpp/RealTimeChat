@@ -203,6 +203,21 @@ const messageSlice = createSlice({
             }
         },
 
+        updateViewOnceRedux: (state, action) => {
+            if (Array.isArray(state.messages)) {
+                const { messageId } = action.payload;
+                state.messages = state.messages.map(msg => {
+                    if (msg._id === messageId) {
+                        return {
+                            ...msg,
+                            isViewOnceOpened: true
+                        };
+                    }
+                    return msg;
+                });
+            }
+        },
+
         clearMessages: (
             state
         ) => {
@@ -235,7 +250,9 @@ export const {
 
     revealGhostMessageRedux,
 
-    replaceMessageRedux
+    replaceMessageRedux,
+
+    updateViewOnceRedux
 
 } = messageSlice.actions;
 

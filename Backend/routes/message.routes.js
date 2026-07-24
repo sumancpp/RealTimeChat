@@ -16,7 +16,8 @@ import {
   disintegrateGhostMessage,
   generateAISummary,
   generateSmartReplies,
-  translateTextMessage
+  translateTextMessage,
+  openViewOnceMessage
 } from "../controllers/message.controllers.js";
 
 const messageRouter = express.Router();
@@ -25,6 +26,7 @@ const messageRouter = express.Router();
 messageRouter.get("/ai-summary/:receiver", isAuth, generateAISummary);
 messageRouter.get("/ai-smart-replies/:receiver", isAuth, generateSmartReplies);
 messageRouter.post("/translate-message", isAuth, translateTextMessage);
+messageRouter.post("/open-view-once/:messageId", isAuth, openViewOnceMessage);
 
 messageRouter.post(
   "/send/:receiver",

@@ -134,6 +134,16 @@ const messageSchema = new mongoose.Schema({
         default: null
     },
 
+    isViewOnce: {
+        type: Boolean,
+        default: false
+    },
+
+    isViewOnceOpened: {
+        type: Boolean,
+        default: false
+    },
+
 }, {
     timestamps: true
 });

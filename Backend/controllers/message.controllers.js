@@ -222,6 +222,7 @@ await Message.create({
     isAIMusic,
     musicQuery,
     isGhost: req.body.isGhost === 'true' || req.body.isGhost === true || (finalMessage && finalMessage.startsWith('@ghost')),
+    isViewOnce: req.body.isViewOnce === 'true' || req.body.isViewOnce === true,
 
     image,
 
@@ -1189,11 +1190,41 @@ export const translateTextMessage = async (req, res) => {
             return res.status(400).json({ message: "Text to translate is required" });
         }
 
-        const prompt = `Translate the following text into ${targetLanguage}. Return ONLY the direct translation, nothing else:\n"${text}"`;
+        const prompt = `Translate the following text into ${targetLanguage}. If translating to Bengali, use authentic, standard Bengali script (বাংলা). If translating to English, ensure natural, standard English phrasing. Return ONLY the direct translation text with no extra commentary or quotes:\n"${text}"`;
         const translatedText = await generateGeminiReply(prompt);
         return res.status(200).json({ translatedText });
     } catch (error) {
         console.error("translateTextMessage Error:", error);
         return res.status(500).json({ message: "Translation failed", error: error.message });
+    }
+};
+
+// OPEN VIEW ONCE MESSAGE
+export const openViewOnceMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        if (!message.isViewOnceOpened) {
+            message.isViewOnceOpened = true;
+            await message.save();
+
+            const senderSocketId = getReceiverSocketId(message.sender);
+            const receiverSocketId = getReceiverSocketId(message.receiver);
+
+            if (senderSocketId) {
+                io.to(senderSocketId).emit("viewOnceOpened", { messageId });
+            }
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("viewOnceOpened", { messageId });
+            }
+        }
+
+        return res.status(200).json(message);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 };
