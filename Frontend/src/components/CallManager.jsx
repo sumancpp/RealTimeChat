@@ -125,14 +125,17 @@ const CallManager = () => {
         });
 
         socket.on("screenShareStopped", () => {
-            if (remoteStream) {
-                const videoTracks = remoteStream.getVideoTracks();
-                videoTracks.forEach(track => {
-                    track.stop();
-                    remoteStream.removeTrack(track);
-                });
-                setRemoteStream(new MediaStream(remoteStream.getAudioTracks()));
+            setIsScreenSharing(false);
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = null;
             }
+            setRemoteStream(prevStream => {
+                if (!prevStream) return null;
+                const videoTracks = prevStream.getVideoTracks();
+                videoTracks.forEach(track => track.stop());
+                const audioTracks = prevStream.getAudioTracks();
+                return new MediaStream(audioTracks);
+            });
         });
 
         return () => {
@@ -324,6 +327,10 @@ const CallManager = () => {
         if (screenStreamRef.current) {
             screenStreamRef.current.getTracks().forEach(track => track.stop());
             screenStreamRef.current = null;
+        }
+
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = null;
         }
 
         const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
