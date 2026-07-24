@@ -202,8 +202,8 @@ await Message.create({
     isAIMessage,
     isAIMusic,
     musicQuery,
-    isGhost: req.body.isGhost === 'true' || req.body.isGhost === true || (finalMessage && finalMessage.startsWith('@ghost')),
-    isViewOnce: req.body.isViewOnce === 'true' || req.body.isViewOnce === true,
+    isGhost: Boolean(req.body.isGhost === 'true' || req.body.isGhost === true || (typeof finalMessage === 'string' && finalMessage.startsWith('@ghost'))),
+    isViewOnce: Boolean(req.body.isViewOnce === 'true' || req.body.isViewOnce === true),
 
     image,
 

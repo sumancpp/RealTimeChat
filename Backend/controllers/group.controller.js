@@ -154,8 +154,9 @@ export const sendGroupMessage = async (req, res) => {
             voice,
             replyTo: replyTo || null,
             isSeen: false,
-            isAnonymous: isAnonymous === 'true' || isAnonymous === true,
-            isGhost: req.body.isGhost === 'true' || req.body.isGhost === true || (message && message.startsWith('@ghost'))
+            isAnonymous: Boolean(isAnonymous === 'true' || isAnonymous === true),
+            isGhost: Boolean(req.body.isGhost === 'true' || req.body.isGhost === true || (typeof message === 'string' && message.startsWith('@ghost'))),
+            isViewOnce: Boolean(req.body.isViewOnce === 'true' || req.body.isViewOnce === true)
         });
 
         group.messages.push(newMessage._id);

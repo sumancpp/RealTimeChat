@@ -863,8 +863,8 @@ const MessageArea = () => {
           isSystemMessage: false,
           isAIMessage: false,
           isAIMusic: false,
-          isGhost: isGhostMode || message?.startsWith('@ghost'),
-          isViewOnce: isViewOnceMode,
+          isGhost: Boolean(isGhostMode || (typeof message === 'string' && message?.startsWith('@ghost'))),
+          isViewOnce: Boolean(isViewOnceMode),
           isViewOnceOpened: false,
           reactions: []
       };
