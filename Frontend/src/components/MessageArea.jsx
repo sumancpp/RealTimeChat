@@ -520,12 +520,12 @@ const MessageArea = () => {
   }, [selectedUser]);
 
   useEffect(() => {
-    if (selectedUser?.isGroup || selectedUser?._id) {
+    if (selectedUser?.isGroup) {
       handleFetchChatSentiment();
     } else {
       setSentimentData(null);
     }
-  }, [selectedUser?._id]);
+  }, [selectedUser?._id, selectedUser?.isGroup]);
 
   useEffect(() => {
 
@@ -2103,22 +2103,35 @@ const MessageArea = () => {
               />
           ) : (
           <>
-          {/* AUTOMATIC AI GROUP SENTIMENT & VIBE METER BANNER */}
+          {/* AUTOMATIC AI GROUP SENTIMENT & VIBE METER BADGE (TOP-MIDDLE EYE-CATCHING PILL) */}
           {selectedUser?.isGroup && (
-            <div className="bg-slate-900/90 border-b border-slate-800/80 px-4 py-2 flex items-center justify-between text-xs text-slate-300 backdrop-blur-sm shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="p-1 bg-emerald-500/20 text-emerald-400 rounded-lg">
-                  <BarChart2 size={14} />
-                </span>
-                <span className="font-bold text-emerald-400">Group AI Vibe:</span>
-                <span className="font-semibold text-white">{sentimentData?.vibe || "🔥 Warm & Active"}</span>
-                <span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                  {sentimentData?.score || "88% Positive"}
-                </span>
+            <div className="w-full flex justify-center py-2 px-4 bg-slate-950/60 border-b border-slate-800/60 backdrop-blur-md">
+              <div className="bg-gradient-to-r from-emerald-950/90 via-slate-900/95 to-cyan-950/90 border border-emerald-500/40 rounded-full px-4 sm:px-6 py-1.5 shadow-[0_0_25px_rgba(16,185,129,0.25)] flex items-center gap-3 animate-in zoom-in-95 duration-300 max-w-xl">
+                <div className="relative flex items-center justify-center">
+                  <span className="absolute w-3 h-3 rounded-full bg-emerald-400 animate-ping opacity-75"></span>
+                  <div className="relative p-1 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/40">
+                    <BarChart2 size={14} />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent font-black text-xs sm:text-sm tracking-wide">
+                    Group AI Vibe:
+                  </span>
+                  <span className="font-extrabold text-white text-xs sm:text-sm drop-shadow-md">
+                    {sentimentData?.vibe || "🔥 Warm & Active"}
+                  </span>
+                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black shadow-inner">
+                    {sentimentData?.score || "88% Positive"}
+                  </span>
+                </div>
+
+                {sentimentData?.summary && (
+                  <span className="text-[11px] text-slate-300 italic hidden md:inline truncate max-w-[200px] border-l border-slate-800 pl-3">
+                    {sentimentData.summary}
+                  </span>
+                )}
               </div>
-              <span className="text-[11px] text-slate-400 italic hidden sm:inline truncate max-w-[300px]">
-                {sentimentData?.summary || "Active & collaborative group discussion."}
-              </span>
             </div>
           )}
 
