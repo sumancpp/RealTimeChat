@@ -42,8 +42,8 @@ app.use(
 
 app.use(express.json());
 app.use(compression());
-
 app.use(cookieParser());
+app.use("/public", express.static(path.join(path.resolve(), "public")));
 
 // TEST ROUTE
 app.get(

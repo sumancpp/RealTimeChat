@@ -260,6 +260,11 @@ const CallManager = () => {
             return;
         }
 
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
+            alert("Screen Sharing Feature Notice: Modern web browsers require a Secure Context (HTTPS or http://localhost) to enable screen recording. If accessing over HTTP on a network IP, please open via http://localhost or use an HTTPS connection.");
+            return;
+        }
+
         try {
             const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
             screenStreamRef.current = screenStream;

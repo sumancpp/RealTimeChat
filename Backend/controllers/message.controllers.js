@@ -59,36 +59,17 @@ export const sendMessage = async (req, res) => {
 let voice = "";
 
 if (req.file) {
+    let uploadedFile = await uploadOnCloudinary(req.file.path);
+    if (!uploadedFile) {
+        // Local static fallback so image upload NEVER fails
+        uploadedFile = `${req.protocol}://${req.get("host")}/public/${req.file.filename}`;
+    }
 
-    const uploadedFile =
-        await uploadOnCloudinary(
-            req.file.path
-        );
-
-    if (
-
-        req.file.mimetype.startsWith(
-            "image"
-        )
-
-    ) {
-
+    if (req.file.mimetype.startsWith("image")) {
         image = uploadedFile;
-
-    }
-
-    else if (
-
-        req.file.mimetype.startsWith(
-            "audio"
-        )
-
-    ) {
-
+    } else if (req.file.mimetype.startsWith("audio")) {
         voice = uploadedFile;
-
     }
-
 }
 
         let conversation =
@@ -274,13 +255,11 @@ console.log(
         const populatedMessage =
             await Message.findById(
                 newMessage._id
-            ).populate({
-
+            )
+            .populate("sender", "name email profileImage userName")
+            .populate({
                 path: "replyTo",
-
-                select:
-                    "message image sender"
-
+                select: "message image sender"
             });
 
         // RECEIVER SOCKET

@@ -1408,6 +1408,8 @@ const MessageArea = () => {
                   <button
                     onClick={() => {
                       setShowAIHubModal(false);
+                      const initialText = message || (messages && messages.length > 0 ? messages.filter(m => m.message && !m.isDeleted).slice(-1)[0]?.message : "");
+                      setTranslateInputText(initialText || "");
                       setShowTranslateModal(true);
                     }}
                     className="flex items-center gap-3 p-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-2xl transition-all text-left cursor-pointer group"
