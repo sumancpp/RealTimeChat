@@ -1190,8 +1190,8 @@ export const translateTextMessage = async (req, res) => {
             return res.status(400).json({ message: "Text to translate is required" });
         }
 
-        const prompt = `Translate the following text into ${targetLanguage}. If translating to Bengali, use authentic, standard Bengali script (বাংলা). If translating to English, ensure natural, standard English phrasing. Return ONLY the direct translation text with no extra commentary or quotes:\n"${text}"`;
-        const translatedText = await generateGeminiReply(prompt);
+        const translationSystemInstruction = `You are a professional multi-lingual translator. Your task is to accurately translate the input text into ${targetLanguage}. If target is Bengali, output pure natural Bengali script (বাংলা). If target is English, output natural, fluent English. Output ONLY the translated text. Do NOT add greetings, explanations, formatting, or quotes.`;
+        const translatedText = await generateGeminiReply(text, GEMINI_MODEL, 5, translationSystemInstruction);
         return res.status(200).json({ translatedText });
     } catch (error) {
         console.error("translateTextMessage Error:", error);

@@ -293,8 +293,11 @@ const MessageArea = () => {
   };
 
   const handleTranslateText = async (textToTranslate) => {
-      const text = textToTranslate || message || (messages && messages.length > 0 ? messages[messages.length - 1].message : "Hello");
-      if (!text) return;
+      const text = textToTranslate || translateInputText || message || (messages && messages.length > 0 ? messages.filter(m => m.message && !m.isDeleted).slice(-1)[0]?.message : "");
+      if (!text) {
+          setTranslatedResult("Please enter text to translate.");
+          return;
+      }
       setLoadingTranslate(true);
       setTranslatedResult("");
       try {
@@ -871,6 +874,8 @@ const MessageArea = () => {
 
       // Capture inputs before clearing
       const messageTextToSend = message;
+      const fileToSend = backendImage;
+      const isViewOnceToSend = isViewOnceMode;
 
       // CLEAR AFTER OPTIMISTIC SUCCESS
       setMessage("");
@@ -898,10 +903,10 @@ const MessageArea = () => {
         );
       }
 
-      if (backendImage) {
+      if (fileToSend) {
         formData.append(
           "file",
-          backendImage
+          fileToSend
         );
       }
 
@@ -913,7 +918,7 @@ const MessageArea = () => {
         formData.append("isGhost", "true");
       }
 
-      if (isViewOnceMode) {
+      if (isViewOnceToSend) {
         formData.append("isViewOnce", "true");
       }
 
@@ -1535,6 +1540,16 @@ const MessageArea = () => {
                 </div>
 
                 <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-slate-400">Text to Translate:</label>
+                    <textarea
+                      value={translateInputText}
+                      onChange={(e) => setTranslateInputText(e.target.value)}
+                      placeholder="Type or paste any text to translate..."
+                      className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-cyan-500 resize-none font-sans"
+                    />
+                  </div>
+
                   <div className="flex items-center gap-2">
                     <label className="text-xs font-semibold text-slate-400">Target Language:</label>
                     <select
@@ -1549,7 +1564,7 @@ const MessageArea = () => {
                     <button
                       onClick={() => handleTranslateText()}
                       disabled={loadingTranslate}
-                      className="ml-auto px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
+                      className="ml-auto px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50 shadow-md"
                     >
                       {loadingTranslate ? "Translating..." : "Translate Now"}
                     </button>

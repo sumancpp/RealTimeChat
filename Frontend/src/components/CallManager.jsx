@@ -261,22 +261,31 @@ const CallManager = () => {
         }
 
         try {
-            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
             screenStreamRef.current = screenStream;
             const screenTrack = screenStream.getVideoTracks()[0];
 
             if (peerConnectionRef.current) {
                 const senders = peerConnectionRef.current.getSenders();
-                const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                let videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                if (!videoSender) {
+                    videoSender = senders.find(s => !s.track || (s.kind && s.kind === 'video'));
+                }
+
                 if (videoSender) {
                     await videoSender.replaceTrack(screenTrack);
+                } else {
+                    peerConnectionRef.current.addTrack(screenTrack, screenStream);
+                    const offer = await peerConnectionRef.current.createOffer();
+                    await peerConnectionRef.current.setLocalDescription(offer);
+                    const socket = getSocket();
+                    if (socket && remoteUser?._id) {
+                        socket.emit("webrtcSignal", { to: remoteUser._id, signalData: peerConnectionRef.current.localDescription });
+                    }
                 }
             }
 
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = screenStream;
-            }
-
+            setLocalStream(screenStream);
             setIsScreenSharing(true);
 
             screenTrack.onended = () => {
@@ -294,16 +303,16 @@ const CallManager = () => {
         }
 
         const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
-        if (peerConnectionRef.current && cameraTrack) {
+        if (peerConnectionRef.current) {
             const senders = peerConnectionRef.current.getSenders();
             const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-            if (videoSender) {
+            if (videoSender && cameraTrack) {
                 await videoSender.replaceTrack(cameraTrack);
             }
         }
 
-        if (localVideoRef.current && localStreamRef.current) {
-            localVideoRef.current.srcObject = localStreamRef.current;
+        if (localStreamRef.current) {
+            setLocalStream(localStreamRef.current);
         }
 
         setIsScreenSharing(false);

@@ -76,7 +76,7 @@ const parseRetryDelayMs = (retryInfo) => {
     return null;
 };
 
-const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5) => {
+const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5, customSystemInstruction = null) => {
     const trimmedPrompt = prompt?.toString().trim();
     if (!trimmedPrompt) return "Sorry, I couldn't generate a response.";
     if (keyPool.length === 0) return "AI replies use fallback text (Missing Key).";
@@ -92,7 +92,7 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5)
                 model: model,
                 contents: trimmedPrompt,
                 config: {
-                    systemInstruction: "You are BaatCheet AI, a helpful chat assistant. Keep your responses extremely concise, conversational, and very short (maximum 1-2 sentences). Do not give long explanations.",
+                    systemInstruction: customSystemInstruction || "You are BaatCheet AI, a helpful chat assistant. Keep your responses extremely concise, conversational, and very short (maximum 1-2 sentences). Do not give long explanations.",
                 }
             });
 
