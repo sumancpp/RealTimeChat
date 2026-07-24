@@ -152,7 +152,7 @@ const CallManager = () => {
             audioElement.srcObject = remoteStream;
             audioElement.play().catch(e => console.log("Audio auto-play prevented:", e));
         }
-    }, [remoteStream, callState]);
+    }, [remoteStream, callState, isScreenSharing]);
 
     const startLocalMedia = async (type) => {
         try {
@@ -189,8 +189,12 @@ const CallManager = () => {
         // Listen for remote stream
         const remoteMediaStream = new MediaStream();
         peerConnection.ontrack = (event) => {
-            remoteMediaStream.addTrack(event.track);
-            setRemoteStream(remoteMediaStream);
+            if (event.streams && event.streams[0]) {
+                setRemoteStream(event.streams[0]);
+            } else {
+                remoteMediaStream.addTrack(event.track);
+                setRemoteStream(new MediaStream(remoteMediaStream.getTracks()));
+            }
         };
 
         // ICE Candidates
@@ -401,22 +405,24 @@ const CallManager = () => {
 
                     {/* Video / Audio Area */}
                     <div className="flex-1 relative flex items-center justify-center">
-                        {callType === 'video' ? (
+                        {(callType === 'video' || isScreenSharing || (remoteStream && remoteStream.getVideoTracks && remoteStream.getVideoTracks().length > 0)) ? (
                             <>
-                                {/* Remote Video */}
+                                {/* Remote Video / Screen */}
                                 {remoteStream ? (
-                                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-contain bg-black" />
                                 ) : (
                                     <div className="flex flex-col items-center">
                                         <img src={remoteUser?.profileImage || defaultProfile} className="w-32 h-32 rounded-full mb-4 opacity-50" />
-                                        <p className="text-gray-400">Waiting for video...</p>
+                                        <p className="text-gray-400">Waiting for video stream...</p>
                                     </div>
                                 )}
                                 
-                                {/* Local Video (PIP) */}
-                                <div className="absolute bottom-32 right-6 w-32 h-44 bg-black rounded-xl overflow-hidden border-2 border-gray-700 shadow-xl">
-                                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                                </div>
+                                {/* Local Video (PIP) - Only show if local stream has video tracks */}
+                                {(localStream && localStream.getVideoTracks && localStream.getVideoTracks().length > 0) && (
+                                    <div className="absolute bottom-32 right-6 w-32 h-44 bg-black rounded-xl overflow-hidden border-2 border-gray-700 shadow-xl">
+                                        <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                                    </div>
+                                )}
                             </>
                         ) : (
                             // Voice Call UI
