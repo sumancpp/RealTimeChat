@@ -234,10 +234,24 @@ const MessageArea = () => {
   const menuRef = useRef(null);
 
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
 
   const messageContainerRef = useRef(null);
 
   const bottomRef = useRef(null);
+
+  const adjustTextareaHeight = (element) => {
+    const el = element || textareaRef.current;
+    if (el) {
+      el.style.height = "44px";
+      const newHeight = Math.min(el.scrollHeight, 220); // ~9 lines max
+      el.style.height = `${Math.max(44, newHeight)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message]);
 
   const [activeReactionMessage, setActiveReactionMessage] = useState(null);
 
@@ -2879,10 +2893,26 @@ ${msg.sender?.toString() ===
               </form>
             ) : (
             <>
-              {smartReplies && smartReplies.length > 0 && (
-                <div className="w-full bg-purple-50/90 border-t border-purple-200 px-3 py-2 flex items-center gap-2 flex-wrap text-xs shadow-inner animate-in slide-in-from-bottom-2">
-                  <span className="font-bold text-purple-700 flex items-center gap-1">
-                    <Sparkles size={14} className="text-purple-600 animate-pulse" /> AI Smart Replies:
+              {/* AI SMART REPLIES THINKING ANIMATION */}
+              {loadingSmartReplies && (
+                <div className="w-full bg-slate-900 border-t border-purple-500/40 px-4 py-2.5 flex items-center justify-between text-xs text-purple-300 shadow-inner animate-in slide-in-from-bottom-2 backdrop-blur-md">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-purple-400 animate-spin" />
+                    <span className="font-bold text-purple-200">AI is thinking smart replies...</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 rounded-full bg-pink-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+              )}
+
+              {/* AI SMART REPLIES RESULTS */}
+              {!loadingSmartReplies && smartReplies && smartReplies.length > 0 && (
+                <div className="w-full bg-purple-950/80 border-t border-purple-500/40 px-3 py-2 flex items-center gap-2 flex-wrap text-xs shadow-inner animate-in slide-in-from-bottom-2 backdrop-blur-md">
+                  <span className="font-bold text-purple-300 flex items-center gap-1">
+                    <Sparkles size={14} className="text-purple-400 animate-pulse" /> AI Smart Replies:
                   </span>
                   {smartReplies.map((reply, i) => (
                     <button
@@ -2892,7 +2922,7 @@ ${msg.sender?.toString() ===
                         setMessage(reply);
                         setSmartReplies([]);
                       }}
-                      className="bg-white hover:bg-purple-600 hover:text-white text-purple-800 border border-purple-300 px-3 py-1 rounded-full font-medium shadow-sm transition-all cursor-pointer active:scale-95"
+                      className="bg-purple-900/90 hover:bg-purple-600 text-purple-100 hover:text-white border border-purple-500/50 px-3 py-1 rounded-full font-medium shadow-sm transition-all cursor-pointer active:scale-95"
                     >
                       {reply}
                     </button>
@@ -2900,7 +2930,7 @@ ${msg.sender?.toString() ===
                   <button
                     type="button"
                     onClick={() => setSmartReplies([])}
-                    className="ml-auto text-gray-400 hover:text-gray-600 font-bold px-1.5 py-0.5 rounded cursor-pointer"
+                    className="ml-auto text-purple-400 hover:text-white font-bold px-1.5 py-0.5 rounded cursor-pointer"
                   >
                     ✕
                   </button>
@@ -2949,17 +2979,12 @@ ${msg.sender?.toString() ===
 
               {/* INPUT */}
               <textarea
-                type="text"
+                ref={textareaRef}
                 value={message}
                 rows={1}
-                style={{
-                  height: "44px"
-                }}
                 onChange={(e) => {
-
-                  setMessage(
-                    e.target.value
-                  );
+                  setMessage(e.target.value);
+                  adjustTextareaHeight(e.target);
 
                   socket?.emit(
                     "typing",
@@ -2970,7 +2995,6 @@ ${msg.sender?.toString() ===
                   );
 
                   setTimeout(() => {
-
                     socket?.emit(
                       "stopTyping",
                       {
@@ -2978,14 +3002,13 @@ ${msg.sender?.toString() ===
                           selectedUser._id
                       }
                     );
-
                   }, 1000);
-
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage(e);
+                    if (textareaRef.current) textareaRef.current.style.height = "44px";
                   }
                 }}
                 placeholder={isGhostMode ? "Ghost Ink Mode 👻 (Disintegrates 5s after reading)" : "Type a message..."}
@@ -2993,15 +3016,15 @@ ${msg.sender?.toString() ===
 flex-1
 min-w-0
 resize-none
-max-h-32
+max-h-[220px]
 px-4
-py-3
+py-2.5
 rounded-3xl
 ${isGhostMode ? 'bg-purple-50 border-2 border-purple-500/80 text-purple-950 font-medium' : 'bg-slate-100'}
 outline-none
 overflow-y-auto
 text-sm
-transition-all
+transition-[height] duration-100
 `}
               />
 
