@@ -224,6 +224,7 @@ const MessageArea = () => {
 
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [isAITypingAnimation, setIsAITypingAnimation] = useState(false);
+  const [deleteModalTarget, setDeleteModalTarget] = useState(null);
 
   useEffect(() => {
 
@@ -1282,6 +1283,20 @@ const MessageArea = () => {
       }
   };
 
+  const handleExecuteDelete = async (deleteForEveryone) => {
+      if (!deleteModalTarget) return;
+      if (deleteModalTarget.type === 'message') {
+          if (deleteForEveryone) {
+              await deleteMessageForEveryone(deleteModalTarget.messageId);
+          } else {
+              dispatch(deleteMessageRedux(deleteModalTarget.messageId));
+          }
+      } else if (deleteModalTarget.type === 'chat') {
+          await handleDeleteChat(deleteForEveryone);
+      }
+      setDeleteModalTarget(null);
+  };
+
   return (
 
     <div className={`w-full h-full h-[100dvh] flex flex-col overflow-hidden ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
@@ -1451,56 +1466,62 @@ const MessageArea = () => {
                     </button>
 
                     {showMenu && (
-                      <div className="absolute top-12 right-0 bg-white border border-gray-200 shadow-lg rounded-lg w-56 z-50 flex flex-col overflow-hidden">
-                        <button onClick={() => { setShowMenu(false); setShowAIHubModal(true); }} className="w-full text-left px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 flex items-center gap-2 font-bold border-b border-gray-100 bg-purple-50/50">
-                            <Sparkles size={16} className="text-purple-600 animate-pulse" /> 🤖 AI Features Hub
+                      <div className="absolute top-12 right-0 bg-[#0e1322]/95 backdrop-blur-2xl border border-cyan-500/20 shadow-2xl rounded-2xl w-60 z-50 flex flex-col overflow-hidden text-slate-100 font-sans animate-in fade-in duration-150">
+                        {/* 1. AI Features Hub */}
+                        <button onClick={() => { setShowMenu(false); setShowAIHubModal(true); }} className="w-full text-left px-4 py-3 text-sm text-indigo-400 hover:bg-slate-800 flex items-center gap-3 font-bold border-b border-slate-800 transition cursor-pointer">
+                            <Sparkles size={18} className="text-indigo-400 animate-pulse shrink-0" /> <span>AI Features Hub</span>
                         </button>
-                        <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-200 flex items-center gap-2 font-medium border-b border-gray-100">
-                            <Film size={16} /> Play Chat Story
+
+                        {/* 2. Play Chat Story */}
+                        <button onClick={() => { setShowChatReplay(true); setShowMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-emerald-400 hover:bg-slate-800 flex items-center gap-3 font-semibold border-b border-slate-800 transition cursor-pointer">
+                            <Film size={18} className="text-emerald-400 shrink-0" /> <span>Play Chat Story</span>
                         </button>
+
+                        {/* 3. Play Mini-Game Duel */}
                         <button onClick={() => { 
                             setShowMenu(false); 
                             if (selectedUser?._id) {
                                 setShowGamePicker(true);
                             }
-                        }} className="w-full text-left px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2 font-medium border-b border-gray-100">
-                            <Swords size={16} /> Play Mini-Game Duel
+                        }} className="w-full text-left px-4 py-3 text-sm text-amber-400 hover:bg-slate-800 flex items-center gap-3 font-semibold border-b border-slate-800 transition cursor-pointer">
+                            <Swords size={18} className="text-amber-400 shrink-0" /> <span>Play Mini-Game Duel</span>
                         </button>
 
+                        {/* 4. Ghost Ink Mode */}
+                        <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 font-semibold border-b border-slate-800 transition cursor-pointer ${isGhostMode ? 'bg-purple-500/20 text-purple-300 font-bold' : 'text-purple-400 hover:bg-slate-800'}`}>
+                            <Ghost size={18} className="shrink-0" /> <span>{isGhostMode ? "Ghost Ink Mode (ON)" : "Ghost Ink Mode"}</span>
+                        </button>
 
-                      <button onClick={() => { setIsGhostMode(!isGhostMode); setShowMenu(false); }} className={`w-full text-left px-4 py-3 text-sm flex items-center gap-2 font-medium border-b border-gray-100 ${isGhostMode ? 'bg-purple-100 text-purple-700 font-bold' : 'text-purple-600 hover:bg-purple-50'}`}>
-                          <Ghost size={16} /> {isGhostMode ? "Ghost Ink Mode (ON)" : "Ghost Ink Mode"}
-                      </button>
-                      <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                          <Ban size={16} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-green-500" : "text-red-500"} />
-                          {userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock" : "Block"}
-                      </button>
+                        {/* 5. Theme */}
+                        <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-3 font-semibold border-b border-slate-800 transition cursor-pointer">
+                            <Edit3 size={18} className="text-blue-400 shrink-0" /> <span className="flex-1">Theme: {THEMES[chatTheme]?.name || "Default"}</span>
+                        </button>
+                        {showThemeMenu && (
+                            <div className="bg-slate-950 border-b border-slate-800">
+                                {Object.keys(THEMES).map(key => (
+                                    <button 
+                                        key={key} 
+                                        onClick={() => { changeTheme(key); setShowMenu(false); }}
+                                        className={`w-full text-left px-8 py-2 text-xs hover:bg-slate-800 transition cursor-pointer ${chatTheme === key ? 'font-bold text-indigo-400' : 'text-slate-400'}`}
+                                    >
+                                        {THEMES[key].name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
-                      <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100">
-                          <Edit3 size={16} className="text-indigo-500" /> Theme: {THEMES[chatTheme].name}
-                      </button>
-                      {showThemeMenu && (
-                          <div className="bg-gray-50 border-t border-gray-200">
-                              {Object.keys(THEMES).map(key => (
-                                  <button 
-                                      key={key} 
-                                      onClick={() => changeTheme(key)}
-                                      className={`w-full text-left px-8 py-2 text-sm hover:bg-gray-200 ${chatTheme === key ? 'font-bold text-indigo-600' : 'text-gray-600'}`}
-                                  >
-                                      {THEMES[key].name}
-                                  </button>
-                              ))}
-                          </div>
-                      )}
+                        {/* 6. Block User */}
+                        <button onClick={handleBlockToggle} className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 flex items-center gap-3 font-semibold border-b border-slate-800 transition cursor-pointer">
+                            <Ban size={18} className={userData?.blockedUsers?.includes(selectedUser._id) ? "text-emerald-400 shrink-0" : "text-rose-400 shrink-0"} />
+                            <span>{userData?.blockedUsers?.includes(selectedUser._id) ? "Unblock User" : "Block User"}</span>
+                        </button>
 
-                      <button onClick={() => handleDeleteChat(false)} className="w-full text-left px-4 py-3 text-sm text-red-800 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
-                          <Trash2 size={16} /> Delete for me
-                      </button>
-                      <button onClick={() => handleDeleteChat(true)} className="w-full text-left px-4 py-3 text-sm text-red-800 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
-                          <Trash2 size={16} /> Delete for everyone
-                      </button>
-                    </div>
-                  )}
+                        {/* 7. Delete Chat */}
+                        <button onClick={() => { setShowMenu(false); setDeleteModalTarget({ type: 'chat', isSender: true }); }} className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/20 flex items-center gap-3 font-bold transition cursor-pointer">
+                            <Trash2 size={18} className="text-rose-400 shrink-0" /> <span>Delete Conversation</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -2511,38 +2532,41 @@ ${msg.sender?.toString() ===
                             </button>
                           )}
 
-                          {msg.sender?.toString() ===
-                            userData?._id?.toString() && (
+                          {msg.sender?.toString() === userData?._id?.toString() && (
+                            <button
+                              onClick={() => {
+                                const timeDiff = Date.now() - new Date(msg.createdAt).getTime();
+                                if (timeDiff > 15 * 60 * 1000) {
+                                  alert("You can only edit messages within 15 minutes of sending.");
+                                } else {
+                                  setEditingMessageId(msg._id);
+                                  setMessage(msg.message);
+                                  setActiveReactionMessage(null);
+                                }
+                              }}
+                              className="text-blue-500 font-bold px-2 cursor-pointer hover:scale-110 transition-transform"
+                              title="Edit Message"
+                            >
+                              <Edit3 size={20} />
+                            </button>
+                          )}
 
-                              <>
-                                <button
-                                  onClick={() => {
-                                    const timeDiff = Date.now() - new Date(msg.createdAt).getTime();
-                                    if (timeDiff > 15 * 60 * 1000) {
-                                      alert("You can only edit messages within 15 minutes of sending.");
-                                    } else {
-                                      setEditingMessageId(msg._id);
-                                      setMessage(msg.message);
-                                      setActiveReactionMessage(null);
-                                    }
-                                  }}
-                                  className="text-blue-500 font-bold px-2"
-                                >
-                                  <Edit3 size={20} />
-                                </button>
-                                
-                                <button
-                                  onClick={() => {
-                                    deleteMessageForEveryone(msg._id);
-                                    setActiveReactionMessage(null);
-                                  }}
-                                  className="text-red-500 font-bold px-2"
-                                >
-                                  <Trash2 size={20} />
-                                </button>
-                              </>
-
-                            )}
+                          {!msg.isDeleted && (
+                            <button
+                              onClick={() => {
+                                setDeleteModalTarget({
+                                  type: 'message',
+                                  messageId: msg._id,
+                                  isSender: msg.sender?.toString() === userData?._id?.toString()
+                                });
+                                setActiveReactionMessage(null);
+                              }}
+                              className="text-rose-500 font-bold px-2 cursor-pointer hover:scale-110 transition-transform"
+                              title="Delete Message"
+                            >
+                              <Trash2 size={20} />
+                            </button>
+                          )}
 
                         </div>
 
@@ -3160,6 +3184,63 @@ transition-[height] duration-100
           </div>
         </div>
       )}
+
+      {/* DELETE OPTIONS MODAL (Delete for me vs Delete for everyone) */}
+      <AnimatePresence>
+        {deleteModalTarget && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="glass-panel border border-cyan-500/20 rounded-3xl w-full max-w-sm p-6 text-slate-100 shadow-2xl backdrop-blur-2xl flex flex-col gap-4 text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto mb-1 shadow-lg">
+                <Trash2 size={24} />
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-extrabold text-white">
+                  {deleteModalTarget.type === 'message' ? 'Delete Message?' : 'Delete Conversation?'}
+                </h3>
+                <p className="text-xs text-slate-400 font-medium mt-1">
+                  Choose how you would like to remove this {deleteModalTarget.type}.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5 mt-2">
+                {/* Delete for Me */}
+                <button
+                  onClick={() => handleExecuteDelete(false)}
+                  className="w-full py-3 rounded-2xl bg-[#090d18] hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Trash2 size={16} className="text-slate-400" />
+                  <span>Delete for me</span>
+                </button>
+
+                {/* Delete for Everyone (if sender or chat delete) */}
+                {(deleteModalTarget.isSender || deleteModalTarget.type === 'chat') && (
+                  <button
+                    onClick={() => handleExecuteDelete(true)}
+                    className="w-full py-3 rounded-2xl bg-rose-600/90 hover:bg-rose-500 text-white font-bold text-xs shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete for everyone</span>
+                  </button>
+                )}
+
+                {/* Cancel */}
+                <button
+                  onClick={() => setDeleteModalTarget(null)}
+                  className="w-full py-2 text-xs text-slate-400 hover:text-white font-semibold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
 
