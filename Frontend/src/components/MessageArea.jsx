@@ -107,17 +107,17 @@ const formatLastSeen = (date) => {
 
 const THEMES = {
   default: {
-    bg: "bg-[#efeae2]",
-    headerBg: "bg-white border-b border-gray-300 text-gray-800",
-    inputBg: "bg-white border-t border-gray-300 text-gray-800",
-    inputTextBg: "bg-slate-100 text-gray-800",
-    titleText: "text-[#0b2a5b]",
-    subtitleText: "text-gray-500",
-    iconColor: "text-gray-700",
-    myBubble: "bg-[#d9fdd3] text-gray-800",
-    otherBubble: "bg-white text-gray-800",
+    bg: "bg-[#f8fafc] text-slate-900",
+    headerBg: "bg-white/95 backdrop-blur-xl border-b border-slate-200/90 text-slate-900 shadow-sm",
+    inputBg: "bg-white/95 backdrop-blur-xl border-t border-slate-200/90 text-slate-900 shadow-lg",
+    inputTextBg: "bg-slate-100 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500",
+    titleText: "text-[#0b2a5b] font-extrabold",
+    subtitleText: "text-slate-500 font-medium",
+    iconColor: "text-slate-600 hover:text-slate-900",
+    myBubble: "bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-sky-200",
+    otherBubble: "bg-white text-slate-900 border border-slate-200/90 shadow-sm",
     font: "font-sans",
-    name: "Default"
+    name: "Bright Vibrant (Default)"
   },
   cyberpunk: {
     bg: "bg-gradient-to-br from-gray-950 via-purple-950 to-black animate-gradient",
@@ -3121,29 +3121,43 @@ transition-[height] duration-100
         </>
 
       ) : (
+        <div className="hidden lg:flex flex-1 items-center justify-center flex-col bg-[#05070e] relative overflow-hidden text-slate-100 p-8 border-l border-cyan-500/15">
+          {/* Cyber Ambient Glowing Blobs */}
+          <div className="w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl animate-glow pointer-events-none absolute" />
+          <div className="w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-glow pointer-events-none absolute" style={{ animationDelay: '2.5s' }} />
 
-        <div className="hidden lg:flex flex-1 items-center justify-center flex-col">
+          <div className="relative z-10 flex flex-col items-center text-center max-w-md glass-panel p-10 rounded-3xl border border-cyan-500/20 shadow-2xl backdrop-blur-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-fuchsia-500 p-[2px] shadow-xl shadow-cyan-500/20 mb-4 animate-float">
+              <div className="w-full h-full bg-[#090d18] rounded-[14px] flex items-center justify-center">
+                <MessageSquare className="w-8 h-8 text-cyan-400" />
+              </div>
+            </div>
 
-          <h1 className="text-7xl font-bold">
+            <h1 className="text-4xl font-extrabold tracking-tight text-white flex items-center gap-2 mb-2">
+              <span>Baat</span>
+              <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+                Cheet
+              </span>
+              <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+            </h1>
 
-            <span className="text-[#0b2a5b]">
-              Baat
-            </span>
+            <p className="text-slate-400 text-sm leading-relaxed mb-6 font-medium">
+              Select a contact or group from the sidebar to start live messaging, WebRTC audio/video calls, voice notes, and mini-game duels!
+            </p>
 
-            <span className="text-orange-500">
-              Cheet
-            </span>
-
-          </h1>
-
-          <p className="text-gray-500 mt-4">
-
-            Select a chat to start messaging
-
-          </p>
-
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="px-3.5 py-1.5 rounded-full bg-[#090d18] border border-cyan-500/20 text-xs font-bold text-slate-200 flex items-center gap-1.5 shadow-sm">
+                <Phone size={14} className="text-emerald-400" /> HD Calls
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-[#090d18] border border-cyan-500/20 text-xs font-bold text-slate-200 flex items-center gap-1.5 shadow-sm">
+                <Ghost size={14} className="text-pink-400" /> Ghost Mode
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-[#090d18] border border-cyan-500/20 text-xs font-bold text-slate-200 flex items-center gap-1.5 shadow-sm">
+                <Swords size={14} className="text-amber-400" /> Game Duels
+              </span>
+            </div>
+          </div>
         </div>
-
       )}
 
     </div>

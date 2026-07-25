@@ -172,12 +172,15 @@ Look for the install icon in the address bar.`
                     left-1/2
                     -translate-x-1/2
                     z-[9999]
-                    bg-orange-500
+                    glass-panel
+                    border
+                    border-cyan-500/30
                     text-white
                     px-5
                     py-3
                     rounded-2xl
-                    shadow-xl
+                    shadow-2xl
+                    backdrop-blur-2xl
                     flex
                     items-center
                     gap-4
@@ -188,12 +191,12 @@ Look for the install icon in the address bar.`
 
                     <div>
 
-                        <h3 className="font-semibold">
-                            📱 Install BaatCheet
+                        <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                            📱 Install BaatCheet App
                         </h3>
 
-                        <p className="text-xs">
-                            Add BaatCheet to your device
+                        <p className="text-xs text-slate-400 font-medium">
+                            Get real-time notifications on your device
                         </p>
 
                     </div>
@@ -205,18 +208,20 @@ Look for the install icon in the address bar.`
                         }
 
                         className="
-                        bg-white
-                        text-orange-500
+                        glow-button
+                        text-white
                         px-4
                         py-2
                         rounded-xl
-                        font-semibold
+                        font-bold
+                        text-xs
                         cursor-pointer
+                        shadow-md
                         "
 
                     >
 
-                        Add
+                        Install App
 
                     </button>
 

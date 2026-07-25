@@ -136,23 +136,24 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
     const availableUsersToAdd = otherUsers?.filter(u => !participantIds.includes(u._id) && !u.isAI && u.userName !== 'ai');
 
     return (
-        <div className="fixed inset-0 bg-white z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom-2 duration-300">
-            <div className="w-full h-full max-w-3xl mx-auto p-4 sm:p-6 md:p-8 overflow-y-auto relative">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+            <div className="glass-panel border border-cyan-500/20 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative text-slate-100 shadow-2xl backdrop-blur-2xl p-6 scrollbar-hide">
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors z-10"
+                    className="absolute top-5 right-5 p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-white transition z-10"
                 >
-                    <X size={24} />
+                    <X size={20} />
                 </button>
-                <div className="flex flex-col items-center mb-6 pt-4">
+
+                <div className="flex flex-col items-center mb-6 pt-2">
                     <div className="relative">
                         <img 
                             src={isEditingInfo ? previewImage : (group.groupProfileImage || defaultProfile)} 
                             alt="Group" 
-                            className="w-24 h-24 rounded-full object-cover border-4 border-gray-100 shadow-md mb-3"
+                            className="w-24 h-24 rounded-full object-cover border-2 border-cyan-400 shadow-xl bg-[#090d18] p-[2px] mb-3"
                         />
                         {isEditingInfo && (
-                            <label className="absolute bottom-3 right-0 bg-green-500 p-1.5 rounded-full text-white cursor-pointer hover:bg-green-600 transition shadow-md">
+                            <label className="absolute bottom-3 right-0 bg-cyan-600 p-2 rounded-full text-white cursor-pointer hover:bg-cyan-500 transition shadow-lg">
                                 <Edit2 size={14} />
                                 <input 
                                     type="file" 
@@ -172,44 +173,44 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
                     {!isEditingInfo ? (
                         <>
                             <div className="flex items-center gap-2">
-                                <h3 className="text-xl font-bold text-gray-800">{group.groupName}</h3>
+                                <h3 className="text-xl font-bold text-white">{group.groupName}</h3>
                                 {isAdmin && (
-                                    <button onClick={handleEditClick} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                    <button onClick={handleEditClick} className="text-slate-400 hover:text-cyan-400 transition">
                                         <Edit2 size={16} />
                                     </button>
                                 )}
                             </div>
-                            {group.groupDescription && <p className="text-gray-500 text-sm mt-1 text-center max-w-full break-words">{group.groupDescription}</p>}
+                            {group.groupDescription && <p className="text-slate-400 text-xs mt-1 text-center max-w-full break-words font-medium">{group.groupDescription}</p>}
                         </>
                     ) : (
-                        <div className="w-full flex flex-col gap-2 mt-2 px-2">
+                        <div className="w-full flex flex-col gap-2.5 mt-2">
                             <input 
                                 type="text" 
                                 value={editGroupName}
                                 onChange={(e) => setEditGroupName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-center text-gray-800 font-semibold"
+                                className="w-full glass-input text-center text-slate-100 font-semibold rounded-xl py-2 px-3 text-sm focus:outline-none"
                                 placeholder="Group Name"
                             />
                             <textarea 
                                 value={editGroupDesc}
                                 onChange={(e) => setEditGroupDesc(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-center text-sm text-gray-600 resize-none"
+                                className="w-full glass-input text-center text-xs text-slate-300 rounded-xl py-2 px-3 focus:outline-none resize-none font-medium"
                                 placeholder="Group Description"
                                 rows="2"
                             />
                             <div className="flex gap-2 justify-center mt-2">
                                 <button 
                                     onClick={() => setIsEditingInfo(false)}
-                                    className="px-4 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                                    className="px-4 py-2 text-xs font-semibold text-slate-300 bg-slate-800 rounded-xl hover:bg-slate-700"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     onClick={handleSaveInfo}
                                     disabled={loading || !editGroupName.trim()}
-                                    className="px-4 py-1.5 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:opacity-50"
+                                    className="px-4 py-2 text-xs font-semibold text-white glow-button rounded-xl disabled:opacity-50"
                                 >
-                                    Save
+                                    Save Changes
                                 </button>
                             </div>
                         </div>
@@ -218,40 +219,40 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
 
                 {!showAddUsers ? (
                     <>
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-semibold text-gray-700">Participants ({group.participants?.length || 0})</h4>
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-xs uppercase tracking-wider text-slate-300">Participants ({group.participants?.length || 0})</h4>
                             {isAdmin && (
-                                <button onClick={() => setShowAddUsers(true)} className="flex items-center gap-1 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full font-medium hover:bg-green-100">
-                                    <UserPlus size={16} /> Add
+                                <button onClick={() => setShowAddUsers(true)} className="flex items-center gap-1 text-xs text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-full font-bold hover:bg-cyan-500/20 transition">
+                                    <UserPlus size={14} /> Add Member
                                 </button>
                             )}
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-hide">
                             {group.participants?.map(participant => {
                                 const isParticipantAdmin = group.admins?.some(admin => admin._id === participant._id || admin === participant._id);
                                 return (
-                                    <div key={participant._id} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50">
+                                    <div key={participant._id} className="flex items-center justify-between p-2.5 rounded-2xl bg-[#090d18]/70 border border-slate-800/80">
                                         <div className="flex items-center gap-3">
-                                            <img src={participant.profileImage || defaultProfile} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                            <img src={participant.profileImage || defaultProfile} alt="" className="w-9 h-9 rounded-full object-cover bg-[#090d18]" />
                                             <div>
-                                                <p className="font-medium text-gray-800">{participant.name || participant.userName}</p>
-                                                {isParticipantAdmin && <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">Admin</span>}
+                                                <p className="font-semibold text-xs text-slate-100">{participant.name || participant.userName}</p>
+                                                {isParticipantAdmin && <span className="text-[10px] bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 rounded-full font-bold">Admin</span>}
                                             </div>
                                         </div>
                                         {isAdmin && participant._id !== userData._id && (
-                                            <div className="flex flex-col gap-2 items-end">
+                                            <div className="flex gap-2 items-center">
                                                 {!isParticipantAdmin && (
                                                     <button 
                                                         onClick={() => handleMakeAdmin(participant._id)}
-                                                        className="text-[11px] text-blue-500 font-medium hover:underline flex items-center gap-1"
+                                                        className="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 p-1 bg-cyan-500/10 rounded-lg"
                                                     >
-                                                        <Shield size={12} /> Make Admin
+                                                        <Shield size={12} /> Admin
                                                     </button>
                                                 )}
                                                 <button 
                                                     onClick={() => handleRemoveUser(participant._id)}
-                                                    className="text-[11px] text-red-500 font-medium hover:underline flex items-center gap-1"
+                                                    className="text-[11px] text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 p-1 bg-rose-500/10 rounded-lg"
                                                 >
                                                     <UserMinus size={12} /> Remove
                                                 </button>
@@ -262,56 +263,60 @@ const GroupInfoModal = ({ isOpen, onClose, group }) => {
                             })}
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                        <div className="mt-6 pt-4 border-t border-slate-800 flex flex-col gap-2">
                             <button 
                                 onClick={handleLeaveGroup}
-                                className="w-full flex justify-center items-center gap-2 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-semibold transition-colors"
+                                className="w-full flex justify-center items-center gap-2 py-3 text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
                             >
-                                <LogOut size={18} /> Leave Group
+                                <LogOut size={16} /> Leave Group
                             </button>
                             <button 
                                 onClick={handleDeleteGroup}
-                                className="w-full flex justify-center items-center gap-2 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-semibold transition-colors"
+                                className="w-full flex justify-center items-center gap-2 py-3 text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 rounded-xl text-xs font-bold transition cursor-pointer"
                             >
-                                <Trash2 size={18} /> Delete Group
+                                <Trash2 size={16} /> Delete Group for Everyone
                             </button>
                         </div>
                     </>
                 ) : (
                     <>
                         <div className="flex items-center gap-2 mb-4">
-                            <button onClick={() => setShowAddUsers(false)} className="text-sm text-gray-500 hover:text-gray-800 font-medium">← Back</button>
-                            <h4 className="font-semibold text-gray-700 flex-1 text-center pr-8">Add Users</h4>
+                            <button onClick={() => setShowAddUsers(false)} className="text-xs text-cyan-400 hover:underline font-bold">← Back</button>
+                            <h4 className="font-extrabold text-white text-sm flex-1 text-center pr-8">Add Members to Group</h4>
                         </div>
                         
-                        <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-200 rounded-xl p-2 mb-4">
+                        <div className="max-h-60 overflow-y-auto space-y-2 border border-slate-800 rounded-xl p-2 mb-4 bg-[#090d18] scrollbar-hide">
                             {availableUsersToAdd?.length > 0 ? availableUsersToAdd.map(user => (
                                 <div 
                                     key={user._id} 
                                     onClick={() => toggleUser(user._id)}
-                                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedUsers.includes(user._id) ? 'bg-green-50 border border-green-200' : 'hover:bg-gray-50 border border-transparent'}`}
+                                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition border ${
+                                        selectedUsers.includes(user._id) 
+                                            ? 'bg-cyan-500/20 border-cyan-500/50 text-white font-bold' 
+                                            : 'hover:bg-slate-900 border-transparent text-slate-300 font-medium'
+                                    }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <img src={user.profileImage || defaultProfile} alt="" className="w-10 h-10 rounded-full object-cover" />
-                                        <span className="font-medium text-gray-800">{user.name || user.userName}</span>
+                                        <img src={user.profileImage || defaultProfile} alt="" className="w-9 h-9 rounded-full object-cover bg-[#090d18]" />
+                                        <span className="font-semibold text-xs">{user.name || user.userName}</span>
                                     </div>
                                     {selectedUsers.includes(user._id) && (
-                                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                            <Check size={14} className="text-white" />
+                                        <div className="w-5 h-5 bg-cyan-500 rounded-full flex items-center justify-center text-white">
+                                            <Check size={12} />
                                         </div>
                                     )}
                                 </div>
                             )) : (
-                                <p className="text-center text-gray-500 py-4 text-sm">No new users available to add.</p>
+                                <p className="text-center text-slate-500 py-4 text-xs font-medium">No new users available to add.</p>
                             )}
                         </div>
                         
                         <button 
                             onClick={handleAddUsers}
                             disabled={loading || selectedUsers.length === 0}
-                            className="w-full py-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:shadow-green-300 transition-all disabled:opacity-50"
+                            className="w-full py-3.5 glow-button text-white rounded-xl font-bold text-xs shadow-xl transition disabled:opacity-50 flex items-center justify-center cursor-pointer"
                         >
-                            {loading ? 'Adding...' : `Add ${selectedUsers.length > 0 ? selectedUsers.length : ''} Users`}
+                            {loading ? 'Adding Members...' : `Add ${selectedUsers.length > 0 ? selectedUsers.length : ''} Members`}
                         </button>
                     </>
                 )}

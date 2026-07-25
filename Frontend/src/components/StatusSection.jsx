@@ -376,33 +376,33 @@ const StatusSection = () => {
     };
 
     return (
-        <div className="w-full h-full flex flex-col p-4 overflow-y-auto bg-slate-100">
+        <div className="w-full h-full flex flex-col p-4 overflow-y-auto bg-[#05070e] text-slate-100 scrollbar-hide">
             
             {/* My Status */}
-            <div className="flex items-center gap-4 mb-6 relative cursor-pointer">
+            <div className="flex items-center gap-4 mb-6 relative cursor-pointer p-3 rounded-2xl glass-card border border-cyan-500/20 shadow-lg glass-card-hover">
                 <div className="relative" onClick={() => myGroup ? handleViewStatusGroup(myGroup) : fileInputRef.current.click()}>
-                    <div className={`p-[2px] rounded-full ${myGroup ? 'bg-green-500' : ''}`}>
+                    <div className={`p-[2px] rounded-full ${myGroup ? 'bg-gradient-to-tr from-cyan-400 to-fuchsia-500 p-[2px]' : ''}`}>
                         <img 
                             src={userData?.profileImage || defaultProfile} 
-                            className="w-14 h-14 rounded-full object-cover border-2 border-white"
+                            className="w-14 h-14 rounded-full object-cover border-2 border-[#090d18] bg-[#090d18] shadow-md"
                             alt="My Status"
                         />
                     </div>
                     {!myGroup && (
-                        <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1 border-2 border-white">
-                            <Plus size={12} className="text-white" />
+                        <div className="absolute bottom-0 right-0 bg-cyan-500 rounded-full p-1 border-2 border-[#090d18] text-white shadow-lg">
+                            <Plus size={12} />
                         </div>
                     )}
                 </div>
                 <div className="flex-1" onClick={() => myGroup ? handleViewStatusGroup(myGroup) : fileInputRef.current.click()}>
-                    <h3 className="font-semibold text-lg text-[#0b2a5b]">My Status</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="font-bold text-sm text-white">My Status</h3>
+                    <p className="text-xs text-slate-400 mt-0.5 font-medium">
                         {myGroup ? getLastStatusTime(myGroup) : "Tap to add status update"}
                     </p>
                 </div>
                 {myGroup && (
-                    <button onClick={() => fileInputRef.current.click()} className="p-2 rounded-full hover:bg-gray-200">
-                        <Plus size={20} className="text-gray-600" />
+                    <button onClick={() => fileInputRef.current.click()} className="p-2.5 rounded-xl bg-[#090d18] border border-cyan-500/20 text-cyan-400 hover:text-white transition">
+                        <Plus size={18} />
                     </button>
                 )}
                 <input 
@@ -416,24 +416,24 @@ const StatusSection = () => {
             </div>
 
             {/* Recent Updates */}
-            {otherGroups.length > 0 && <h3 className="text-md font-semibold text-gray-500 mb-3 px-2">Recent updates</h3>}
+            {otherGroups.length > 0 && <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">Recent updates</h3>}
             <div className="flex flex-col gap-2">
                 {Array.isArray(otherGroups) && otherGroups.map((group) => (
                     <div 
                         key={group.user._id} 
-                        className="flex items-center gap-4 cursor-pointer p-2 rounded-xl hover:bg-slate-200 transition-colors"
+                        className="flex items-center gap-3.5 cursor-pointer p-3 rounded-2xl glass-card border border-cyan-500/15 shadow-md glass-card-hover"
                         onClick={() => handleViewStatusGroup(group)}
                     >
-                        <div className="p-[2px] bg-green-500 rounded-full">
+                        <div className="p-[2px] bg-gradient-to-tr from-cyan-400 to-fuchsia-500 rounded-full">
                             <img 
                                 src={group.user.profileImage || defaultProfile} 
-                                className="w-12 h-12 rounded-full object-cover border-2 border-white"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-[#090d18] bg-[#090d18] shadow-sm"
                                 alt="Status"
                             />
                         </div>
                         <div>
-                            <h4 className="font-semibold text-[#0b2a5b]">{group.user.name || group.user.userName}</h4>
-                            <p className="text-xs text-gray-500">
+                            <h4 className="font-bold text-sm text-white">{group.user.name || group.user.userName}</h4>
+                            <p className="text-xs text-slate-400 font-medium mt-0.5">
                                 {getLastStatusTime(group)}
                             </p>
                         </div>

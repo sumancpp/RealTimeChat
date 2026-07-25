@@ -15,9 +15,8 @@ import {
     Phone,
     Plus,
     Camera,
-    PhoneCall,
-    Lock,
-    Info
+    Info,
+    Sparkles
 } from "lucide-react";
 
 import StatusSection from "./StatusSection";
@@ -63,7 +62,6 @@ const formatLastSeen = (date) => {
 const SideBar = () => {
 
     const navigate = useNavigate();
-
     const dispatch = useDispatch();
 
     const {
@@ -75,15 +73,9 @@ const SideBar = () => {
         state => state.user
     );
 
-    const [showSearch, setShowSearch] =
-        useState(false);
-
-    const [search, setSearch] =
-        useState("");
-
-    const [activeTab, setActiveTab] = 
-        useState("chats");
-        
+    const [showSearch, setShowSearch] = useState(false);
+    const [search, setSearch] = useState("");
+    const [activeTab, setActiveTab] = useState("chats");
     const [groups, setGroups] = useState([]);
     const [showGroupModal, setShowGroupModal] = useState(false);
     const [viewingImage, setViewingImage] = useState(null);
@@ -96,7 +88,6 @@ const SideBar = () => {
     };
 
     const handleTabChange = (tab) => {
-        // Trigger haptic feedback for mobile users (vibrates for 40ms)
         if (navigator.vibrate) {
             navigator.vibrate(40);
         }
@@ -118,464 +109,262 @@ const SideBar = () => {
         }
     };
 
-    // SEARCH USERS
-    const handleSearch = async (
-        value
-    ) => {
-
+    const handleSearch = async (value) => {
         setSearch(value);
-
         try {
-
-            // EMPTY SEARCH
             if (!value.trim()) {
-
-                const result =
-                    await axios.get(
-
-                        `${serverUrl}/message/sorted-users?t=${Date.now()}`,
-
-                        {
-                            withCredentials: true
-                        }
-
-                    );
-
-                dispatch(
-                    setOtherUsers(
-                        result.data
-                    )
+                const result = await axios.get(
+                    `${serverUrl}/message/sorted-users?t=${Date.now()}`,
+                    { withCredentials: true }
                 );
-
+                dispatch(setOtherUsers(result.data));
                 return;
             }
 
-            const result =
-                await axios.get(
-
-                    `${serverUrl}/user/search?query=${value}&t=${Date.now()}`,
-
-                    {
-                        withCredentials: true
-                    }
-
-                );
-
-            dispatch(
-                setOtherUsers(
-                    result.data
-                )
+            const result = await axios.get(
+                `${serverUrl}/user/search?query=${value}&t=${Date.now()}`,
+                { withCredentials: true }
             );
-
+            dispatch(setOtherUsers(result.data));
         } catch (error) {
-
             console.log(error);
-
         }
-
     };
 
-    // LOGOUT
     const handleLogout = async () => {
-
         try {
-
-            await axios.get(
-
-                `${serverUrl}/logout`,
-
-                {
-                    withCredentials: true
-                }
-
-            );
-
-            dispatch(
-                setUserData(null)
-            );
-
-            dispatch(
-                setOtherUsers([])
-            );
-
-            dispatch(
-                setSelectedUser(null)
-            );
-
+            await axios.get(`${serverUrl}/logout`, { withCredentials: true });
+            dispatch(setUserData(null));
+            dispatch(setOtherUsers([]));
+            dispatch(setSelectedUser(null));
             navigate("/login");
-
         } catch (error) {
-
             console.log(error);
-
         }
-
     };
 
     return (
         <>
-        <div className='w-full h-screen bg-slate-100 border-r border-gray-300 flex flex-col overflow-hidden relative'>
+        <div className='w-full h-full bg-[#05070e] border-r border-cyan-500/15 flex flex-col overflow-hidden relative font-sans text-slate-100'>
 
-            {/* TOP SECTION */}
-            <motion.div
-                initial={{
-                    y: -80,
-                    opacity: 0
-                }}
-                animate={{
-                    y: 0,
-                    opacity: 1
-                }}
-                transition={{
-                    duration: 0.6
-                }}
-                className='w-full min-h-[280px] bg-[#e6fffa] rounded-b-[30%] shadow-md px-5 py-4'
-            >
-
-                {/* HEADER */}
+            {/* TOP HEADER & USER BAR */}
+            <div className='w-full bg-[#0e1322]/85 backdrop-blur-2xl border-b border-cyan-500/15 px-5 pt-4 pb-4 flex flex-col gap-3 shadow-xl relative z-10 text-slate-100'>
+                {/* BRAND & LOGOUT/PROFILE */}
                 <div className='flex items-center justify-between'>
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/about')}>
+                        <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-1">
+                            <span>Baat</span>
+                            <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+                                Cheet
+                            </span>
+                        </h1>
+                        <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                    </div>
 
-                    <h1 className="text-4xl font-bold tracking-wide font-[Poppins]">
-
-                        <span className="text-[#0b2a5b]">
-
-                            Baat
-
-                        </span>
-
-                        <span className="bg-gradient-to-r from-orange-400 via-orange-500 to-pink-500 bg-clip-text text-transparent">
-
-                            Cheet
-
-                        </span>
-
-                    </h1>
-
-                    <img
-                        src={
-                            userData?.profileImage ||
-                            defaultProfile
-                        }
-                        onClick={() =>
-                            navigate("/profile")
-                        }
-                        alt="profile"
-                        className="w-16 h-16 rounded-full border-4 border-white shadow-md object-cover cursor-pointer hover:opacity-90 transition"
-                    />
-
+                    <div className="flex items-center gap-3">
+                        <img
+                            src={userData?.profileImage || defaultProfile}
+                            onClick={() => navigate("/profile")}
+                            alt="profile"
+                            className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 to-fuchsia-500 object-cover cursor-pointer hover:scale-105 transition shadow-lg"
+                        />
+                    </div>
                 </div>
 
-                {/* USER INFO */}
-                <div className='mt-5 flex items-center gap-2'>
-
-                    <p className='text-lg text-gray-500'>
-
-                        Hey 👋
-
-                    </p>
-
-                    <h1 className='text-2xl font-semibold text-[#02085f]'>
-
-                        {
-                            userData?.name ||
-                            userData?.userName
-                        }
-
-                    </h1>
-
-                </div>
-
-                {/* SEARCH */}
-                <div className='w-full mt-4'>
-
+                {/* USER GREETING & SEARCH ICON */}
+                <div className='flex items-center justify-between gap-3'>
                     {!showSearch ? (
-
-                        <div className='flex items-center gap-4'>
-
-                            {/* SEARCH ICON */}
-                            <div className='relative'>
-
-                                <motion.button
-                                    whileHover={{
-                                        scale: 1.05
-                                    }}
-                                    whileTap={{
-                                        scale: 0.95
-                                    }}
-                                    onClick={() =>
-                                        setShowSearch(true)
-                                    }
-                                    className='p-3 rounded-full bg-white shadow-md cursor-pointer flex-shrink-0'
-                                >
-
-                                    <Search
-                                        size={20}
-                                        className='text-gray-700'
-                                    />
-
-                                </motion.button>
-
-                                {/* ONLINE COUNT */}
-                                {/* {
-                                    onlineUsers?.length > 0 && (
-
-                                        <span
-                                            className='absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center'
-                                        >
-
-                                            {
-                                                onlineUsers.length
-                                            }
-
-                                        </span>
-
-                                    )
-                                } */}
-
+                        <>
+                            <div className="flex items-center gap-2 overflow-hidden">
+                                <p className='text-xs font-semibold text-slate-400'>Welcome,</p>
+                                <h2 className='text-sm font-extrabold text-white truncate'>
+                                    {userData?.name || userData?.userName}
+                                </h2>
                             </div>
 
-                            {/* ONLINE USERS */}
-                            <div className='flex items-center overflow-x-auto scrollbar-hide gap-4 flex-1 pb-2 mt-7'>
-
-                                {
-                                    Array.isArray(otherUsers) && otherUsers
-                                        .filter(user =>
-                                            (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
-                                        )
-                                        .map((user) => (
-
-                                            <div
-                                                key={user._id}
-                                                className='flex flex-col items-center min-w-[70px] cursor-pointer'
-                                                onClick={() =>
-                                                    dispatch(
-                                                        setSelectedUser(
-                                                            user
-                                                        )
-                                                    )
-                                                }
-                                            >
-
-                                                <div className='relative'>
-
-                                                    <img
-                                                        src={
-                                                            user?.profileImage ||
-                                                            defaultProfile
-                                                        }
-                                                        alt="profile"
-                                                        className='w-11 h-11 rounded-full border-2 border-green-500 object-cover shadow-md hover:scale-105 transition-transform'
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setViewingImage(user?.profileImage || defaultProfile);
-                                                        }}
-                                                    />
-
-                                                    <span
-                                                        className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full'
-                                                    />
-
-                                                </div>
-
-                                                <p className='text-sm mt-1 truncate w-[70px] text-center text-[#0b2a5b] font-medium'>
-
-                                                    {
-                                                        user?.name ||
-                                                        user?.userName
-                                                    }
-
-                                                </p>
-
-                                            </div>
-
-                                        ))
-                                }
-
-                            </div>
-
-                        </div>
-
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowSearch(true)}
+                                className='p-2.5 rounded-xl bg-[#090d18] border border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10 cursor-pointer transition shadow-sm'
+                            >
+                                <Search size={16} />
+                            </motion.button>
+                        </>
                     ) : (
-
-                        <div className='w-full'>
-
-                            <div className='relative w-full'>
-
-                                <Search
-                                    size={18}
-                                    className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-500'
-                                />
-
-                                <input
-                                    type="text"
-                                    placeholder='Search People...'
-                                    value={search}
-                                    onChange={(e) =>
-                                        handleSearch(
-                                            e.target.value
-                                        )
-                                    }
-                                    className='w-full py-2 pl-11 pr-12 rounded-3xl border border-gray-300 bg-white shadow-sm outline-none'
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowSearch(false);
-                                        setSearch("");
-                                        handleSearch("");
-                                    }}
-                                    className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer'
-                                >
-
-                                    <X size={18} />
-
-                                </button>
-
-                            </div>
-
+                        <div className='relative w-full'>
+                            <Search size={16} className='absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400' />
+                            <input
+                                type="text"
+                                placeholder='Search users or conversations...'
+                                value={search}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                autoFocus
+                                className='w-full py-2 pl-10 pr-10 rounded-xl glass-input text-xs text-slate-100 placeholder-slate-500 focus:outline-none transition font-medium'
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowSearch(false);
+                                    setSearch("");
+                                    handleSearch("");
+                                }}
+                                className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer'
+                            >
+                                <X size={16} />
+                            </button>
                         </div>
-
                     )}
-
                 </div>
 
-            </motion.div>
-
-            {/* USER LIST */}
-            {/* MAIN CONTENT AREA */}
-            <div className='flex-1 overflow-y-auto scrollbar-hide bg-slate-100 mt-1 pb-16'>
-                {activeTab === "chats" && (
-                    <div className='flex flex-col gap-2 px-3 py-4'>
-                        {(() => {
-                            const displayUsers = Array.isArray(otherUsers) ? otherUsers : [];
-
-                            return (
-                                <>
-                                    {displayUsers.map((user) => (
-
+                {/* ONLINE USERS HORIZONTAL TRAY */}
+                {!showSearch && Array.isArray(otherUsers) && (
+                    <div className='flex items-center gap-3 overflow-x-auto scrollbar-hide py-1 border-t border-slate-800/80 pt-3'>
+                        {otherUsers
+                            .filter(user => (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai"))
+                            .map((user) => (
                                 <div
                                     key={user._id}
-                                    onClick={() => handleUserClick(user)}
-                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-lg
-
-                                    ${selectedUser?._id ===
-                                            user._id
-
-                                            ? "bg-blue-100"
-
-                                            : "hover:bg-slate-200"
-                                        }`}
+                                    className='flex flex-col items-center min-w-[56px] cursor-pointer group'
+                                    onClick={() => dispatch(setSelectedUser(user))}
                                 >
-
                                     <div className='relative'>
-
                                         <img
-                                            src={
-                                                user?.profileImage ||
-                                                defaultProfile
-                                            }
+                                            src={user?.profileImage || defaultProfile}
                                             alt="profile"
-                                            className='w-14 h-14 rounded-full object-cover hover:scale-105 transition-transform'
+                                            className='w-11 h-11 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 to-emerald-400 object-cover shadow-sm group-hover:scale-105 transition-transform'
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setViewingImage(user?.profileImage || defaultProfile);
                                             }}
                                         />
-
-                                        {
-                                            (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai") && (
-
-                                                <span
-                                                    className='absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full'
-                                                />
-
-                                            )
-                                        }
-
-                                        {
-                                            user.unreadCount > 0 && (
-
-                                                <span
-                                                    className='absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold'
-                                                >
-
-                                                    {
-                                                        user.unreadCount > 99
-                                                            ? "99+"
-                                                            : user.unreadCount
-                                                    }
-
-                                                </span>
-
-                                            )
-                                        }
-
+                                        <span className='absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#05070e] rounded-full animate-pulse' />
                                     </div>
+                                    <p className='text-[11px] mt-1 truncate w-[56px] text-center text-slate-300 font-semibold group-hover:text-cyan-400 transition'>
+                                        {user?.name?.split(' ')[0] || user?.userName}
+                                    </p>
+                                </div>
+                            ))}
+                    </div>
+                )}
+            </div>
 
-                                    <div className='flex-1 overflow-hidden rounded-2xl'>
+            {/* MAIN CONTENT AREA */}
+            <div className='flex-1 overflow-y-auto scrollbar-hide bg-[#05070e] p-3 pb-20'>
+                {activeTab === "chats" && (
+                    <div className='flex flex-col gap-2'>
+                        {(() => {
+                            const displayUsers = Array.isArray(otherUsers) ? otherUsers : [];
 
-                                        <div className='flex items-center ml-2'>
-                                            <h2 className='font-semibold text-[#0b2a5b] truncate'>
-                                                {user?.name || user?.userName}
-                                            </h2>
+                            if (displayUsers.length === 0) {
+                                return (
+                                    <div className="text-center text-slate-500 text-xs mt-12 px-4 font-medium">
+                                        No chats found. Use search to find friends!
+                                    </div>
+                                );
+                            }
+
+                            return displayUsers.map((user) => {
+                                const isSelected = selectedUser?._id === user._id;
+                                const isOnline = onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai";
+                                const isGhost = user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS');
+
+                                return (
+                                    <div
+                                        key={user._id}
+                                        onClick={() => handleUserClick(user)}
+                                        className={`w-full flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer transition-all duration-200 border ${
+                                            isSelected
+                                                ? "bg-[#12192d] border-cyan-500/40 shadow-lg shadow-cyan-500/10 text-white"
+                                                : "glass-card hover:bg-[#161e36] border-slate-800/80 text-slate-300"
+                                        }`}
+                                    >
+                                        <div className='relative flex-shrink-0'>
+                                            <img
+                                                src={user?.profileImage || defaultProfile}
+                                                alt="profile"
+                                                className='w-12 h-12 rounded-full object-cover shadow-sm hover:scale-105 transition-transform bg-[#090d18] border border-cyan-500/20'
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setViewingImage(user?.profileImage || defaultProfile);
+                                                }}
+                                            />
+                                            {isOnline && (
+                                                <span className='absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#05070e] rounded-full' />
+                                            )}
+                                            {user.unreadCount > 0 && (
+                                                <span className='absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-[10px] flex items-center justify-center font-bold shadow-md'>
+                                                    {user.unreadCount > 99 ? "99+" : user.unreadCount}
+                                                </span>
+                                            )}
                                         </div>
 
-                                        <p className={`text-sm truncate ml-2 ${user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS') ? 'text-pink-500 font-semibold' : 'text-gray-500'}`}>
-                                            {
-                                                (user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS'))
-                                                    ? "Ghost SMS 👻"
-                                                    : (onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai")
-                                                        ? "Online"
-                                                        : (
-                                                            user.lastMessage ||
-                                                            formatLastSeen(
-                                                                user.lastSeen
-                                                            )
-                                                        )
-                                            }
-                                        </p>
+                                        <div className='flex-1 overflow-hidden'>
+                                            <div className='flex items-center justify-between'>
+                                                <h2 className='font-bold text-sm text-white truncate'>
+                                                    {user?.name || user?.userName}
+                                                </h2>
+                                                {!isOnline && user.lastSeen && (
+                                                    <span className="text-[10px] text-slate-500 flex-shrink-0 font-medium">
+                                                        {formatLastSeen(user.lastSeen)}
+                                                    </span>
+                                                )}
+                                            </div>
 
-
+                                            <p className={`text-xs truncate mt-0.5 ${
+                                                isGhost 
+                                                    ? 'text-pink-400 font-bold flex items-center gap-1' 
+                                                    : isOnline 
+                                                        ? 'text-emerald-400 font-semibold' 
+                                                        : 'text-slate-400 font-medium'
+                                            }`}>
+                                                {isGhost 
+                                                    ? "Ghost SMS 👻" 
+                                                    : isOnline 
+                                                        ? "Online" 
+                                                        : (user.lastMessage || "Click to start chatting")}
+                                            </p>
+                                        </div>
                                     </div>
-
-                                </div>
-
-                            ))}
-                            </>
-                            );
+                                );
+                            });
                         })()}
-
                     </div>
                 )}
 
                 {activeTab === "groups" && (
                     <div className="flex flex-col h-full relative">
-                        <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-2">
-                            {Array.isArray(groups) && groups.map((group) => (
-                                <div
-                                    key={group._id}
-                                    onClick={() => handleUserClick(group)}
-                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 shadow-sm border border-gray-100
-                                    ${selectedUser?._id === group._id ? "bg-blue-100 border-blue-300" : "bg-white hover:bg-slate-50"}`}
-                                >
-                                    <img
-                                        src={group.groupProfileImage || defaultProfile}
-                                        alt="group"
-                                        className="w-14 h-14 rounded-full object-cover shadow-sm hover:scale-105 transition-transform"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setViewingImage(group.groupProfileImage || defaultProfile);
-                                        }}
-                                    />
-                                    <div className="flex-1 overflow-hidden">
-                                        <h2 className="font-semibold text-[#0b2a5b] truncate">{group.groupName}</h2>
-                                        <p className="text-sm text-gray-500 truncate">{group.lastMessage || "No messages yet"}</p>
+                        <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+                            {Array.isArray(groups) && groups.map((group) => {
+                                const isSelected = selectedUser?._id === group._id;
+                                return (
+                                    <div
+                                        key={group._id}
+                                        onClick={() => handleUserClick(group)}
+                                        className={`w-full flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer transition-all duration-200 border ${
+                                            isSelected
+                                                ? "bg-[#12192d] border-cyan-500/40 shadow-lg shadow-cyan-500/10 text-white"
+                                                : "glass-card hover:bg-[#161e36] border-slate-800/80 text-slate-300"
+                                        }`}
+                                    >
+                                        <img
+                                            src={group.groupProfileImage || defaultProfile}
+                                            alt="group"
+                                            className="w-12 h-12 rounded-full object-cover shadow-sm hover:scale-105 transition-transform bg-[#090d18] border border-cyan-500/20"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setViewingImage(group.groupProfileImage || defaultProfile);
+                                            }}
+                                        />
+                                        <div className="flex-1 overflow-hidden">
+                                            <h2 className="font-bold text-sm text-white truncate">{group.groupName}</h2>
+                                            <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">{group.lastMessage || "No messages yet"}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {groups.length === 0 && (
-                                <div className="text-center text-gray-500 mt-10">You are not in any groups yet.</div>
+                                <div className="text-center text-slate-500 text-xs mt-12 font-medium">You are not in any groups yet. Click + below to create one!</div>
                             )}
                         </div>
                         <CreateGroupModal 
@@ -599,30 +388,57 @@ const SideBar = () => {
             </div>
 
             {/* BOTTOM NAV BAR */}
-            <div className="absolute bottom-0 w-full bg-white border-t border-gray-300 flex justify-around items-center p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 rounded-br-none sm:rounded-br-3xl sm:rounded-bl-3xl lg:rounded-none">
-                <div onClick={() => handleTabChange("chats")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'chats' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
-                    <MessageCircle size={24} />
-                    <span className="text-[10px] mt-1 tracking-wide">Chats</span>
+            <div className="absolute bottom-0 w-full bg-[#0e1322]/95 backdrop-blur-2xl border-t border-cyan-500/15 flex justify-around items-center px-2 py-3 shadow-2xl z-10 text-slate-400">
+                <div 
+                    onClick={() => handleTabChange("chats")} 
+                    className={`flex flex-col items-center cursor-pointer transition-all ${
+                        activeTab === 'chats' ? 'text-cyan-400 font-extrabold scale-105' : 'hover:text-slate-200'
+                    }`}
+                >
+                    <MessageCircle size={22} />
+                    <span className="text-[10px] mt-1 tracking-wider font-bold">Chats</span>
                 </div>
-                <div onClick={() => handleTabChange("groups")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'groups' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
-                    <Users size={24} />
-                    <span className="text-[10px] mt-1 tracking-wide">Groups</span>
+
+                <div 
+                    onClick={() => handleTabChange("groups")} 
+                    className={`flex flex-col items-center cursor-pointer transition-all ${
+                        activeTab === 'groups' ? 'text-cyan-400 font-extrabold scale-105' : 'hover:text-slate-200'
+                    }`}
+                >
+                    <Users size={22} />
+                    <span className="text-[10px] mt-1 tracking-wider font-bold">Groups</span>
                 </div>
-                <div onClick={() => handleTabChange("status")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'status' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
-                    <CircleDashed size={24} />
-                    <span className="text-[10px] mt-1 tracking-wide">Status</span>
+
+                <div 
+                    onClick={() => handleTabChange("status")} 
+                    className={`flex flex-col items-center cursor-pointer transition-all ${
+                        activeTab === 'status' ? 'text-cyan-400 font-extrabold scale-105' : 'hover:text-slate-200'
+                    }`}
+                >
+                    <CircleDashed size={22} />
+                    <span className="text-[10px] mt-1 tracking-wider font-bold">Status</span>
                 </div>
-                <div onClick={() => handleTabChange("calls")} className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === 'calls' ? 'text-green-500 font-bold scale-110' : 'text-gray-500 font-medium'}`}>
-                    <Phone size={24} />
-                    <span className="text-[10px] mt-1 tracking-wide">Calls</span>
+
+                <div 
+                    onClick={() => handleTabChange("calls")} 
+                    className={`flex flex-col items-center cursor-pointer transition-all ${
+                        activeTab === 'calls' ? 'text-cyan-400 font-extrabold scale-105' : 'hover:text-slate-200'
+                    }`}
+                >
+                    <Phone size={22} />
+                    <span className="text-[10px] mt-1 tracking-wider font-bold">Calls</span>
                 </div>
-                <div onClick={() => navigate("/about")} className="flex flex-col items-center cursor-pointer transition-all text-gray-500 hover:text-green-500 font-medium hover:font-bold hover:scale-110">
-                    <Info size={24} />
-                    <span className="text-[10px] mt-1 tracking-wide">About</span>
+
+                <div 
+                    onClick={() => navigate("/about")} 
+                    className="flex flex-col items-center cursor-pointer transition-all hover:text-indigo-400 font-bold"
+                >
+                    <Info size={22} />
+                    <span className="text-[10px] mt-1 tracking-wider font-bold">About</span>
                 </div>
             </div>
 
-            {/* DYNAMIC ACTION BUTTON */}
+            {/* DYNAMIC FLOATING ACTION BUTTON */}
             {activeTab !== "calls" && (
                 <motion.button
                     whileHover={{ scale: 1.08 }}
@@ -637,49 +453,47 @@ const SideBar = () => {
                             if (fileInput) fileInput.click();
                         }
                     }}
-                    className={`absolute bottom-20 right-5 p-4 rounded-full shadow-lg border transition cursor-pointer z-20 ${
+                    className={`absolute bottom-20 right-5 p-3.5 rounded-2xl shadow-xl border transition cursor-pointer z-20 ${
                         activeTab === "chats" 
-                            ? "bg-white border-gray-200 text-red-500 hover:bg-red-50" 
-                            : "bg-green-500 border-green-600 text-white hover:bg-green-600"
+                            ? "bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20" 
+                            : "glow-button text-white border-cyan-400/40"
                     }`}
                 >
-                    {activeTab === "chats" && <LogOut className="rotate-180" size={24} />}
-                    {activeTab === "groups" && <Plus size={24} />}
-                    {activeTab === "status" && <Camera size={24} />}
+                    {activeTab === "chats" && <LogOut className="rotate-180" size={20} />}
+                    {activeTab === "groups" && <Plus size={20} />}
+                    {activeTab === "status" && <Camera size={20} />}
                 </motion.button>
             )}
 
         </div>
 
-            {/* PROFILE IMAGE VIEWER MODAL */}
-            {viewingImage && (
-                <div 
-                    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
-                    onClick={() => setViewingImage(null)}
+        {/* PROFILE IMAGE VIEWER MODAL */}
+        {viewingImage && (
+            <div 
+                className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md"
+                onClick={() => setViewingImage(null)}
+            >
+                <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    className="relative max-w-sm w-full max-h-[80vh] flex items-center justify-center"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <motion.div 
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.5, opacity: 0 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="relative max-w-sm w-full max-h-[80vh] flex items-center justify-center"
-                        onClick={(e) => e.stopPropagation()}
+                    <img 
+                        src={viewingImage} 
+                        alt="Profile View" 
+                        className="w-full h-auto max-h-[70vh] object-contain rounded-2xl shadow-2xl bg-[#090d18] border border-slate-800"
+                    />
+                    <button 
+                        className="absolute -top-12 right-0 text-white p-2 hover:bg-white/20 rounded-full transition"
+                        onClick={() => setViewingImage(null)}
                     >
-                        <img 
-                            src={viewingImage} 
-                            alt="Profile View" 
-                            className="w-full h-auto max-h-[70vh] object-contain rounded-none shadow-2xl bg-black"
-                        />
-                        <button 
-                            className="absolute -top-12 right-0 text-white p-2 hover:bg-white/20 rounded-full transition"
-                            onClick={() => setViewingImage(null)}
-                        >
-                            <X size={30} />
-                        </button>
-                    </motion.div>
-                </div>
-            )}
-
+                        <X size={26} />
+                    </button>
+                </motion.div>
+            </div>
+        )}
         </>
     );
 };
