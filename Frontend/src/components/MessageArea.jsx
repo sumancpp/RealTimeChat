@@ -519,13 +519,7 @@ const MessageArea = () => {
     setActiveGameMessageId(null);
   }, [selectedUser]);
 
-  useEffect(() => {
-    if (selectedUser?.isGroup) {
-      handleFetchChatSentiment();
-    } else {
-      setSentimentData(null);
-    }
-  }, [selectedUser?._id, selectedUser?.isGroup]);
+
 
   useEffect(() => {
 
@@ -1319,13 +1313,72 @@ const MessageArea = () => {
 
             <div className="ml-auto flex items-center gap-1 sm:gap-4 text-gray-500 relative shrink-0">
               {selectedUser?.isGroup ? (
-                <button 
-                  onClick={() => setShowDrawingCanvas(true)}
-                  className="hover:text-purple-500 hover:bg-purple-50 p-1.5 sm:p-2 rounded-full transition-colors"
-                  title="Group Whiteboard"
-                >
-                  <Palette size={24} />
-                </button>
+                <div ref={menuRef} className="relative">
+                  <button 
+                    onClick={() => setShowMenu(!showMenu)} 
+                    className="hover:text-gray-700 hover:bg-gray-50 p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer"
+                    title="Group Options"
+                  >
+                    <MoreVertical size={24} />
+                  </button>
+
+                  {showMenu && (
+                    <div className="absolute top-12 right-0 bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl w-64 z-50 flex flex-col overflow-hidden text-white font-sans animate-in fade-in duration-150">
+                      {/* 1. Group Whiteboard */}
+                      <button 
+                        onClick={() => { setShowMenu(false); setShowDrawingCanvas(true); }} 
+                        className="w-full text-left px-4 py-3 text-sm text-purple-400 hover:bg-slate-800 flex items-center gap-3 font-bold border-b border-slate-800 transition cursor-pointer"
+                      >
+                        <Palette size={18} className="text-purple-400 shrink-0" />
+                        <span>Group Whiteboard</span>
+                      </button>
+
+                      {/* 2. The AI Features Hub */}
+                      <button 
+                        onClick={() => { setShowMenu(false); setShowAIHubModal(true); }} 
+                        className="w-full text-left px-4 py-3 text-sm text-indigo-400 hover:bg-slate-800 flex items-center gap-3 font-bold border-b border-slate-800 transition cursor-pointer"
+                      >
+                        <Sparkles size={18} className="text-indigo-400 animate-pulse shrink-0" />
+                        <span>The AI Features Hub</span>
+                      </button>
+
+                      {/* 3. Theme */}
+                      <button 
+                        onClick={() => setShowThemeMenu(!showThemeMenu)} 
+                        className="w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-3 font-semibold border-b border-slate-800 transition cursor-pointer"
+                      >
+                        <Edit3 size={18} className="text-blue-400 shrink-0" />
+                        <span className="flex-1">Theme: {THEMES[chatTheme]?.name || "Default"}</span>
+                      </button>
+                      {showThemeMenu && (
+                        <div className="bg-slate-950 border-b border-slate-800">
+                          {Object.keys(THEMES).map(key => (
+                            <button 
+                              key={key} 
+                              onClick={() => { changeTheme(key); setShowMenu(false); }}
+                              className={`w-full text-left px-8 py-2 text-xs hover:bg-slate-800 transition cursor-pointer ${chatTheme === key ? 'font-bold text-indigo-400' : 'text-slate-400'}`}
+                            >
+                              {THEMES[key].name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 4. AI Chat Vibe & Sentiment Meter */}
+                      <button 
+                        onClick={() => { 
+                          setShowMenu(false); 
+                          handleFetchChatSentiment(); 
+                          setShowSentimentModal(true); 
+                        }} 
+                        className="w-full text-left px-4 py-3 text-sm text-emerald-400 hover:bg-slate-800 flex items-center gap-3 font-bold transition cursor-pointer"
+                      >
+                        <BarChart2 size={18} className="text-emerald-400 shrink-0" />
+                        <span>AI Chat Vibe & Sentiment Meter</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   {!selectedUser?.isAI && (
@@ -2113,24 +2166,7 @@ const MessageArea = () => {
               )
             }
           >
-            {/* GROUP AI VIBE BADGE IN MESSAGE STREAM */}
-            {selectedUser?.isGroup && (
-              <div className="flex justify-center mb-4 w-full font-sans">
-                <div className="bg-slate-900 border border-slate-800 rounded-full px-4 py-1.5 shadow-md flex items-center gap-2 text-xs text-slate-300 font-sans">
-                  <BarChart2 size={14} className="text-emerald-400" />
-                  <span className="font-bold text-slate-200">Group AI Vibe:</span>
-                  <span className="font-semibold text-emerald-400">{sentimentData?.vibe || "🔥 Warm & Active"}</span>
-                  <span className="bg-slate-800 text-cyan-300 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                    {sentimentData?.score || "88% Positive"}
-                  </span>
-                  {sentimentData?.summary && (
-                    <span className="text-[11px] text-slate-400 italic hidden sm:inline truncate max-w-[220px]">
-                      ({sentimentData.summary})
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+
 
             {Array.isArray(messages) && messages.map(
               (msg, index) => {
