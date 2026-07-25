@@ -33,7 +33,8 @@ import {
   Bot,
   BarChart2,
   Code2,
-  FileText
+  FileText,
+  MessageSquare
 } from "lucide-react";
 
 
