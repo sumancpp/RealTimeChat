@@ -108,13 +108,25 @@ const formatLastSeen = (date) => {
 const THEMES = {
   default: {
     bg: "bg-[#efeae2]",
+    headerBg: "bg-white border-b border-gray-300 text-gray-800",
+    inputBg: "bg-white border-t border-gray-300 text-gray-800",
+    inputTextBg: "bg-slate-100 text-gray-800",
+    titleText: "text-[#0b2a5b]",
+    subtitleText: "text-gray-500",
+    iconColor: "text-gray-700",
     myBubble: "bg-[#d9fdd3] text-gray-800",
     otherBubble: "bg-white text-gray-800",
     font: "font-sans",
     name: "Default"
   },
   cyberpunk: {
-    bg: "bg-gradient-to-br from-gray-900 via-purple-900 to-black animate-gradient",
+    bg: "bg-gradient-to-br from-gray-950 via-purple-950 to-black animate-gradient",
+    headerBg: "bg-gray-900/95 backdrop-blur-md border-b border-purple-500/40 text-purple-200",
+    inputBg: "bg-gray-900/95 backdrop-blur-md border-t border-purple-500/40 text-purple-200",
+    inputTextBg: "bg-gray-950 border border-purple-500/40 text-purple-100 placeholder-purple-400/60",
+    titleText: "text-purple-300 font-bold",
+    subtitleText: "text-purple-400/80",
+    iconColor: "text-purple-400",
     myBubble: "bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white border border-fuchsia-400/30",
     otherBubble: "bg-gradient-to-r from-gray-800 to-gray-700 text-white border border-gray-600",
     font: "font-mono",
@@ -122,13 +134,25 @@ const THEMES = {
   },
   sunset: {
     bg: "bg-gradient-to-br from-orange-100 via-rose-100 to-yellow-100 animate-gradient",
+    headerBg: "bg-white/85 backdrop-blur-md border-b border-rose-200 text-rose-900",
+    inputBg: "bg-white/85 backdrop-blur-md border-t border-rose-200 text-rose-900",
+    inputTextBg: "bg-rose-50/80 border border-rose-200 text-rose-900 placeholder-rose-400",
+    titleText: "text-rose-900 font-bold",
+    subtitleText: "text-rose-600",
+    iconColor: "text-rose-600",
     myBubble: "bg-gradient-to-r from-orange-500 to-rose-500 text-white",
-    otherBubble: "bg-white/80 backdrop-blur-md text-gray-800 border border-white/50",
+    otherBubble: "bg-white/90 backdrop-blur-md text-gray-800 border border-white/50",
     font: "font-sans",
     name: "Sunset Bliss"
   },
   ocean: {
     bg: "bg-gradient-to-br from-cyan-100 via-blue-100 to-indigo-100 animate-gradient",
+    headerBg: "bg-white/85 backdrop-blur-md border-b border-cyan-200 text-cyan-950",
+    inputBg: "bg-white/85 backdrop-blur-md border-t border-cyan-200 text-cyan-950",
+    inputTextBg: "bg-cyan-50/80 border border-cyan-200 text-cyan-950 placeholder-cyan-500",
+    titleText: "text-cyan-950 font-bold",
+    subtitleText: "text-cyan-700",
+    iconColor: "text-cyan-700",
     myBubble: "bg-gradient-to-r from-cyan-600 to-blue-600 text-white",
     otherBubble: "bg-white/90 backdrop-blur-md text-blue-900 border border-white/50",
     font: "font-serif",
@@ -136,6 +160,12 @@ const THEMES = {
   },
   forest: {
     bg: "bg-gradient-to-br from-green-50 via-emerald-100 to-teal-50 animate-gradient",
+    headerBg: "bg-white/85 backdrop-blur-md border-b border-emerald-200 text-emerald-950",
+    inputBg: "bg-white/85 backdrop-blur-md border-t border-emerald-200 text-emerald-950",
+    inputTextBg: "bg-emerald-50/80 border border-emerald-200 text-emerald-950 placeholder-emerald-500",
+    titleText: "text-emerald-950 font-bold",
+    subtitleText: "text-emerald-700",
+    iconColor: "text-emerald-700",
     myBubble: "bg-gradient-to-r from-emerald-600 to-teal-600 text-white",
     otherBubble: "bg-white/90 backdrop-blur-md text-emerald-900 border border-white/50",
     font: "font-sans",
@@ -1260,7 +1290,7 @@ const MessageArea = () => {
         <>
 
           {/* HEADER */}
-          <div className="w-full h-[70px] min-h-[70px] shrink-0 bg-white border-b border-gray-300 flex items-center px-4 shadow-sm z-50">
+          <div className={`w-full h-[70px] min-h-[70px] shrink-0 flex items-center px-4 shadow-sm z-50 transition-colors duration-300 ${THEMES[chatTheme]?.headerBg || 'bg-white border-b border-gray-300'}`}>
 
             <button
               onClick={() => {
@@ -1275,13 +1305,13 @@ const MessageArea = () => {
 
               <ArrowLeft
                 size={24}
-                className="text-gray-700"
+                className={THEMES[chatTheme]?.iconColor || "text-gray-700"}
               />
 
             </button>
 
             <div 
-              className={`flex items-center flex-1 min-w-0 ${selectedUser?.isGroup ? 'cursor-pointer hover:bg-gray-50 py-1 px-2 -ml-2 rounded-xl transition-colors' : ''}`}
+              className={`flex items-center flex-1 min-w-0 ${selectedUser?.isGroup ? 'cursor-pointer hover:opacity-80 py-1 px-2 -ml-2 rounded-xl transition-colors' : ''}`}
               onClick={() => {
                   if (selectedUser?.isGroup) {
                       setShowGroupInfo(true);
@@ -1294,12 +1324,12 @@ const MessageArea = () => {
                   defaultProfile
                 }
                 alt="profile"
-                className="w-12 h-12 rounded-full object-cover shrink-0"
+                className="w-12 h-12 rounded-full object-cover shrink-0 border border-slate-700/20"
               />
 
               <div className="ml-3 truncate">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-[#0b2a5b] truncate">
+                    <h2 className={`text-lg font-semibold truncate ${THEMES[chatTheme]?.titleText || 'text-[#0b2a5b]'}`}>
                       {
                         selectedUser?.isGroup 
                           ? selectedUser.groupName 
@@ -1311,7 +1341,7 @@ const MessageArea = () => {
                     )}
                 </div>
 
-                <p className="text-xs text-gray-500 truncate">
+                <p className={`text-xs truncate ${THEMES[chatTheme]?.subtitleText || 'text-gray-500'}`}>
                   {
                     selectedUser?.isGroup 
                       ? `${selectedUser.participants?.length || 0} participants`
@@ -2941,7 +2971,7 @@ ${msg.sender?.toString() ===
                 onSubmit={
                   handleSendMessage
                 }
-                className="w-full bg-white px-2 sm:px-3 py-2 border-t border-gray-300 flex items-center gap-2"
+                className={`w-full px-2 sm:px-3 py-2 flex items-center gap-2 transition-colors duration-300 ${THEMES[chatTheme]?.inputBg || 'bg-white border-t border-gray-300'}`}
               >
 
               {/* EMOJI */}
@@ -2952,6 +2982,7 @@ ${msg.sender?.toString() ===
                     (prev) => !prev
                   )
                 }
+                className={THEMES[chatTheme]?.iconColor || "text-gray-700"}
               >
 
                 <Smile size={22} />
@@ -2960,7 +2991,7 @@ ${msg.sender?.toString() ===
 
 
               {/* IMAGE */}
-              <label className="cursor-pointer">
+              <label className={`cursor-pointer ${THEMES[chatTheme]?.iconColor || "text-gray-700"}`}>
 
                 <ImagePlus size={22} />
 
@@ -3020,7 +3051,7 @@ max-h-[220px]
 px-4
 py-2.5
 rounded-3xl
-${isGhostMode ? 'bg-purple-50 border-2 border-purple-500/80 text-purple-950 font-medium' : 'bg-slate-100'}
+${isGhostMode ? 'bg-purple-50 border-2 border-purple-500/80 text-purple-950 font-medium' : (THEMES[chatTheme]?.inputTextBg || 'bg-slate-100 text-gray-800')}
 outline-none
 overflow-y-auto
 text-sm
