@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Send, Sparkles, Film, Palette, Music, Phone, Users, CheckCheck, Image, Trash2, Reply, Ghost, Swords, ShieldAlert, Cpu, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Film, Palette, Music, Phone, Users, CheckCheck, Image, Trash2, Reply, Ghost, Swords, ShieldAlert, Cpu, MessageSquare, Mic, Eye, Bot, BarChart2, Languages, Code2, FileText, Lock, Search, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -38,6 +38,21 @@ const About = () => {
             usage: "In any Group Chat, click the Fedora Hat & Sunglasses Incognito icon in the message input bar to toggle Incognito Mode ON or OFF." 
         },
         { 
+            icon: <Eye size={20} className="text-rose-400" />, 
+            text: "View-Once Media Disappear: Send photos or videos that recipients can open only once before self-destructing forever.",
+            usage: "Select a photo in chat → tap the ① icon before sending to mark it as View-Once media!" 
+        },
+        { 
+            icon: <Mic size={20} className="text-teal-400" />, 
+            text: "Voice Pitch Modifier Notes: Record voice notes with fun pitch modification filters like Robot 🤖, Chipmunk 🐿️, Deep Male 🎙️, and Echo 🔊.",
+            usage: "Hold the microphone icon to record → select a voice pitch filter before sending to surprise your friends!" 
+        },
+        { 
+            icon: <BarChart2 size={20} className="text-violet-400" />, 
+            text: "AI Chat Sentiment & Vibe Meter: Analyzes conversation tone in real-time and displays a live vibe score (Positive/Neutral/Spicy) with mood insights.",
+            usage: "Open the 3-dot (⋮) menu in any chat → click '🤖 AI Features Hub' → select 'AI Chat Vibe Meter'." 
+        },
+        { 
             icon: <Music size={20} className="text-pink-400" />, 
             text: "AI Mood Music: Automatically detects chat vibes and suggests playable YouTube Music cards.",
             usage: "Click the Music (🎵) icon next to the chat input to type '@music' and hit send." 
@@ -59,23 +74,29 @@ const About = () => {
         },
         { 
             icon: <Palette size={20} className="text-indigo-400" />, 
-            text: "Custom Theming Engine: Personalize every chat with animated backgrounds like Cyberpunk or Sunset.",
+            text: "Custom Theming Engine: Personalize every chat with animated backgrounds like Cyberpunk, Sunset, or OLED Midnight.",
             usage: "Open the 3-dot (⋮) menu in any 1-on-1 chat, select 'Theme', and choose your favorite." 
         }
     ];
 
     const standardFeatures = [
         { icon: <Phone size={18} className="text-emerald-400" />, text: "WebRTC Audio & Video Calls: High-quality, real-time face-to-face and voice calling." },
-        { icon: <Users size={18} className="text-cyan-400" />, text: "Group Chats & Admin Controls: Create groups, add participants, and manage permissions." },
-        { icon: <Image size={18} className="text-amber-400" />, text: "WhatsApp-Style Status Updates: Share 24-hour disappearing photo statuses with captions." },
+        { icon: <Users size={18} className="text-cyan-400" />, text: "Group Chats & Admin Controls: Create groups, add/remove participants, promote admins, and edit group info." },
+        { icon: <Image size={18} className="text-amber-400" />, text: "WhatsApp-Style Status Updates: Share 24-hour disappearing photo statuses with captions and viewer lists." },
+        { icon: <Languages size={18} className="text-blue-400" />, text: "AI Language Translator: Instant live translation of chat messages into 10+ languages." },
+        { icon: <Code2 size={18} className="text-emerald-400" />, text: "AI Code Reviewer: Paste code snippets for instant AI syntax and optimization analysis." },
+        { icon: <FileText size={18} className="text-purple-400" />, text: "AI Voice & Chat Transcriber: Speech-to-text transcription and instant long chat thread summaries." },
+        { icon: <Bot size={18} className="text-cyan-400" />, text: "BaatCheet AI Assistant: Smart 24/7 AI companion built right into your contact list." },
+        { icon: <Search size={18} className="text-indigo-400" />, text: "Search by Username: Find friends instantly without sharing phone numbers." },
+        { icon: <Lock size={18} className="text-rose-400" />, text: "Security Question Recovery: Secure account recovery via custom security questions." },
         { icon: <CheckCheck size={18} className="text-indigo-400" />, text: "Read Receipts & Typing Indicators: Real-time 'Typing...' and blue double-tick read receipts." },
-        { icon: <Music size={18} className="text-pink-400" />, text: "Voice Recording & File Sharing: Instantly record voice notes and share images seamlessly." },
+        { icon: <Mic size={18} className="text-pink-400" />, text: "Voice Recording & File Sharing: Instantly record voice notes and share images seamlessly." },
         { icon: <Trash2 size={18} className="text-rose-400" />, text: "Edit & Delete Messages: Correct typos or delete messages for everyone instantly." },
-        { icon: <Reply size={18} className="text-purple-400" />, text: "Reply & Reactions: Threaded replies and quick emoji reactions to individual messages." }
+        { icon: <Reply size={18} className="text-purple-400" />, text: "Reply & Emoji Reactions: Threaded replies and quick emoji reactions to individual messages." }
     ];
 
     return (
-        <div className="min-h-screen bg-[#05070e] text-slate-100 overflow-y-auto pb-20 relative">
+        <div className="min-h-screen bg-[#05070e] text-slate-100 overflow-y-auto pb-20 relative font-sans">
             {/* Cyber Ambient Glowing Blobs */}
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl animate-glow pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2.5s' }} />
@@ -109,87 +130,91 @@ const About = () => {
                     </p>
                 </div>
 
-                {/* Features Section */}
+                {/* Crazy Features Section */}
                 <div className="glass-panel rounded-3xl p-6 sm:p-10 shadow-2xl border border-cyan-500/20 mb-10 text-slate-100 backdrop-blur-2xl">
                     <h3 className="text-xl font-extrabold text-white mb-6 flex items-center gap-2.5 border-b border-slate-800 pb-4">
-                        <Sparkles className="text-amber-400" /> Mind-Blowing Features
+                        <Sparkles className="text-amber-400" size={22} /> 🔥 Exclusive Interactive Features
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                        {crazyFeatures.map((feat, idx) => (
-                            <div key={idx} className="flex flex-col gap-2.5 p-5 rounded-2xl glass-card border border-cyan-500/10 glass-card-hover">
-                                <div className="flex items-start gap-3.5">
-                                    <div className="mt-0.5 p-2 rounded-xl bg-[#090d18] border border-cyan-500/20">{feat.icon}</div>
-                                    <p className="text-slate-100 text-sm leading-relaxed font-bold">{feat.text}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {crazyFeatures.map((feat, index) => (
+                            <div key={index} className="p-5 rounded-2xl bg-[#090d18] border border-cyan-500/15 flex flex-col gap-2.5 shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                                        {feat.icon}
+                                    </div>
+                                    <h4 className="font-bold text-sm text-white">{feat.text.split(':')[0]}</h4>
                                 </div>
-                                <div className="mt-1 pl-[3.25rem]">
-                                    <p className="text-xs text-slate-400 bg-[#090d18]/80 p-3 rounded-xl border border-slate-800 font-medium">
-                                        <span className="font-bold text-cyan-400">How to use: </span>{feat.usage}
-                                    </p>
+                                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                                    {feat.text.split(':').slice(1).join(':')}
+                                </p>
+                                <div className="mt-2 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-[11px] text-cyan-300 font-semibold">
+                                    💡 <span className="font-bold text-white">How to use:</span> {feat.usage}
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <h3 className="text-lg font-extrabold text-white mb-6 flex items-center gap-2 border-b border-slate-800 pb-4">
-                        <Cpu className="text-cyan-400" /> Core Platform Capabilities
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {standardFeatures.map((feat, idx) => (
-                            <div key={idx} className="flex items-start gap-3 p-3.5 rounded-xl bg-[#090d18]/50 border border-slate-800">
-                                <div className="mt-0.5">{feat.icon}</div>
-                                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">{feat.text}</p>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Feedback Form Section */}
-                <div className="glass-panel rounded-3xl p-8 sm:p-10 shadow-2xl border border-cyan-500/20 text-slate-100 backdrop-blur-2xl">
-                    <div className="max-w-2xl mx-auto">
-                        <h3 className="text-2xl font-extrabold mb-2 text-center text-white">We'd love your feedback!</h3>
-                        <p className="text-slate-400 text-xs sm:text-sm text-center mb-8 font-medium">Have a feature idea or found an issue? Let us know directly.</p>
-                        
-                        {sent && (
-                            <div className="p-3 mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold text-center">
-                                Thank you! Your default mail app has been opened.
+                {/* Standard Features Section */}
+                <div className="glass-panel rounded-3xl p-6 sm:p-10 shadow-2xl border border-cyan-500/20 mb-10 text-slate-100 backdrop-blur-2xl">
+                    <h3 className="text-xl font-extrabold text-white mb-6 flex items-center gap-2.5 border-b border-slate-800 pb-4">
+                        <Cpu className="text-cyan-400" size={22} /> ⚡ Powerful Core & AI Features
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {standardFeatures.map((feat, index) => (
+                            <div key={index} className="p-4 rounded-2xl bg-[#090d18] border border-slate-800/80 flex items-center gap-3.5 shadow-md">
+                                <div className="p-2 rounded-xl bg-slate-900 border border-slate-800">
+                                    {feat.icon}
+                                </div>
+                                <p className="text-xs text-slate-200 font-medium leading-relaxed">{feat.text}</p>
                             </div>
-                        )}
+                        ))}
+                    </div>
+                </div>
 
-                        <form onSubmit={handleFeedbackSubmit} className="space-y-5">
+                {/* Feedback Section */}
+                <div className="glass-panel rounded-3xl p-6 sm:p-10 shadow-2xl border border-cyan-500/20 text-slate-100 backdrop-blur-2xl">
+                    <h3 className="text-xl font-extrabold text-white mb-2 flex items-center gap-2.5">
+                        <Send className="text-cyan-400" size={22} /> Send Us Feedback
+                    </h3>
+                    <p className="text-slate-400 text-xs mb-6 font-medium">Have a suggestion or feature request? We'd love to hear from you!</p>
+
+                    {sent ? (
+                        <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-sm font-bold text-center">
+                            🎉 Thank you for your feedback! Your email client has been opened.
+                        </div>
+                    ) : (
+                        <form onSubmit={handleFeedbackSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Your Name</label>
+                                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Your Name</label>
                                 <input 
-                                    type="text" 
+                                    type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="What should we call you?" 
-                                    className="w-full glass-input rounded-xl px-4 py-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition font-medium"
-                                    required
+                                    placeholder="Enter your name"
+                                    className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white focus:outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Your Feedback</label>
+                                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Your Feedback</label>
                                 <textarea 
                                     value={feedback}
                                     onChange={(e) => setFeedback(e.target.value)}
-                                    placeholder="Tell us what you love, what we should improve, or ideas for the future..." 
-                                    rows={4}
-                                    className="w-full glass-input rounded-xl px-4 py-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition resize-none font-medium"
+                                    placeholder="Tell us what you think or what feature you'd like to see next..."
+                                    rows="4"
                                     required
+                                    className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white focus:outline-none resize-none"
                                 />
                             </div>
-                            <motion.button 
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="submit" 
-                                className="w-full glow-button text-white font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm cursor-pointer"
+                            <button 
+                                type="submit"
+                                className="w-full py-3.5 glow-button text-white font-bold text-xs rounded-xl shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
                             >
-                                <Send size={18} /> Send Direct Feedback
-                            </motion.button>
+                                <Send size={16} /> Submit Feedback
+                            </button>
                         </form>
-                    </div>
+                    )}
                 </div>
-
             </div>
         </div>
     );

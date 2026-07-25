@@ -36,11 +36,11 @@ const BAATCHEET_GROUP = {
             type: 'custom',
             user: BAATCHEET_GROUP_USER,
             bgColor: 'from-purple-600 to-fuchsia-800',
-            title: 'Baatcheet AI',
-            description: 'Chat with our smart AI assistant for instant answers, advice, and help!',
+            title: 'Baatcheet AI Hub',
+            description: 'Access AI Summary, Language Translator, Code Reviewer, Voice Transcriber & Sentiment Meter!',
             icon: '🤖',
-            instruction: 'Click the 🤖 icon at the bottom right corner of your chat list.',
-            caption: 'Your personal AI assistant.',
+            instruction: 'Open 3-dot (⋮) menu in chat → click "🤖 AI Features Hub".',
+            caption: 'Supercharge chats with AI!',
             viewers: []
         },
         {
@@ -128,7 +128,7 @@ const BAATCHEET_GROUP = {
             user: BAATCHEET_GROUP_USER,
             bgColor: 'from-purple-600 to-indigo-900',
             title: 'Ghost Ink Mode',
-            description: 'Send secret self-destructing messages that disintegrate 5s after reveal, displaying real-time "Ghost SMS is seen" status badge to both users.',
+            description: 'Send secret self-destructing messages that disintegrate 5s after reveal, displaying real-time "Ghost SMS is seen" status badge.',
             icon: '👻',
             instruction: 'Open 3-dot (⋮) menu in chat → select Ghost Ink Mode, or type "@ghost your message".',
             caption: 'Self-destructing secret messages!',
@@ -141,7 +141,7 @@ const BAATCHEET_GROUP = {
             user: BAATCHEET_GROUP_USER,
             bgColor: 'from-amber-600 to-orange-700',
             title: 'Mini-Game Duel Hub',
-            description: 'Challenge chat partners to 2-player Table Tennis 🏓, Tic-Tac-Toe ❌⭕, or Rock Paper Scissors ✊✋✌️ with real-time duel permission prompts.',
+            description: 'Challenge chat partners to 2-player Table Tennis 🏓, Tic-Tac-Toe ❌⭕, or Rock Paper Scissors ✊✋✌️ with real-time invitations.',
             icon: '⚔️',
             instruction: 'Open 3-dot (⋮) menu in chat → click "Play Mini-Game Duel" → select a game to send invite!',
             caption: 'Challenge your friends to a duel!',
@@ -158,6 +158,45 @@ const BAATCHEET_GROUP = {
             icon: '🕶️',
             instruction: 'In group chat input bar, tap the Fedora Hat & Sunglasses icon to toggle Incognito Mode.',
             caption: 'Stay completely anonymous in groups!',
+            viewers: []
+        },
+        {
+            _id: 'b12',
+            createdAt: new Date(Date.now() + 11000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-rose-600 to-red-800',
+            title: 'View-Once Media Disappear',
+            description: 'Send photos or videos that can only be opened once by the recipient before self-destructing forever.',
+            icon: '👁️',
+            instruction: 'Select a photo in chat → tap the ① icon before sending to make it View-Once!',
+            caption: 'Private 1-time view media!',
+            viewers: []
+        },
+        {
+            _id: 'b13',
+            createdAt: new Date(Date.now() + 12000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-teal-600 to-emerald-800',
+            title: 'Voice Pitch Shifter Notes',
+            description: 'Record voice notes with pitch modification effects like Robot 🤖, Chipmunk 🐿️, and Deep Male 🎙️.',
+            icon: '🎙️',
+            instruction: 'Hold the microphone icon to record → select a voice pitch filter before sending!',
+            caption: 'Disguise your voice with fun effects!',
+            viewers: []
+        },
+        {
+            _id: 'b14',
+            createdAt: new Date(Date.now() + 13000).toISOString(),
+            type: 'custom',
+            user: BAATCHEET_GROUP_USER,
+            bgColor: 'from-violet-600 to-fuchsia-900',
+            title: 'AI Chat Vibe Meter',
+            description: 'Analyzes conversation tone and displays a live vibe score (Positive/Neutral/Spicy) with mood insights.',
+            icon: '📊',
+            instruction: 'Open 3-dot (⋮) menu in chat → click AI Features Hub → select AI Vibe Meter.',
+            caption: 'Track your chat sentiment live!',
             viewers: []
         }
     ]
@@ -179,8 +218,8 @@ const StatusSection = () => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     // Viewer state
-    const [activeGroup, setActiveGroup] = useState(null); // The user's statuses being viewed
-    const [activeGroupIndex, setActiveGroupIndex] = useState(0); // Which status in the group
+    const [activeGroup, setActiveGroup] = useState(null);
+    const [activeGroupIndex, setActiveGroupIndex] = useState(0);
     const [statusViewTimer, setStatusViewTimer] = useState(0);
     const [showViewers, setShowViewers] = useState(false);
     
@@ -193,7 +232,6 @@ const StatusSection = () => {
     const fetchStatuses = async () => {
         try {
             const res = await axios.get(`${serverUrl}/status`, { withCredentials: true });
-            // Sort to have older statuses first for sequence
             if (Array.isArray(res.data)) {
                 const sortedStatuses = res.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
                 setStatuses(sortedStatuses);
@@ -201,51 +239,41 @@ const StatusSection = () => {
                 setStatuses([]);
             }
         } catch (error) {
-            console.log("Error fetching statuses", error);
+            console.log(error);
         }
     };
 
     useEffect(() => {
         fetchStatuses();
-        const interval = setInterval(fetchStatuses, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-                setShowEmojiPicker(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
+        if (file) {
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
     };
 
-    const handleUpload = async () => {
+    const handleUploadStatus = async () => {
         if (!selectedFile) return;
-
-        const formData = new FormData();
-        formData.append("image", selectedFile);
-        formData.append("caption", caption);
-
         setLoading(true);
+        const formData = new FormData();
+        formData.append('media', selectedFile);
+        formData.append('caption', caption);
+
         try {
-            await axios.post(`${serverUrl}/status/upload`, formData, {
+            await axios.post(`${serverUrl}/status/create`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
             });
-            fetchStatuses();
             setSelectedFile(null);
             setPreviewUrl(null);
             setCaption("");
+            fetchStatuses();
         } catch (error) {
-            console.log("Error uploading status", error);
+            console.log(error);
+            alert("Error uploading status");
         } finally {
             setLoading(false);
         }
@@ -321,8 +349,8 @@ const StatusSection = () => {
             });
             setReplyText("");
             setShowReplySheet(false);
-            dispatch(setSelectedUser(activeGroup.user)); // Navigate to chat
-            setActiveGroup(null); // Close status viewer
+            dispatch(setSelectedUser(activeGroup.user));
+            setActiveGroup(null);
         } catch (error) {
             console.log("Reply error:", error);
         } finally {
@@ -332,7 +360,6 @@ const StatusSection = () => {
 
     const handleDeleteStatus = async (statusId) => {
         try {
-            // Optimistic UI update for instant feedback
             setStatuses(prev => prev.filter(s => s._id !== statusId));
             
             const updatedGroup = { ...activeGroup, statuses: activeGroup.statuses.filter(s => s._id !== statusId) };
@@ -348,11 +375,10 @@ const StatusSection = () => {
         } catch (error) {
             console.error("Failed to delete status", error);
             alert("Failed to delete status.");
-            fetchStatuses(); // Revert state if backend fails
+            fetchStatuses();
         }
     };
 
-    // Group statuses by user
     const groupedStatuses = statuses.reduce((acc, status) => {
         const userId = status.user?._id;
         if (!userId) return acc;
@@ -364,12 +390,9 @@ const StatusSection = () => {
     }, {});
 
     const myGroup = userData?._id ? groupedStatuses[userData._id] : undefined;
-    
-    // Filter out my group from recent updates
     const otherGroupsFromApi = Object.values(groupedStatuses).filter(group => group.user?._id !== userData?._id);
     const otherGroups = [BAATCHEET_GROUP, ...otherGroupsFromApi];
     
-    // Get last status of group to show time
     const getLastStatusTime = (group) => {
         const lastStatus = group.statuses[group.statuses.length - 1];
         return new Date(lastStatus.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -458,33 +481,27 @@ const StatusSection = () => {
                         </div>
                         <div className="p-4 pb-8 sm:pb-4 pr-6 sm:pr-4 bg-gray-900 flex flex-col gap-3 shrink-0 relative w-full box-border">
                             {showEmojiPicker && (
-                                <div className="absolute bottom-full left-4 mb-2 z-50" ref={pickerRef}>
-                                    <EmojiPicker 
-                                        onEmojiClick={(emojiData) => setCaption(prev => prev + emojiData.emoji)}
-                                        theme="dark"
-                                    />
+                                <div className="absolute bottom-20 left-4 z-50 shadow-2xl">
+                                    <EmojiPicker onEmojiClick={(e) => setCaption(prev => prev + e.emoji)} theme="dark" width={300} height={350} />
                                 </div>
                             )}
-                            <div className="flex items-center gap-3 w-full">
-                                <button 
-                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                    className="text-gray-400 hover:text-white p-2"
-                                >
-                                    <Smile size={24} />
+                            <div className="flex items-center gap-2 bg-gray-800 rounded-full px-4 py-2">
+                                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-gray-400 hover:text-white">
+                                    <Smile size={20} />
                                 </button>
                                 <input 
                                     type="text" 
                                     placeholder="Add a caption..." 
-                                    value={caption}
+                                    value={caption} 
                                     onChange={(e) => setCaption(e.target.value)}
-                                    className="flex-1 min-w-0 bg-gray-800 text-white p-3 rounded-full outline-none"
+                                    className="bg-transparent border-none text-white focus:outline-none flex-1 text-sm"
                                 />
                                 <button 
-                                    onClick={handleUpload}
+                                    onClick={handleUploadStatus}
                                     disabled={loading}
-                                    className="bg-green-500 w-12 h-12 flex items-center justify-center rounded-full text-white hover:bg-green-600 disabled:opacity-50 flex-shrink-0 shadow-lg active:scale-95 transition-transform"
+                                    className="bg-green-600 hover:bg-green-500 text-white p-2 rounded-full font-bold transition disabled:opacity-50"
                                 >
-                                    {loading ? <span className="animate-pulse">...</span> : <Send size={20} className="ml-1" />}
+                                    {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send size={18} />}
                                 </button>
                             </div>
                         </div>
@@ -492,222 +509,187 @@ const StatusSection = () => {
                 )}
             </AnimatePresence>
 
-            {/* Status Viewer Modal */}
+            {/* Status Fullscreen Viewer Modal */}
             <AnimatePresence>
                 {activeGroup && (
                     <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black flex flex-col"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-between p-0 sm:p-4 select-none"
                     >
-                        {/* Progress bars segment */}
-                        <div className="flex w-full gap-1 p-2 absolute top-0 z-10">
-                            {Array.isArray(activeGroup.statuses) && activeGroup.statuses.map((_, idx) => (
-                                <div key={idx} className="h-1 flex-1 bg-gray-500/50 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-white transition-all duration-1000 ease-linear" 
-                                        style={{ 
-                                            width: idx < activeGroupIndex ? '100%' : idx === activeGroupIndex ? `${(statusViewTimer / 15) * 100}%` : '0%' 
-                                        }}
-                                    ></div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Header */}
-                        <div className="flex justify-between items-center p-4 mt-4 z-30 absolute top-2 w-full bg-gradient-to-b from-black/50 to-transparent pointer-events-auto">
-                            <div className="flex items-center gap-3">
-                                <img src={activeGroup.user.profileImage || defaultProfile} className="w-10 h-10 rounded-full border border-gray-400" alt="User" />
-                                <div className="text-white drop-shadow-md">
-                                    <h4 className="font-semibold text-shadow">{activeGroup.user.name || activeGroup.user.userName}</h4>
-                                    <p className="text-xs text-gray-200">{new Date(activeGroup.statuses[activeGroupIndex].createdAt).toLocaleTimeString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => setActiveGroup(null)} className="text-white p-2 rounded-full hover:bg-gray-700/50">
-                                    <X size={24} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Image & Navigation Areas */}
-                        <div className="flex-1 relative flex flex-col justify-center bg-black overflow-hidden min-h-0">
-                            {/* Left tap area for previous */}
-                            <div className="absolute left-0 top-0 bottom-0 w-1/3 z-20 cursor-pointer" onClick={prevStatus}></div>
-                            {/* Right tap area for next */}
-                            <div className="absolute right-0 top-0 bottom-0 w-1/3 z-20 cursor-pointer" onClick={nextStatus}></div>
+                        <div className="w-full max-w-md h-full flex flex-col justify-between relative bg-slate-950 sm:rounded-3xl overflow-hidden shadow-2xl border border-slate-800">
                             
-                            <div className="w-full h-full flex items-center justify-center p-0">
-                                {activeGroup.statuses[activeGroupIndex].type === 'custom' ? (
-                                    <div className={`w-full h-full flex flex-col items-center justify-center p-8 bg-gradient-to-br ${activeGroup.statuses[activeGroupIndex].bgColor}`}>
-                                        <motion.div 
-                                            initial={{ scale: 0.5, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                                            key={`icon-${activeGroupIndex}`}
-                                            className="relative mb-8"
+                            {/* Progress Bars */}
+                            <div className="absolute top-3 left-0 right-0 px-3 z-30 flex gap-1">
+                                {activeGroup.statuses.map((s, idx) => (
+                                    <div key={s._id} className="flex-1 bg-white/30 h-1 rounded-full overflow-hidden">
+                                        <div 
+                                            className="bg-white h-full transition-all duration-1000 ease-linear"
+                                            style={{
+                                                width: idx < activeGroupIndex ? '100%' : idx === activeGroupIndex ? `${(statusViewTimer / 15) * 100}%` : '0%'
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Viewer Header */}
+                            <div className="absolute top-6 left-0 right-0 px-4 z-30 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-2 pb-6">
+                                <div className="flex items-center gap-3">
+                                    <img src={activeGroup.user?.profileImage || defaultProfile} className="w-10 h-10 rounded-full object-cover border border-white/50" alt="" />
+                                    <div>
+                                        <h4 className="font-bold text-white text-sm">{activeGroup.user?.name || activeGroup.user?.userName}</h4>
+                                        <p className="text-[11px] text-gray-300 font-medium">
+                                            {new Date(activeGroup.statuses[activeGroupIndex]?.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {activeGroup.user?._id === userData?._id && activeGroup.statuses[activeGroupIndex]?.type !== 'custom' && (
+                                        <button 
+                                            onClick={() => handleDeleteStatus(activeGroup.statuses[activeGroupIndex]._id)} 
+                                            className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/20 hover:bg-rose-500/30 rounded-full transition"
+                                            title="Delete status"
                                         >
-                                            <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-150"></div>
-                                            <div className="text-8xl drop-shadow-2xl relative z-10">
-                                                {activeGroup.statuses[activeGroupIndex].icon}
-                                            </div>
-                                        </motion.div>
-                                        <motion.h2 
-                                            initial={{ y: 20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.1 }}
-                                            key={`title-${activeGroupIndex}`}
-                                            className="text-3xl md:text-4xl font-extrabold text-white text-center mb-6 drop-shadow-md"
-                                        >
-                                            {activeGroup.statuses[activeGroupIndex].title}
-                                        </motion.h2>
-                                        <motion.p 
-                                            initial={{ y: 20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.2 }}
-                                            key={`desc-${activeGroupIndex}`}
-                                            className="text-lg md:text-xl text-white/95 text-center font-medium drop-shadow-sm leading-relaxed"
-                                        >
-                                            {activeGroup.statuses[activeGroupIndex].description}
-                                        </motion.p>
-                                        {activeGroup.statuses[activeGroupIndex].instruction && (
-                                            <motion.div
-                                                initial={{ y: 20, opacity: 0 }}
-                                                animate={{ y: 0, opacity: 1 }}
-                                                transition={{ delay: 0.3 }}
-                                                key={`inst-${activeGroupIndex}`}
-                                                className="mt-8 bg-black/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 max-w-sm shadow-xl w-full"
-                                            >
-                                                <div className="text-white/70 text-xs font-bold uppercase tracking-wider mb-2 text-center flex items-center justify-center gap-2">
-                                                    <span>💡</span> How to use
-                                                </div>
-                                                <p className="text-white text-sm md:text-base text-center font-medium">
-                                                    {activeGroup.statuses[activeGroupIndex].instruction}
-                                                </p>
-                                            </motion.div>
-                                        )}
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
+
+                                    <button onClick={() => setActiveGroup(null)} className="text-white p-2 hover:bg-white/20 rounded-full transition">
+                                        <X size={22} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Media & Content Area */}
+                            <div className="flex-1 flex items-center justify-center relative bg-black w-full overflow-hidden" onClick={nextStatus}>
+                                {activeGroup.statuses[activeGroupIndex]?.type === 'custom' ? (
+                                    <div className={`w-full h-full bg-gradient-to-br ${activeGroup.statuses[activeGroupIndex].bgColor} p-8 flex flex-col justify-center items-center text-center text-white relative`}>
+                                        <div className="text-6xl mb-6 animate-bounce">{activeGroup.statuses[activeGroupIndex].icon}</div>
+                                        <h2 className="text-2xl font-extrabold mb-3 tracking-tight">{activeGroup.statuses[activeGroupIndex].title}</h2>
+                                        <p className="text-sm text-white/90 leading-relaxed mb-6 font-medium max-w-xs">{activeGroup.statuses[activeGroupIndex].description}</p>
+                                        
+                                        <div className="bg-black/30 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-xs font-semibold text-white/90 max-w-xs shadow-lg">
+                                            💡 {activeGroup.statuses[activeGroupIndex].instruction}
+                                        </div>
                                     </div>
                                 ) : (
-                                    <img src={activeGroup.statuses[activeGroupIndex].image} className="w-full h-full object-contain" alt="Status Content" />
+                                    <img 
+                                        src={activeGroup.statuses[activeGroupIndex]?.mediaUrl} 
+                                        className="w-full h-full object-contain max-h-full" 
+                                        alt="Status" 
+                                    />
                                 )}
+
+                                {/* Left / Right Click Nav */}
+                                <div className="absolute left-0 top-16 bottom-16 w-1/3 z-20" onClick={(e) => { e.stopPropagation(); prevStatus(); }} />
+                                <div className="absolute right-0 top-16 bottom-16 w-1/3 z-20" onClick={(e) => { e.stopPropagation(); nextStatus(); }} />
                             </div>
 
-                            {/* Caption */}
-                            {activeGroup.statuses[activeGroupIndex].caption && (
-                                <div className="absolute bottom-24 w-full p-4 text-center z-10 pointer-events-none">
-                                    <div className="inline-block bg-black/60 text-white px-4 py-2 rounded-xl backdrop-blur-sm mx-auto pointer-events-auto">
-                                        {activeGroup.statuses[activeGroupIndex].caption}
-                                    </div>
-                                </div>
-                            )}
+                            {/* Caption & Bottom Controls */}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col items-center gap-3 z-30">
+                                {activeGroup.statuses[activeGroupIndex]?.caption && (
+                                    <p className="text-white text-sm font-medium text-center bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 max-w-[90%] truncate">
+                                        {activeGroup.statuses[activeGroupIndex]?.caption}
+                                    </p>
+                                )}
 
-                            {/* Reply Button Trigger (Only if someone else's status) */}
-                            {activeGroup.user?._id !== userData?._id && activeGroup.user?._id !== 'baatcheet-official' && !showReplySheet && (
-                                <div 
-                                    className="absolute bottom-4 w-full flex flex-col items-center justify-center text-white z-30 cursor-pointer drop-shadow-lg"
-                                    onClick={(e) => { e.stopPropagation(); setShowReplySheet(true); }}
-                                >
-                                    <ChevronUp size={28} className="animate-bounce" />
-                                    <span className="text-sm font-semibold tracking-wide">Reply</span>
-                                </div>
-                            )}
-
-                            {/* Reply Sheet */}
-                            {activeGroup.user?._id !== userData?._id && activeGroup.user?._id !== 'baatcheet-official' && showReplySheet && (
-                                <motion.div 
-                                    initial={{ y: "100%" }}
-                                    animate={{ y: 0 }}
-                                    exit={{ y: "100%" }}
-                                    className="absolute bottom-0 w-full bg-gray-900 p-4 z-40 rounded-t-3xl shadow-2xl flex flex-col gap-3 pb-10 pr-6 sm:pb-6 sm:pr-4 box-border"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <div className="flex justify-between items-center mb-2 px-2">
-                                        <span className="text-white font-semibold">Reply to {activeGroup.user.name || activeGroup.user.userName}</span>
-                                        <button onClick={() => setShowReplySheet(false)} className="text-gray-400 p-1 bg-gray-800 rounded-full hover:bg-gray-700"><X size={20}/></button>
+                                {/* If My Status: Viewers Count Bar */}
+                                {activeGroup.user?._id === userData?._id && activeGroup.statuses[activeGroupIndex]?.type !== 'custom' ? (
+                                    <div 
+                                        onClick={() => setShowViewers(!showViewers)} 
+                                        className="flex items-center gap-2 text-white/90 text-xs bg-white/20 backdrop-blur-md px-4 py-2 rounded-full cursor-pointer hover:bg-white/30 transition font-bold"
+                                    >
+                                        <Eye size={16} /> {activeGroup.statuses[activeGroupIndex]?.viewers?.length || 0} Views
+                                        <ChevronUp size={16} className={`transition-transform ${showViewers ? 'rotate-180' : ''}`} />
                                     </div>
-                                    
-                                    <div className="relative flex items-center gap-2">
-                                        {showReplyEmoji && (
-                                            <div className="absolute bottom-full left-0 mb-2 z-50">
-                                                <EmojiPicker 
-                                                    onEmojiClick={(emojiData) => setReplyText(prev => prev + emojiData.emoji)}
-                                                    theme="dark"
-                                                />
-                                            </div>
-                                        )}
+                                ) : activeGroup.user?._id !== userData?._id ? (
+                                    /* Reply Bar for other users */
+                                    <div className="w-full relative">
                                         <button 
-                                            onClick={() => setShowReplyEmoji(!showReplyEmoji)}
-                                            className="text-gray-400 hover:text-white p-2"
+                                            onClick={() => setShowReplySheet(!showReplySheet)}
+                                            className="w-full py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-xs font-semibold flex items-center justify-center gap-2 hover:bg-white/30 transition"
                                         >
-                                            <Smile size={24} />
+                                            <Send size={14} /> Reply to {activeGroup.user?.name?.split(' ')[0] || 'User'}
+                                        </button>
+                                    </div>
+                                ) : null}
+                            </div>
+
+                            {/* My Viewers Drawer Sheet */}
+                            {showViewers && (
+                                <motion.div 
+                                    initial={{ y: 200 }} 
+                                    animate={{ y: 0 }} 
+                                    exit={{ y: 200 }}
+                                    className="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 rounded-t-3xl p-5 z-40 max-h-60 overflow-y-auto text-white shadow-2xl"
+                                >
+                                    <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                                        <h4 className="font-bold text-sm text-slate-200">Viewed by ({activeGroup.statuses[activeGroupIndex]?.viewers?.length || 0})</h4>
+                                        <button onClick={() => setShowViewers(false)} className="p-1 text-slate-400 hover:text-white"><X size={18} /></button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {activeGroup.statuses[activeGroupIndex]?.viewers?.map((v, i) => (
+                                            <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/50">
+                                                <img src={v.user?.profileImage || defaultProfile} className="w-8 h-8 rounded-full object-cover" alt="" />
+                                                <div>
+                                                    <p className="text-xs font-bold">{v.user?.name || v.user?.userName}</p>
+                                                    <p className="text-[10px] text-slate-400">{new Date(v.viewedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(!activeGroup.statuses[activeGroupIndex]?.viewers || activeGroup.statuses[activeGroupIndex]?.viewers?.length === 0) && (
+                                            <p className="text-center text-slate-500 py-4 text-xs">No views recorded yet.</p>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Reply Input Sheet Modal */}
+                            {showReplySheet && (
+                                <motion.div 
+                                    initial={{ y: 200 }} 
+                                    animate={{ y: 0 }} 
+                                    exit={{ y: 200 }}
+                                    className="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 rounded-t-3xl p-4 z-40 text-white shadow-2xl flex flex-col gap-3"
+                                >
+                                    <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                                        <span className="text-xs font-bold text-slate-300">Reply to {activeGroup.user?.name || activeGroup.user?.userName}</span>
+                                        <button onClick={() => setShowReplySheet(false)} className="text-slate-400 hover:text-white"><X size={18} /></button>
+                                    </div>
+
+                                    {showReplyEmoji && (
+                                        <div className="absolute bottom-16 left-2 z-50 shadow-2xl">
+                                            <EmojiPicker onEmojiClick={(e) => setReplyText(prev => prev + e.emoji)} theme="dark" width={280} height={300} />
+                                        </div>
+                                    )}
+
+                                    <form onSubmit={handleReplySubmit} className="flex items-center gap-2">
+                                        <button type="button" onClick={() => setShowReplyEmoji(!showReplyEmoji)} className="text-slate-400 hover:text-white p-2">
+                                            <Smile size={20} />
                                         </button>
                                         <input 
                                             type="text" 
                                             placeholder="Type a reply..." 
-                                            value={replyText}
+                                            value={replyText} 
                                             onChange={(e) => setReplyText(e.target.value)}
-                                            className="flex-1 min-w-0 bg-gray-800 text-white placeholder-gray-400 p-3 rounded-full outline-none focus:ring-2 focus:ring-green-500"
                                             autoFocus
+                                            className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500"
                                         />
                                         <button 
-                                            onClick={handleReplySubmit}
+                                            type="submit" 
                                             disabled={replying || !replyText.trim()}
-                                            className="bg-green-500 w-12 h-12 flex items-center justify-center rounded-full text-white hover:bg-green-600 disabled:opacity-50 flex-shrink-0 shadow-lg active:scale-95 transition-transform"
+                                            className="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-xl transition disabled:opacity-50"
                                         >
-                                            {replying ? <span className="animate-pulse">...</span> : <Send size={20} className="ml-1" />}
+                                            {replying ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send size={16} />}
                                         </button>
-                                    </div>
+                                    </form>
                                 </motion.div>
                             )}
-                        </div>
 
-                        {/* Viewers (Only if own status) */}
-                        {activeGroup.user?._id === userData?._id && (
-                            <div className="relative z-30">
-                                {showViewers && (
-                                    <motion.div 
-                                        initial={{ y: 50, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        className="absolute bottom-full left-0 right-0 bg-white rounded-t-3xl p-6 text-black min-h-[300px]"
-                                    >
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-xl font-bold">Viewed by {activeGroup.statuses[activeGroupIndex].viewers.length}</h3>
-                                            <button onClick={() => setShowViewers(false)}><X size={20} /></button>
-                                        </div>
-                                        <div className="flex flex-col gap-2 mb-4">
-                                            {Array.isArray(activeGroup.statuses[activeGroupIndex].viewers) && activeGroup.statuses[activeGroupIndex].viewers.map((viewer, i) => (
-                                                <div key={i} className="flex items-center gap-3">
-                                                    <img src={viewer.user.profileImage || defaultProfile} className="w-10 h-10 rounded-full" alt="Viewer" />
-                                                    <div>
-                                                        <h4 className="font-semibold">{viewer.user.name || viewer.user.userName}</h4>
-                                                        <p className="text-xs text-gray-500">{new Date(viewer.viewedAt).toLocaleTimeString()}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {activeGroup.statuses[activeGroupIndex].viewers.length === 0 && (
-                                                <p className="text-gray-500 text-center mt-4">No views yet</p>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                                <div className="flex bg-gray-900 text-white">
-                                    <div 
-                                        className="p-4 flex-1 flex justify-center items-center gap-2 cursor-pointer hover:bg-gray-800"
-                                        onClick={() => setShowViewers(!showViewers)}
-                                    >
-                                        <Eye size={20} />
-                                        <span>{activeGroup.statuses[activeGroupIndex].viewers.length} Viewers</span>
-                                    </div>
-                                    <div 
-                                        className="p-4 flex justify-center items-center cursor-pointer hover:bg-red-500 hover:text-white text-red-400 transition-colors border-l border-gray-700"
-                                        onClick={(e) => { e.stopPropagation(); handleDeleteStatus(activeGroup.statuses[activeGroupIndex]._id); }}
-                                    >
-                                        <Trash2 size={20} />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
