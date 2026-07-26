@@ -276,6 +276,10 @@ const MessageArea = () => {
   const adjustTextareaHeight = (element) => {
     const el = element || textareaRef.current;
     if (el) {
+      if (!el.value || !el.value.trim()) {
+        el.style.height = "44px";
+        return;
+      }
       el.style.height = "44px";
       const newHeight = Math.min(el.scrollHeight, 220); // ~9 lines max
       el.style.height = `${Math.max(44, newHeight)}px`;
@@ -1016,8 +1020,12 @@ const MessageArea = () => {
       setFrontendImage(null);
       setBackendImage(null);
       setIsViewOnceMode(false);
+      setIsGhostMode(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
+      }
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "44px";
       }
 
       // 2. PREPARE FORM DATA FOR SERVER

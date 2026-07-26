@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { serverUrl } from '../config';
-import { Plus, X, Eye, Send, Smile, ChevronUp, Trash2 } from 'lucide-react';
+import { Plus, X, Eye, Send, Smile, ChevronUp, Trash2, Sparkles, UploadCloud, Loader2 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmojiPicker from 'emoji-picker-react';
@@ -247,9 +247,18 @@ const StatusSection = () => {
         fetchStatuses();
     }, []);
 
+    const MAX_STATUS_SIZE_MB = 10;
+    const MAX_STATUS_SIZE_BYTES = MAX_STATUS_SIZE_MB * 1024 * 1024;
+
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (file.size > MAX_STATUS_SIZE_BYTES) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                alert(`Your image size (${fileSizeMB} MB) is too big! Please upload an image under ${MAX_STATUS_SIZE_MB} MB.`);
+                if (e.target) e.target.value = "";
+                return;
+            }
             setSelectedFile(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
@@ -257,13 +266,21 @@ const StatusSection = () => {
 
     const handleUploadStatus = async () => {
         if (!selectedFile) return;
+
+        if (selectedFile.size > MAX_STATUS_SIZE_BYTES) {
+            const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
+            alert(`Your image size (${fileSizeMB} MB) is too big! Please upload an image under ${MAX_STATUS_SIZE_MB} MB.`);
+            return;
+        }
+
         setLoading(true);
         const formData = new FormData();
+        formData.append('image', selectedFile);
         formData.append('media', selectedFile);
         formData.append('caption', caption);
 
         try {
-            await axios.post(`${serverUrl}/status/create`, formData, {
+            await axios.post(`${serverUrl}/status/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
             });
@@ -273,7 +290,8 @@ const StatusSection = () => {
             fetchStatuses();
         } catch (error) {
             console.log(error);
-            alert("Error uploading status");
+            const serverMsg = error.response?.data?.message || "Error uploading status";
+            alert(serverMsg);
         } finally {
             setLoading(false);
         }
@@ -404,14 +422,18 @@ const StatusSection = () => {
             {/* My Status */}
             <div className="flex items-center gap-4 mb-6 relative cursor-pointer p-3 rounded-2xl glass-card border border-cyan-500/20 shadow-lg glass-card-hover">
                 <div className="relative" onClick={() => myGroup ? handleViewStatusGroup(myGroup) : fileInputRef.current.click()}>
-                    <div className={`p-[2px] rounded-full ${myGroup ? 'bg-gradient-to-tr from-cyan-400 to-fuchsia-500 p-[2px]' : ''}`}>
+                    <div className={`p-[2px] rounded-full ${loading ? 'bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500 animate-spin p-[3px]' : myGroup ? 'bg-gradient-to-tr from-cyan-400 to-fuchsia-500 p-[2px]' : ''}`}>
                         <img 
                             src={userData?.profileImage || defaultProfile} 
                             className="w-14 h-14 rounded-full object-cover border-2 border-[#090d18] bg-[#090d18] shadow-md"
                             alt="My Status"
                         />
                     </div>
-                    {!myGroup && (
+                    {loading ? (
+                        <div className="absolute bottom-0 right-0 bg-cyan-500 rounded-full p-1 border-2 border-[#090d18] text-white shadow-lg">
+                            <Loader2 size={12} className="animate-spin" />
+                        </div>
+                    ) : !myGroup && (
                         <div className="absolute bottom-0 right-0 bg-cyan-500 rounded-full p-1 border-2 border-[#090d18] text-white shadow-lg">
                             <Plus size={12} />
                         </div>
@@ -419,8 +441,16 @@ const StatusSection = () => {
                 </div>
                 <div className="flex-1" onClick={() => myGroup ? handleViewStatusGroup(myGroup) : fileInputRef.current.click()}>
                     <h3 className="font-bold text-sm text-white">My Status</h3>
-                    <p className="text-xs text-slate-400 mt-0.5 font-medium">
-                        {myGroup ? getLastStatusTime(myGroup) : "Tap to add status update"}
+                    <p className="text-xs text-slate-400 mt-0.5 font-medium flex items-center gap-1.5">
+                        {loading ? (
+                            <span className="text-cyan-400 font-bold animate-pulse flex items-center gap-1">
+                                <Loader2 size={12} className="animate-spin" /> Uploading status update...
+                            </span>
+                        ) : myGroup ? (
+                            getLastStatusTime(myGroup)
+                        ) : (
+                            "Tap to add status update"
+                        )}
                     </p>
                 </div>
                 {myGroup && (
@@ -474,10 +504,63 @@ const StatusSection = () => {
                         className="fixed inset-0 z-[100] bg-black flex flex-col"
                     >
                         <div className="flex justify-between p-4 text-white bg-black/50 absolute top-0 w-full z-10">
-                            <button onClick={() => { setPreviewUrl(null); setSelectedFile(null); setCaption(""); }} className="p-2 bg-gray-800/80 rounded-full"><X size={24} /></button>
+                            <button 
+                                onClick={() => { if (!loading) { setPreviewUrl(null); setSelectedFile(null); setCaption(""); } }} 
+                                disabled={loading}
+                                className="p-2 bg-gray-800/80 rounded-full disabled:opacity-40"
+                            >
+                                <X size={24} />
+                            </button>
                         </div>
                         <div className="flex-1 flex items-center justify-center p-0 bg-black overflow-hidden min-h-0 relative">
                             <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" />
+
+                            {/* UPLOADING WORK-IN-PROGRESS ANIMATION OVERLAY */}
+                            <AnimatePresence>
+                                {loading && (
+                                    <motion.div 
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20"
+                                    >
+                                        {/* Scanning Light Beam */}
+                                        <motion.div 
+                                            animate={{ y: ["-250%", "250%"] }}
+                                            transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                                            className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#06b6d4] pointer-events-none"
+                                        />
+
+                                        {/* Dual Rotating Gradient Rings */}
+                                        <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+                                            <div className="absolute inset-0 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 border-r-fuchsia-500 animate-spin" />
+                                            <div className="absolute inset-2 rounded-full border-4 border-purple-500/20 border-b-indigo-400 animate-spin [animation-duration:1.5s]" />
+                                            <div className="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                                                <UploadCloud className="w-8 h-8 text-cyan-300 animate-pulse" />
+                                            </div>
+                                        </div>
+
+                                        {/* Text Banner */}
+                                        <h3 className="text-lg font-extrabold text-white tracking-wide flex items-center gap-2">
+                                            <span>Uploading Status Update...</span>
+                                        </h3>
+                                        <p className="text-xs text-cyan-300/90 font-medium mt-1 mb-5 flex items-center gap-1">
+                                            <Sparkles size={14} className="animate-spin text-amber-400" />
+                                            <span>Processing media & saving to cloud...</span>
+                                        </p>
+
+                                        {/* Animated Filling Progress Bar */}
+                                        <div className="w-64 h-2.5 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/40 p-0.5 shadow-inner">
+                                            <motion.div 
+                                                initial={{ width: "8%" }}
+                                                animate={{ width: ["10%", "70%", "98%"] }}
+                                                transition={{ duration: 2.2, ease: "easeInOut", repeat: Infinity }}
+                                                className="h-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-fuchsia-500 rounded-full shadow-md shadow-cyan-500/50"
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                         <div className="p-4 pb-8 sm:pb-4 pr-6 sm:pr-4 bg-gray-900 flex flex-col gap-3 shrink-0 relative w-full box-border">
                             {showEmojiPicker && (
@@ -486,22 +569,23 @@ const StatusSection = () => {
                                 </div>
                             )}
                             <div className="flex items-center gap-2 bg-gray-800 rounded-full px-4 py-2">
-                                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-gray-400 hover:text-white">
+                                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} disabled={loading} className="text-gray-400 hover:text-white disabled:opacity-40">
                                     <Smile size={20} />
                                 </button>
                                 <input 
                                     type="text" 
-                                    placeholder="Add a caption..." 
+                                    placeholder={loading ? "Uploading..." : "Add a caption..."} 
                                     value={caption} 
+                                    disabled={loading}
                                     onChange={(e) => setCaption(e.target.value)}
-                                    className="bg-transparent border-none text-white focus:outline-none flex-1 text-sm"
+                                    className="bg-transparent border-none text-white focus:outline-none flex-1 text-sm disabled:opacity-50"
                                 />
                                 <button 
                                     onClick={handleUploadStatus}
                                     disabled={loading}
-                                    className="bg-green-600 hover:bg-green-500 text-white p-2 rounded-full font-bold transition disabled:opacity-50"
+                                    className="bg-cyan-500 hover:bg-cyan-400 text-white p-2.5 rounded-full font-bold transition disabled:opacity-50 flex items-center justify-center shadow-lg shadow-cyan-500/20"
                                 >
-                                    {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send size={18} />}
+                                    {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                                 </button>
                             </div>
                         </div>

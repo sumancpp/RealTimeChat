@@ -6,11 +6,12 @@ import Message from "../models/message.model.js";
 // Upload Status
 export const uploadStatus = async (req, res) => {
     try {
-        if (!req.file) {
+        const file = req.file || (req.files?.image?.[0] || req.files?.media?.[0]);
+        if (!file) {
             return res.status(400).json({ message: "Image is required" });
         }
 
-        const imageUrl = await uploadOnCloudinary(req.file.path);
+        const imageUrl = await uploadOnCloudinary(file.path);
         
         if (!imageUrl) {
             return res.status(500).json({ message: "Failed to upload image" });

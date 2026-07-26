@@ -95,6 +95,10 @@ const SideBar = () => {
     };
 
     useEffect(() => {
+        fetchGroups();
+    }, []);
+
+    useEffect(() => {
         if (activeTab === "groups") {
             fetchGroups();
         }
@@ -251,140 +255,143 @@ const SideBar = () => {
 
             {/* MAIN CONTENT AREA */}
             <div className='flex-1 overflow-y-auto scrollbar-hide bg-[#05070e] p-3 pb-20'>
-                {activeTab === "chats" && (
-                    <div className='flex flex-col gap-2'>
-                        {(() => {
-                            const displayUsers = Array.isArray(otherUsers) ? otherUsers : [];
+                <div className={activeTab === "chats" ? "flex flex-col gap-2" : "hidden"}>
+                    {(() => {
+                        const displayUsers = Array.isArray(otherUsers) ? otherUsers : [];
 
-                            if (displayUsers.length === 0) {
-                                return (
-                                    <div className="text-center text-slate-500 text-xs mt-12 px-4 font-medium">
-                                        No chats found. Use search to find friends!
+                        if (displayUsers.length === 0) {
+                            return (
+                                <div className="text-center text-slate-500 text-xs mt-12 px-4 font-medium">
+                                    No chats found. Use search to find friends!
+                                </div>
+                            );
+                        }
+
+                        return displayUsers.map((user) => {
+                            const isSelected = selectedUser?._id === user._id;
+                            const isOnline = onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai";
+                            const isGhost = user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS');
+
+                            return (
+                                <div
+                                    key={user._id}
+                                    onClick={() => handleUserClick(user)}
+                                    className={`w-full flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer transition-all duration-200 border ${
+                                        isSelected
+                                            ? "bg-[#12192d] border-cyan-500/40 shadow-lg shadow-cyan-500/10 text-white"
+                                            : "glass-card hover:bg-[#161e36] border-slate-800/80 text-slate-300"
+                                    }`}
+                                >
+                                    <div className='relative flex-shrink-0'>
+                                        <img
+                                            src={user?.profileImage || defaultProfile}
+                                            alt="profile"
+                                            className='w-12 h-12 rounded-full object-cover shadow-sm hover:scale-105 transition-transform bg-[#090d18] border border-cyan-500/20'
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setViewingImage(user?.profileImage || defaultProfile);
+                                            }}
+                                        />
+                                        {isOnline && (
+                                            <span className='absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#05070e] rounded-full' />
+                                        )}
+                                        {user.unreadCount > 0 && (
+                                            <span className='absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-[10px] flex items-center justify-center font-bold shadow-md'>
+                                                {user.unreadCount > 99 ? "99+" : user.unreadCount}
+                                            </span>
+                                        )}
                                     </div>
-                                );
-                            }
 
-                            return displayUsers.map((user) => {
-                                const isSelected = selectedUser?._id === user._id;
-                                const isOnline = onlineUsers?.includes(user?._id) || user?.isAI || user?.userName === "ai";
-                                const isGhost = user?.isLastGhost || user?.lastMessage?.includes('Ghost SMS');
-
-                                return (
-                                    <div
-                                        key={user._id}
-                                        onClick={() => handleUserClick(user)}
-                                        className={`w-full flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer transition-all duration-200 border ${
-                                            isSelected
-                                                ? "bg-[#12192d] border-cyan-500/40 shadow-lg shadow-cyan-500/10 text-white"
-                                                : "glass-card hover:bg-[#161e36] border-slate-800/80 text-slate-300"
-                                        }`}
-                                    >
-                                        <div className='relative flex-shrink-0'>
-                                            <img
-                                                src={user?.profileImage || defaultProfile}
-                                                alt="profile"
-                                                className='w-12 h-12 rounded-full object-cover shadow-sm hover:scale-105 transition-transform bg-[#090d18] border border-cyan-500/20'
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setViewingImage(user?.profileImage || defaultProfile);
-                                                }}
-                                            />
-                                            {isOnline && (
-                                                <span className='absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#05070e] rounded-full' />
-                                            )}
-                                            {user.unreadCount > 0 && (
-                                                <span className='absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-[10px] flex items-center justify-center font-bold shadow-md'>
-                                                    {user.unreadCount > 99 ? "99+" : user.unreadCount}
+                                    <div className='flex-1 overflow-hidden'>
+                                        <div className='flex items-center justify-between'>
+                                            <h2 className='font-bold text-sm text-white truncate'>
+                                                {user?.name || user?.userName}
+                                            </h2>
+                                            {!isOnline && user.lastSeen && (
+                                                <span className="text-[10px] text-slate-500 flex-shrink-0 font-medium">
+                                                    {formatLastSeen(user.lastSeen)}
                                                 </span>
                                             )}
                                         </div>
 
-                                        <div className='flex-1 overflow-hidden'>
-                                            <div className='flex items-center justify-between'>
-                                                <h2 className='font-bold text-sm text-white truncate'>
-                                                    {user?.name || user?.userName}
-                                                </h2>
-                                                {!isOnline && user.lastSeen && (
-                                                    <span className="text-[10px] text-slate-500 flex-shrink-0 font-medium">
-                                                        {formatLastSeen(user.lastSeen)}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <p className={`text-xs truncate mt-0.5 ${
-                                                isGhost 
-                                                    ? 'text-pink-400 font-bold flex items-center gap-1' 
-                                                    : isOnline 
-                                                        ? 'text-emerald-400 font-semibold' 
-                                                        : 'text-slate-400 font-medium'
-                                            }`}>
-                                                {isGhost 
-                                                    ? "Ghost SMS 👻" 
-                                                    : isOnline 
-                                                        ? "Online" 
-                                                        : (user.lastMessage || "Click to start chatting")}
-                                            </p>
-                                        </div>
+                                        <p className={`text-xs truncate mt-0.5 ${
+                                            isGhost 
+                                                ? 'text-pink-400 font-bold flex items-center gap-1' 
+                                                : isOnline 
+                                                    ? 'text-emerald-400 font-semibold' 
+                                                    : 'text-slate-400 font-medium'
+                                        }`}>
+                                            {isGhost 
+                                                ? "Ghost SMS 👻" 
+                                                : isOnline 
+                                                    ? "Online" 
+                                                    : (user.lastMessage || "Click to start chatting")}
+                                        </p>
                                     </div>
-                                );
-                            });
-                        })()}
-                    </div>
-                )}
+                                </div>
+                            );
+                        });
+                    })()}
+                </div>
 
-                {activeTab === "groups" && (
-                    <div className="flex flex-col h-full relative">
-                        <div className="flex-1 overflow-y-auto flex flex-col gap-2">
-                            {Array.isArray(groups) && groups.map((group) => {
-                                const isSelected = selectedUser?._id === group._id;
-                                return (
-                                    <div
-                                        key={group._id}
-                                        onClick={() => handleUserClick(group)}
-                                        className={`w-full flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer transition-all duration-200 border ${
-                                            isSelected
-                                                ? "bg-[#12192d] border-cyan-500/40 shadow-lg shadow-cyan-500/10 text-white"
-                                                : "glass-card hover:bg-[#161e36] border-slate-800/80 text-slate-300"
-                                        }`}
-                                    >
-                                        <img
-                                            src={group.groupProfileImage || defaultProfile}
-                                            alt="group"
-                                            className="w-12 h-12 rounded-full object-cover shadow-sm hover:scale-105 transition-transform bg-[#090d18] border border-cyan-500/20"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setViewingImage(group.groupProfileImage || defaultProfile);
-                                            }}
-                                        />
-                                        <div className="flex-1 overflow-hidden">
-                                            <h2 className="font-bold text-sm text-white truncate">{group.groupName}</h2>
-                                            <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">{group.lastMessage || "No messages yet"}</p>
-                                        </div>
+                <div className={activeTab === "groups" ? "flex flex-col h-full relative" : "hidden"}>
+                    <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+                        {Array.isArray(groups) && groups.map((group) => {
+                            const isSelected = selectedUser?._id === group._id;
+                            return (
+                                <div
+                                    key={group._id}
+                                    onClick={() => handleUserClick(group)}
+                                    className={`w-full flex items-center gap-3.5 p-3 rounded-2xl cursor-pointer transition-all duration-200 border ${
+                                        isSelected
+                                            ? "bg-[#12192d] border-cyan-500/40 shadow-lg shadow-cyan-500/10 text-white"
+                                            : "glass-card hover:bg-[#161e36] border-slate-800/80 text-slate-300"
+                                    }`}
+                                >
+                                    <img
+                                        src={group.groupProfileImage || defaultProfile}
+                                        alt="group"
+                                        className="w-12 h-12 rounded-full object-cover shadow-sm hover:scale-105 transition-transform bg-[#090d18] border border-cyan-500/20"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setViewingImage(group.groupProfileImage || defaultProfile);
+                                        }}
+                                    />
+                                    <div className="flex-1 overflow-hidden">
+                                        <h2 className="font-bold text-sm text-white truncate">{group.groupName}</h2>
+                                        <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">{group.lastMessage || "No messages yet"}</p>
                                     </div>
-                                );
-                            })}
-                            {groups.length === 0 && (
-                                <div className="text-center text-slate-500 text-xs mt-12 font-medium">You are not in any groups yet. Click + below to create one!</div>
-                            )}
-                        </div>
-                        <CreateGroupModal 
-                            isOpen={showGroupModal} 
-                            onClose={() => setShowGroupModal(false)} 
-                            otherUsers={otherUsers}
-                            onGroupCreated={(newGroup) => {
-                                setGroups([newGroup, ...groups]);
-                            }}
-                        />
+                                </div>
+                            );
+                        })}
+                        {groups.length === 0 && (
+                            <div className="text-center text-slate-500 text-xs mt-12 font-medium">You are not in any groups yet. Click + below to create one!</div>
+                        )}
                     </div>
-                )}
+                </div>
 
-                {activeTab === "status" && (
+                <div className={activeTab === "status" ? "block h-full" : "hidden"}>
                     <StatusSection />
-                )}
+                </div>
 
-                {activeTab === "calls" && (
+                <div className={activeTab === "calls" ? "block h-full" : "hidden"}>
                     <CallSection />
-                )}
+                </div>
+
+                <CreateGroupModal 
+                    isOpen={showGroupModal} 
+                    onClose={() => setShowGroupModal(false)} 
+                    otherUsers={otherUsers}
+                    onGroupCreated={(newGroup) => {
+                        const formattedGroup = {
+                            ...newGroup,
+                            lastMessage: "Group created",
+                            lastMessageTime: newGroup.createdAt || new Date().toISOString()
+                        };
+                        setGroups((prev) => [formattedGroup, ...prev.filter(g => g._id !== newGroup._id)]);
+                        fetchGroups();
+                    }}
+                />
             </div>
 
             {/* BOTTOM NAV BAR */}
