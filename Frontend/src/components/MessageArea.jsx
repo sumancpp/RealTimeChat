@@ -42,6 +42,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
 import EmojiPicker from "emoji-picker-react";
+import defaultProfile from "../assets/profile.png";
 
 const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
   const canvasRef = useRef(null);
