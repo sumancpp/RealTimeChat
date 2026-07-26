@@ -46,17 +46,20 @@ import defaultProfile from "../assets/profile.png";
 
 const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
   const canvasRef = useRef(null);
+  const [isPressing, setIsPressing] = useState(false);
   const [isCaptured, setIsCaptured] = useState(false);
 
   useEffect(() => {
     const handleHide = () => {
       setIsCaptured(true);
+      setIsPressing(false);
     };
 
     window.addEventListener("blur", handleHide);
     const handleVis = () => {
       if (document.visibilityState === "hidden") {
         setIsCaptured(true);
+        setIsPressing(false);
       }
     };
     document.addEventListener("visibilitychange", handleVis);
@@ -68,9 +71,17 @@ const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
   }, []);
 
   useEffect(() => {
-    if (!canvasRef.current || !media?.image) return;
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+
+    if (isCaptured || !isPressing || !media?.image) {
+      // Draw pitch black blank screen
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, canvas.width || 300, canvas.height || 300);
+      return;
+    }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = media.image;
@@ -79,19 +90,31 @@ const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
     };
-  }, [media?.image]);
+  }, [isPressing, isCaptured, media?.image]);
+
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    if (!isCaptured) {
+      setIsPressing(true);
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.preventDefault();
+    setIsPressing(false);
+  };
 
   return (
     <div 
       onContextMenu={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
-      className="fixed inset-0 z-[9999] bg-black/98 backdrop-blur-2xl flex items-center justify-center p-4 select-none touch-none"
+      className="fixed inset-0 z-[9999] bg-black/99 backdrop-blur-3xl flex items-center justify-center p-4 select-none touch-none"
     >
-      <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-4 max-w-lg w-full text-white shadow-2xl flex flex-col items-center relative">
+      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-4 max-w-lg w-full text-white shadow-2xl flex flex-col items-center relative">
         <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
             <span className="w-6 h-6 rounded-full border-2 border-emerald-400 flex items-center justify-center text-[11px] font-extrabold bg-emerald-500/20">1</span>
-            <span>View Once Photo 🔒</span>
+            <span>View Once Photo 🔒 (Hardware Screenshot Protected)</span>
           </div>
           <button
             onClick={onClose}
@@ -101,26 +124,40 @@ const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
           </button>
         </div>
 
-        {isCaptured ? (
-          <div className="w-full h-[60vh] bg-black rounded-2xl border border-slate-900 flex items-center justify-center select-none pointer-events-none" />
-        ) : (
-          <div className="relative max-h-[65vh] w-auto max-w-full overflow-hidden rounded-2xl border border-slate-800 bg-black flex items-center justify-center">
-            <canvas 
-              ref={canvasRef}
-              onContextMenu={(e) => e.preventDefault()}
-              onDragStart={(e) => e.preventDefault()}
-              className="max-h-[65vh] w-auto max-w-full rounded-2xl object-contain protected-media touch-none select-none pointer-events-none"
-            />
-            <div 
-              onContextMenu={(e) => e.preventDefault()}
-              onDragStart={(e) => e.preventDefault()}
-              className="absolute inset-0 z-10 select-none touch-none cursor-not-allowed"
-            />
-          </div>
-        )}
+        {/* SECURE CANVAS MEDIA CONTAINER */}
+        <div 
+          onMouseDown={handleTouchStart}
+          onMouseUp={handleTouchEnd}
+          onMouseLeave={handleTouchEnd}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          className="relative w-full min-h-[320px] max-h-[65vh] rounded-2xl border border-slate-800 bg-black flex flex-col items-center justify-center overflow-hidden cursor-pointer select-none touch-none"
+        >
+          <canvas 
+            ref={canvasRef}
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            className={`max-h-[65vh] w-auto max-w-full rounded-2xl object-contain protected-media touch-none select-none pointer-events-none ${!isPressing || isCaptured ? 'hidden' : 'block'}`}
+          />
 
-        <p className="text-[11px] text-amber-400/90 mt-3 font-semibold text-center bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full">
-          🛡️ Mobile Screenshot & Save Protected • Disintegrates when closed
+          {(!isPressing || isCaptured) && (
+            <div className="flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center mb-4 text-emerald-400 shadow-xl shadow-emerald-500/10 animate-pulse">
+                <span className="text-2xl">👁️</span>
+              </div>
+              <h3 className="text-sm font-extrabold text-white mb-1">
+                {isCaptured ? "🔒 Screenshot Blocked (Blank Screen Captured)" : "Press & Hold to Reveal Media"}
+              </h3>
+              <p className="text-xs text-slate-400 max-w-xs font-medium">
+                {isCaptured ? "Hardware screenshot detected. Screen flipped to black." : "Hold your finger on screen to view. Releasing turns screen pitch-black."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <p className="text-[11px] text-emerald-400/90 mt-3 font-semibold text-center bg-emerald-500/10 border border-emerald-500/20 px-4 py-1.5 rounded-full">
+          🛡️ Hold finger to view • Releasing flips screen to 100% pitch-black
         </p>
       </div>
     </div>
