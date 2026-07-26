@@ -1,47 +1,23 @@
-import React, {
-  useEffect
-} from "react";
-
-import {
-  Navigate,
-  Route,
-  Routes
-} from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { serverUrl } from "./config";
 
 import InstallPrompt from "./components/InstallPrompt";
 import CallManager from "./components/CallManager";
-
-import {
-  useDispatch,
-  useSelector
-} from "react-redux";
+import SplashScreen from "./components/SplashScreen";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
-
-import getCurrentUser from "./custumHooks/getCurrentUser";
-import getOtherUsers from "./custumHooks/getOtherUsers";
-
-import {
-  setOnlineUsers,
-  setSocketConnected
-} from "./redux/userSlice";
-
-import {
-  connectSocket,
-  disconnectSocket,
-  getSocket
-} from "./socket";
-
-import { useState } from "react";
-import SplashScreen from "./components/SplashScreen";
-
 import ForgotPassword from "./pages/ForgotPassword";
-import axios from "axios";
-import { serverUrl } from "./config";
+
+import getOtherUsers from "./custumHooks/getOtherUsers";
+import { setUserData, setOnlineUsers, setSocketConnected } from "./redux/userSlice";
+import { connectSocket, disconnectSocket, getSocket } from "./socket";
 
 function urlBase64ToUint8Array(base64String) {
   if (!base64String) return new Uint8Array();
@@ -60,35 +36,39 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 const App = () => {
-
-  getCurrentUser();
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+  const { userData } = useSelector(state => state.user);
 
   getOtherUsers();
 
-  const dispatch = useDispatch();
-
-  const [loading, setLoading] = useState(true);
-
-  const { userData } = useSelector(
-    state => state.user
-  );
-
+  // Unified Initial Authentication & Single Centered Splash Screen
   useEffect(() => {
+    let isMounted = true;
+    const initAuth = async () => {
+      const startTime = Date.now();
+      try {
+        const result = await axios.get(`${serverUrl}/user/current`, { withCredentials: true });
+        if (result.data && isMounted) {
+          dispatch(setUserData(result.data));
+        }
+      } catch (error) {
+        console.log("No active user session");
+      } finally {
+        const elapsedTime = Date.now() - startTime;
+        const remainingSplashTime = Math.max(0, 1400 - elapsedTime);
+        setTimeout(() => {
+          if (isMounted) setLoading(false);
+        }, remainingSplashTime);
+      }
+    };
 
-    const timer =
-      setTimeout(() => {
+    initAuth();
+    return () => { isMounted = false; };
+  }, [dispatch]);
 
-        setLoading(false);
-
-      }, 1500);
-
-    return () =>
-      clearTimeout(timer);
-
-  }, []);
-
+  // Push Notifications Setup
   useEffect(() => {
-
     if (userData?._id && "serviceWorker" in navigator && "PushManager" in window) {
       navigator.serviceWorker.register("/sw.js").then(async (registration) => {
         await navigator.serviceWorker.ready;
@@ -110,135 +90,64 @@ const App = () => {
         }
       }).catch(err => console.log("SW error:", err));
     }
-
   }, [userData?._id]);
 
+  // Socket Connection Manager
   useEffect(() => {
-
-    // USER NOT LOGGED IN
     if (!userData?._id) {
-
       disconnectSocket();
-
       return;
-
     }
 
-    // CONNECT SOCKET
-    connectSocket(
-      userData._id
-    );
+    connectSocket(userData._id);
+    const activeSocket = getSocket();
+    if (!activeSocket) return;
 
-    const activeSocket =
-      getSocket();
+    activeSocket.on("getOnlineUsers", (users) => {
+      dispatch(setOnlineUsers(users));
+    });
 
-    if (!activeSocket)
-      return;
+    activeSocket.on("connect", () => {
+      dispatch(setSocketConnected(true));
+    });
 
-    // ONLINE USERS
-    activeSocket.on(
-      "getOnlineUsers",
-      (users) => {
-
-        dispatch(
-          setOnlineUsers(users)
-        );
-
-      }
-    );
-
-    // CONNECT EVENT
-    activeSocket.on(
-      "connect",
-      () => {
-
-        console.log(
-          "Socket Connected:",
-          activeSocket.id
-        );
-        dispatch(setSocketConnected(true));
-
-      }
-    );
-
-    // DISCONNECT EVENT
-    activeSocket.on(
-      "disconnect",
-      () => {
-
-        console.log(
-          "Socket Disconnected"
-        );
-        dispatch(setSocketConnected(false));
-
-      }
-    );
+    activeSocket.on("disconnect", () => {
+      dispatch(setSocketConnected(false));
+    });
 
     return () => {
-
-      activeSocket.off(
-        "getOnlineUsers"
-      );
-
-      activeSocket.off(
-        "connect"
-      );
-
-      activeSocket.off(
-        "disconnect"
-      );
-
+      activeSocket.off("getOnlineUsers");
+      activeSocket.off("connect");
+      activeSocket.off("disconnect");
     };
-
-  }, [
-    userData,
-    dispatch
-  ]);
+  }, [userData, dispatch]);
 
   if (loading) return <SplashScreen />;
 
   return (
-
     <>
-
       <InstallPrompt />
       <CallManager />
 
       <Routes>
         <Route
           path="/login"
-          element={
-            !userData
-              ? <Login />
-              : <Navigate to="/" />
-          }
+          element={!userData ? <Login /> : <Navigate to="/" />}
         />
 
         <Route
           path="/signup"
-          element={
-            !userData
-              ? <Signup />
-              : <Navigate to="/profile" />
-          }
+          element={!userData ? <Signup /> : <Navigate to="/profile" />}
         />
 
         <Route
           path="/"
-          element={
-            userData
-              ? <Home />
-              : <Navigate to="/login" />
-          }
+          element={userData ? <Home /> : <Navigate to="/login" />}
         />
 
         <Route
           path="/profile"
-          element={
-            userData
-              ? <Profile />
-              : <Navigate to="/signup" />
-          }
+          element={userData ? <Profile /> : <Navigate to="/signup" />}
         />
 
         <Route
@@ -250,13 +159,9 @@ const App = () => {
           path="/about"
           element={<About />}
         />
-
       </Routes>
-
     </>
-
   );
-
 };
 
 export default App;
