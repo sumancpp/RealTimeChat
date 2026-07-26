@@ -661,7 +661,7 @@ const StatusSection = () => {
                                     </div>
                                 ) : (
                                     <img 
-                                        src={activeGroup.statuses[activeGroupIndex]?.mediaUrl} 
+                                        src={activeGroup.statuses[activeGroupIndex]?.image || activeGroup.statuses[activeGroupIndex]?.mediaUrl || activeGroup.statuses[activeGroupIndex]?.media} 
                                         className="w-full h-full object-contain max-h-full" 
                                         alt="Status" 
                                     />
