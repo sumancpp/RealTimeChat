@@ -31,9 +31,14 @@ const messageSchema = new mongoose.Schema({
     },
 
     voice: {
-    type: String,
-    default: ""
-},
+        type: String,
+        default: ""
+    },
+
+    audioTranscript: {
+        type: String,
+        default: ""
+    },
 
     // REPLY FEATURE
     replyTo: {

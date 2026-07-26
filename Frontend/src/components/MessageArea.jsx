@@ -774,25 +774,16 @@ const MessageArea = () => {
         );
 
         const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
-        await axios.post(
-
+        const res = await axios.post(
           endpoint,
-
           formData,
-
           {
-
-            withCredentials:
-              true
-
+            withCredentials: true
           }
-
         );
 
-        if (res.data) {
-          if (res.data._id) {
-            dispatch(addMessage(res.data));
-          }
+        if (res?.data) {
+          dispatch(addMessage(res.data));
         }
 
       }
