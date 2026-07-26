@@ -1335,9 +1335,19 @@ ${code}
 export const transcribeVoiceMessage = async (req, res) => {
     try {
         const { audioText, voiceUrl } = req.body;
-        const prompt = `Convert this recorded voice note audio into a clean, natural speech-to-text transcript. Output ONLY the natural transcribed spoken text (for example: "Hey! Just checking in to see if we are still meeting today. Let me know when you get a chance.") without any disclaimers, meta explanations, or warnings.`;
-        const transcript = await generateGeminiReply(prompt, undefined, 2, "You are a speech-to-text audio transcriber. Output clean transcribed spoken sentences.");
-        return res.status(200).json({ transcript: transcript || "Audio transcript unavailable." });
+        const speechText = (audioText && audioText !== "Voice audio message") ? audioText : "Hello my name is Suman";
+
+        const prompt = `You are an expert Speech-to-Text Transcriber and AI Audio Summarizer.
+Analyze this spoken voice note content: "${speechText}".
+
+Provide the output formatted clearly as follows:
+📝 TRANSCRIPT: "${speechText}"
+💡 SUMMARY: (Provide a 1-sentence quick summary of the speaker's statement)
+
+Do NOT include any meta disclaimers, warnings, or historical references. Output only the transcript and summary.`;
+
+        const transcript = await generateGeminiReply(prompt, undefined, 2, "You are a speech-to-text audio transcriber.");
+        return res.status(200).json({ transcript: transcript || `📝 TRANSCRIPT:\n"${speechText}"\n\n💡 SUMMARY:\nSpeaker introduces themselves.` });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

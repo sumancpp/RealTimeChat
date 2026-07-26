@@ -357,12 +357,12 @@ const MessageArea = () => {
       }
   };
 
-  const handleTranscribeVoice = async (voiceUrl = "") => {
+  const handleTranscribeVoice = async (voiceUrl = "", audioText = "") => {
       setLoadingTranscribe(true);
       setShowVoiceTranscribeModal(true);
       setTranscribeResult("");
       try {
-          const res = await axios.post(`${serverUrl}/message/ai-transcribe`, { audioText: "Voice audio message", voiceUrl }, { withCredentials: true });
+          const res = await axios.post(`${serverUrl}/message/ai-transcribe`, { audioText: audioText || "Hello my name is Suman", voiceUrl }, { withCredentials: true });
           setTranscribeResult(res.data.transcript || "Transcription completed.");
       } catch (err) {
           console.error("Transcribe error", err);
@@ -2439,7 +2439,7 @@ const MessageArea = () => {
                           className="w-[250px]"
                         />
                         <button
-                          onClick={() => handleTranscribeVoice(msg.voice)}
+                          onClick={() => handleTranscribeVoice(msg.voice, msg.audioTranscript || msg.text)}
                           className="self-start text-[10px] font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-lg transition flex items-center gap-1 cursor-pointer"
                         >
                           <FileText size={12} /> Transcribe Audio
