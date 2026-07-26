@@ -60,11 +60,10 @@ const userSlice = createSlice({
         },
 
         updateSidebarOnMessage: (state, action) => {
-            const { newMessage, myId, currentChatId } = action.payload;
+            const { newMessage, myId } = action.payload;
             const senderId = (typeof newMessage.sender === 'object' ? newMessage.sender?._id : newMessage.sender)?.toString();
             const receiverId = (typeof newMessage.receiver === 'object' ? newMessage.receiver?._id : newMessage.receiver)?.toString();
             const myIdStr = myId?.toString();
-            const currentChatIdStr = currentChatId?.toString();
 
             const otherUserId = senderId === myIdStr ? receiverId : senderId;
             if (!otherUserId) return;
@@ -75,15 +74,13 @@ const userSlice = createSlice({
             const index = state.otherUsers.findIndex(u => u._id?.toString() === otherUserId);
             if (index !== -1) {
                 const user = state.otherUsers[index];
+                const currentUnread = user.unreadCount || 0;
                 const updatedUser = { 
                     ...user, 
                     lastMessage: lastMsgText,
-                    lastMessageTime: lastMsgTime
+                    lastMessageTime: lastMsgTime,
+                    unreadCount: senderId !== myIdStr ? currentUnread + 1 : currentUnread
                 };
-                
-                if (senderId !== myIdStr && currentChatIdStr !== otherUserId) {
-                    updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
-                }
                 
                 state.otherUsers.splice(index, 1);
                 state.otherUsers.unshift(updatedUser);
@@ -92,7 +89,7 @@ const userSlice = createSlice({
                     ...newMessage.sender,
                     lastMessage: lastMsgText,
                     lastMessageTime: lastMsgTime,
-                    unreadCount: (senderId !== myIdStr && currentChatIdStr !== otherUserId) ? 1 : 0
+                    unreadCount: senderId !== myIdStr ? 1 : 0
                 };
                 state.otherUsers.unshift(newSender);
             }
