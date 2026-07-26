@@ -168,79 +168,31 @@ const getMessages = () => {
 
                         : newMessage.receiver;
 
-                const currentChatId =
-                    selectedUser._id;
-
-                const myId =
-                    userData._id;
+                const currentChatId = selectedUser?._id;
+                const myId = userData?._id;
 
                 const belongsToCurrentChat =
-
                     (
-                        senderId?.toString() ===
-                        currentChatId?.toString()
-
-                        &&
-
-                        receiverId?.toString() ===
-                        myId?.toString()
-                    )
-
-                    ||
-
+                        senderId?.toString() === currentChatId?.toString() &&
+                        receiverId?.toString() === myId?.toString()
+                    ) ||
                     (
-                        senderId?.toString() ===
-                        myId?.toString()
-
-                        &&
-
-                        receiverId?.toString() ===
-                        currentChatId?.toString()
+                        senderId?.toString() === myId?.toString() &&
+                        receiverId?.toString() === currentChatId?.toString()
                     );
 
-                if (
-                    belongsToCurrentChat
-                ) {
-
-                    dispatch(
-                        addMessage(
-                            newMessage
-                        )
-                    );
-
-                }
-                else {
-
-                    // NOTIFICATION ONLY
-
-                    if (
-
-                        Notification.permission ===
-                        "granted"
-
-                    ) {
-
+                if (belongsToCurrentChat) {
+                    dispatch(addMessage(newMessage));
+                } else {
+                    if (Notification.permission === "granted") {
                         new Notification(
-
                             "BaatCheet",
-
                             {
-
-                                body:
-
-                                    newMessage.message ||
-
-                                    "📷 Image Received",
-
-                                icon:
-                                    "/logo.png"
-
+                                body: newMessage.message || "📷 Image Received",
+                                icon: "/logo.png"
                             }
-
                         );
-
                     }
-
                 }
 
                 // UPDATE SIDEBAR FOR THIS MESSAGE
@@ -249,16 +201,12 @@ const getMessages = () => {
                     myId,
                     currentChatId
                 }));
-
             };
 
-        socket.on(
-            "newMessage",
-            handleNewMessage
-        );
+        socket.on("newMessage", handleNewMessage);
         
         const handleNewGroupMessage = (newMessage) => {
-             if (selectedUser.isGroup && newMessage.groupId === selectedUser._id) {
+             if (selectedUser?.isGroup && newMessage.groupId === selectedUser?._id) {
                  dispatch(addMessage(newMessage));
              } else {
                  if (Notification.permission === "granted") {

@@ -131,3 +131,21 @@ html, body, #root {
   box-shadow: 0 6px 28px rgba(56, 189, 248, 0.55);
   transform: translateY(-1px);
 }
+
+/* Anti-Screenshot & Anti-Download Protection */
+.protected-media {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+@media print {
+  html, body, #root {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}

@@ -2050,12 +2050,16 @@ const MessageArea = () => {
 
           {/* VIEW ONCE MEDIA MODAL */}
           {viewOnceModalMedia && (
-            <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div 
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none"
+            >
               <div className="bg-slate-900 border border-slate-700 rounded-3xl p-4 max-w-lg w-full text-white shadow-2xl flex flex-col items-center relative animate-in zoom-in-95">
                 <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
                   <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
                     <span className="w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-[11px] font-extrabold">1</span>
-                    <span>View Once Photo</span>
+                    <span>View Once Photo 🔒 (Right-Click & Download Protected)</span>
                   </div>
                   <button
                     onClick={async () => {
@@ -2076,14 +2080,25 @@ const MessageArea = () => {
                   </button>
                 </div>
 
-                <img
-                  src={viewOnceModalMedia.image}
-                  alt="View once photo"
-                  className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain border border-slate-800 shadow-2xl"
-                />
+                <div className="relative max-h-[70vh] w-auto max-w-full overflow-hidden rounded-2xl">
+                  <img
+                    src={viewOnceModalMedia.image}
+                    alt="View once photo"
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    draggable={false}
+                    className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain border border-slate-800 shadow-2xl protected-media"
+                  />
+                  {/* Invisible protective shield over View Once photo */}
+                  <div 
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    className="absolute inset-0 z-10"
+                  />
+                </div>
 
-                <p className="text-xs text-slate-400 mt-3 italic">
-                  ⚠️ This photo will disappear once closed and cannot be viewed again.
+                <p className="text-xs text-slate-400 mt-3 italic text-center">
+                  ⚠️ This photo will disappear once closed and cannot be saved, downloaded, or right-clicked.
                 </p>
               </div>
             </div>
@@ -2766,65 +2781,23 @@ ${msg.sender?.toString() ===
           )}
 
           {selectedImage && (
-
             <div
-
-              className="
-    fixed
-    inset-0
-    bg-black/90
-    z-[9999]
-    flex
-    items-center
-    justify-center
-    p-4
-    "
-
-              onClick={() =>
-                setSelectedImage(
-                  null
-                )
-              }
-
+              className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4"
+              onClick={() => setSelectedImage(null)}
             >
-
               <button
-
-                className="
-      absolute
-      top-4
-      right-4
-      text-white
-      text-4xl
-      "
-
+                onClick={() => setSelectedImage(null)}
+                className="absolute top-4 right-4 text-white text-3xl p-2 hover:bg-white/20 rounded-full transition cursor-pointer"
               >
-
-                ×
-
+                ✕
               </button>
-
               <img
-
                 src={selectedImage}
-
                 alt="fullscreen"
-
-                className="
-      max-w-full
-      max-h-full
-      object-contain
-      rounded-lg
-      "
-
-                onClick={(e) =>
-                  e.stopPropagation()
-                }
-
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
               />
-
             </div>
-
           )}
 
           {/* INPUT */}

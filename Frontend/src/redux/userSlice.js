@@ -56,13 +56,16 @@ const userSlice = createSlice({
             const receiverId = typeof newMessage.receiver === 'object' ? newMessage.receiver._id : newMessage.receiver;
             const otherUserId = senderId === myId ? receiverId : senderId;
             
+            const lastMsgText = newMessage.message || (newMessage.image ? "📷 Image" : (newMessage.voice ? "🎤 Voice Message" : ""));
+            const lastMsgTime = newMessage.createdAt || new Date().toISOString();
+
             const index = state.otherUsers.findIndex(u => u._id === otherUserId);
             if (index !== -1) {
                 const user = state.otherUsers[index];
                 const updatedUser = { 
                     ...user, 
-                    lastMessage: newMessage.message || (newMessage.image ? "📷 Image" : (newMessage.voice ? "🎤 Voice Message" : "")),
-                    lastMessageTime: newMessage.createdAt || new Date().toISOString()
+                    lastMessage: lastMsgText,
+                    lastMessageTime: lastMsgTime
                 };
                 
                 if (senderId !== myId && currentChatId !== otherUserId) {
@@ -71,6 +74,14 @@ const userSlice = createSlice({
                 
                 state.otherUsers.splice(index, 1);
                 state.otherUsers.unshift(updatedUser);
+            } else if (typeof newMessage.sender === 'object' && newMessage.sender?._id) {
+                const newSender = {
+                    ...newMessage.sender,
+                    lastMessage: lastMsgText,
+                    lastMessageTime: lastMsgTime,
+                    unreadCount: (senderId !== myId && currentChatId !== otherUserId) ? 1 : 0
+                };
+                state.otherUsers.unshift(newSender);
             }
         },
 

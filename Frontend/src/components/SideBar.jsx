@@ -35,6 +35,7 @@ import defaultProfile from "../assets/profile.png";
 import axios from 'axios';
 
 import { serverUrl } from '../config';
+import { socket, getSocket } from "../socket";
 
 import {
     setOtherUsers,
@@ -96,6 +97,44 @@ const SideBar = () => {
 
     useEffect(() => {
         fetchGroups();
+    }, []);
+
+    useEffect(() => {
+        const activeSocket = getSocket();
+        if (!activeSocket) return;
+
+        const handleRealtimeGroupMessage = (newMessage) => {
+            const groupId = newMessage.groupId || newMessage.conversationId;
+            if (!groupId) return;
+
+            setGroups((prevGroups) => {
+                const index = prevGroups.findIndex(g => g._id === groupId);
+                const senderObj = typeof newMessage.sender === 'object' ? newMessage.sender : null;
+                const senderName = senderObj?.name?.split(' ')[0] || senderObj?.userName || (newMessage.isAnonymous ? "Secret Member" : "Member");
+                const msgBody = newMessage.message || (newMessage.image ? "📷 Image" : (newMessage.voice ? "🎤 Voice" : ""));
+                const lastMsgText = `${senderName}: ${msgBody}`;
+                const lastMsgTime = newMessage.createdAt || new Date().toISOString();
+
+                if (index !== -1) {
+                    const group = prevGroups[index];
+                    const updatedGroup = {
+                        ...group,
+                        lastMessage: lastMsgText,
+                        lastMessageTime: lastMsgTime
+                    };
+                    const rest = prevGroups.filter((_, i) => i !== index);
+                    return [updatedGroup, ...rest];
+                } else {
+                    fetchGroups();
+                    return prevGroups;
+                }
+            });
+        };
+
+        activeSocket.on("newGroupMessage", handleRealtimeGroupMessage);
+        return () => {
+            activeSocket.off("newGroupMessage", handleRealtimeGroupMessage);
+        };
     }, []);
 
     useEffect(() => {
