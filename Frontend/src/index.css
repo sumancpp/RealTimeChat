@@ -6,10 +6,20 @@
   color-scheme: dark;
 }
 
-body {
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #05070e;
   color: #f1f5f9;
-  overflow-x: hidden;
+  touch-action: manipulation;
 }
 
 /* Custom Styled Scrollbar for Cyber Neon Dark Theme */
