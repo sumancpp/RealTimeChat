@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import logoImg from "../assets/logo.jpeg";
 
 const SplashScreen = () => {
     return (
@@ -22,9 +23,9 @@ const SplashScreen = () => {
                         initial={{ scale: 0.85 }}
                         animate={{ scale: [0.95, 1.05, 0.95] }}
                         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        src="/logo.png"
+                        src={logoImg}
                         alt="BaatCheet Logo"
-                        className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 object-contain relative z-10 drop-shadow-[0_20px_50px_rgba(56,189,248,0.5)]"
+                        className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 object-cover rounded-3xl relative z-10 shadow-[0_20px_50px_rgba(56,189,248,0.5)] border border-cyan-500/30"
                     />
                 </div>
 
