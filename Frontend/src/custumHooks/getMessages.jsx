@@ -142,13 +142,11 @@ const getMessages = () => {
     // REALTIME MESSAGE
     useEffect(() => {
 
-        const socket =
-            getSocket();
+        const activeSocket = getSocket() || socket;
 
         if (
-            !socket ||
-            !userData ||
-            !isSocketConnected
+            !activeSocket ||
+            !userData?._id
         ) return;
 
         const handleNewMessage =
@@ -207,7 +205,7 @@ const getMessages = () => {
                 }));
             };
 
-        socket.on("newMessage", handleNewMessage);
+        activeSocket.on("newMessage", handleNewMessage);
         
         const handleNewGroupMessage = (newMessage) => {
              if (selectedUser?.isGroup && newMessage.groupId === selectedUser?._id) {
@@ -222,27 +220,27 @@ const getMessages = () => {
              }
         };
 
-        socket.on("newGroupMessage", handleNewGroupMessage);
+        activeSocket.on("newGroupMessage", handleNewGroupMessage);
 
         const handleMessageEdited = (payload) => {
              dispatch(editMessageRedux(payload));
         };
 
-        socket.on("messageEdited", handleMessageEdited);
+        activeSocket.on("messageEdited", handleMessageEdited);
 
         return () => {
 
-            socket.off(
+            activeSocket.off(
                 "newMessage",
                 handleNewMessage
             );
             
-            socket.off(
+            activeSocket.off(
                 "newGroupMessage",
                 handleNewGroupMessage
             );
 
-            socket.off(
+            activeSocket.off(
                 "messageEdited",
                 handleMessageEdited
             );

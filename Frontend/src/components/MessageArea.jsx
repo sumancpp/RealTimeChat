@@ -78,20 +78,8 @@ const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-
-      ctx.save();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.font = `bold ${Math.max(16, Math.floor(img.width / 20))}px sans-serif`;
-      ctx.rotate((-25 * Math.PI) / 180);
-      const text = `CONFIDENTIAL VIEW ONCE - ${userData?.name || userData?.userName || 'BaatCheet'}`;
-      for (let y = -img.height; y < img.height * 2; y += 100) {
-        for (let x = -img.width; x < img.width * 2; x += 280) {
-          ctx.fillText(text, x, y);
-        }
-      }
-      ctx.restore();
     };
-  }, [media?.image, userData]);
+  }, [media?.image]);
 
   return (
     <div 
@@ -114,11 +102,7 @@ const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
         </div>
 
         {isCaptured ? (
-          <div className="w-full h-64 bg-slate-950 border border-rose-500/40 rounded-2xl flex flex-col items-center justify-center p-6 text-center">
-            <span className="text-3xl mb-2">🔒</span>
-            <p className="text-sm font-bold text-rose-400">Screenshot Attempt Blocked</p>
-            <p className="text-xs text-slate-400 mt-1">Photo contents have been hidden for privacy.</p>
-          </div>
+          <div className="w-full h-[60vh] bg-black rounded-2xl border border-slate-900 flex items-center justify-center select-none pointer-events-none" />
         ) : (
           <div className="relative max-h-[65vh] w-auto max-w-full overflow-hidden rounded-2xl border border-slate-800 bg-black flex items-center justify-center">
             <canvas 
@@ -176,7 +160,8 @@ import {
   setSelectedUser,
   setOtherUsers,
   updateOtherUser,
-  setUserData
+  setUserData,
+  updateSidebarOnMessage
 } from "../redux/userSlice";
 
 import GroupInfoModal from "./GroupInfoModal";
@@ -893,6 +878,11 @@ const MessageArea = () => {
 
         if (res?.data) {
           dispatch(addMessage(res.data));
+          dispatch(updateSidebarOnMessage({
+            newMessage: res.data,
+            myId: userData?._id,
+            currentChatId: selectedUser?._id
+          }));
           liveAudioTranscriptRef.current = "";
         }
 
@@ -1188,8 +1178,18 @@ const MessageArea = () => {
         if (res.data.aiMessage) {
           dispatch(replaceMessageRedux({ tempId, realMessage: res.data.message }));
           dispatch(addMessage(res.data.aiMessage));
+          dispatch(updateSidebarOnMessage({
+            newMessage: res.data.aiMessage,
+            myId: userData?._id,
+            currentChatId: selectedUser?._id
+          }));
         } else if (res.data._id) {
           dispatch(replaceMessageRedux({ tempId, realMessage: res.data }));
+          dispatch(updateSidebarOnMessage({
+            newMessage: res.data,
+            myId: userData?._id,
+            currentChatId: selectedUser?._id
+          }));
         }
       }
 
