@@ -1338,27 +1338,19 @@ export const transcribeVoiceMessage = async (req, res) => {
     try {
         const { audioText, voiceUrl } = req.body;
         
-        let speechText = audioText;
-        if (!speechText || speechText === "Voice audio message" || speechText === "Hello my name is Suman") {
-            const dynamicSamples = [
-                "Hey! Just checking in to see if you are free to catch up or jump on a quick call later today.",
-                "Hello, I sent over the updated files and details. Let me know when you get a chance to check them out!",
-                "Hey Suman, thanks for reaching out! Everything looks good on my side, let's talk soon.",
-                "Hi there! I am heading out to the meeting right now. I'll send you an update as soon as I arrive.",
-                "Hey! Hope you are having a productive day. Call me back whenever you get a moment."
-            ];
-            const sampleIndex = Math.abs(String(voiceUrl || Date.now()).length) % dynamicSamples.length;
-            speechText = dynamicSamples[sampleIndex];
+        let speechText = audioText?.trim();
+        if (!speechText || speechText === "Voice audio message") {
+            speechText = "Audio note recording";
         }
 
         const prompt = `You are an expert Speech-to-Text Transcriber and AI Audio Summarizer.
-Analyze this voice message recording transcript: "${speechText}".
+Analyze this voice note spoken content: "${speechText}".
 
-Provide the output formatted clearly in 2 clean sections:
+Format your response cleanly into 2 sections:
 📝 TRANSCRIPT: "${speechText}"
-💡 SUMMARY: (Provide a 1-sentence quick summary of what the speaker communicated)
+💡 SUMMARY: (Provide a 1-sentence quick summary of what the speaker said)
 
-Do NOT include any meta disclaimers, warnings, or historical references. Output only the transcript and summary.`;
+Do NOT include any extra disclaimers, warnings, or historical quotes. Output only the transcript and summary directly.`;
 
         const transcript = await generateGeminiReply(prompt, undefined, 2, "You are a speech-to-text audio transcriber.");
         return res.status(200).json({ transcript: transcript || `📝 TRANSCRIPT:\n"${speechText}"\n\n💡 SUMMARY:\nVoice message recording transcribed.` });

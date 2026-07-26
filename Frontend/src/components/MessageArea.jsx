@@ -744,6 +744,9 @@ const MessageArea = () => {
 
   }, [selectedUser]);
 
+  const speechRecognitionRef = useRef(null);
+  const liveAudioTranscriptRef = useRef("");
+
   const sendVoiceMessage =
     async (
       audioBlob
@@ -773,6 +776,10 @@ const MessageArea = () => {
 
         );
 
+        if (liveAudioTranscriptRef.current) {
+          formData.append("audioTranscript", liveAudioTranscriptRef.current);
+        }
+
         const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
         const res = await axios.post(
           endpoint,
@@ -784,6 +791,7 @@ const MessageArea = () => {
 
         if (res?.data) {
           dispatch(addMessage(res.data));
+          liveAudioTranscriptRef.current = "";
         }
 
       }
@@ -805,6 +813,33 @@ const MessageArea = () => {
       if (recordingRef.current) return;
 
       recordingRef.current = true;
+      liveAudioTranscriptRef.current = "";
+
+      // Initialize Web Speech API for live spoken transcript
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+
+          recognition.onresult = (event) => {
+            let capturedText = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              capturedText += event.results[i][0].transcript;
+            }
+            if (capturedText) {
+              liveAudioTranscriptRef.current = capturedText;
+            }
+          };
+
+          recognition.start();
+          speechRecognitionRef.current = recognition;
+        } catch (e) {
+          console.log("Speech recognition error:", e);
+        }
+      }
+
       try {
 
         const stream =
@@ -839,11 +874,6 @@ const MessageArea = () => {
         mediaRecorder.ondataavailable =
           (event) => {
 
-            console.log(
-              "Chunk Size:",
-              event.data.size
-            );
-
             if (
               event.data.size > 0
             ) {
@@ -866,10 +896,6 @@ const MessageArea = () => {
                     "audio/webm"
                 }
               );
-            console.log(
-              "Voice Size:",
-              audioBlob.size
-            );
             if (audioBlob.size > 0) {
               setRecordedAudioBlob(audioBlob);
             }
@@ -896,6 +922,11 @@ const MessageArea = () => {
   const stopRecording = () => {
 
     recordingRef.current = false;
+
+    if (speechRecognitionRef.current) {
+      try { speechRecognitionRef.current.stop(); } catch (e) {}
+      speechRecognitionRef.current = null;
+    }
 
     if (
       mediaRecorderRef.current
