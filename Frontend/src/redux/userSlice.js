@@ -50,16 +50,29 @@ const userSlice = createSlice({
             }
         },
 
+        clearUnreadCount: (state, action) => {
+            const userId = action.payload?.toString();
+            if (!userId) return;
+            const index = state.otherUsers.findIndex(u => u._id?.toString() === userId);
+            if (index !== -1) {
+                state.otherUsers[index].unreadCount = 0;
+            }
+        },
+
         updateSidebarOnMessage: (state, action) => {
             const { newMessage, myId, currentChatId } = action.payload;
-            const senderId = typeof newMessage.sender === 'object' ? newMessage.sender._id : newMessage.sender;
-            const receiverId = typeof newMessage.receiver === 'object' ? newMessage.receiver._id : newMessage.receiver;
-            const otherUserId = senderId === myId ? receiverId : senderId;
-            
+            const senderId = (typeof newMessage.sender === 'object' ? newMessage.sender?._id : newMessage.sender)?.toString();
+            const receiverId = (typeof newMessage.receiver === 'object' ? newMessage.receiver?._id : newMessage.receiver)?.toString();
+            const myIdStr = myId?.toString();
+            const currentChatIdStr = currentChatId?.toString();
+
+            const otherUserId = senderId === myIdStr ? receiverId : senderId;
+            if (!otherUserId) return;
+
             const lastMsgText = newMessage.message || (newMessage.image ? "📷 Image" : (newMessage.voice ? "🎤 Voice Message" : ""));
             const lastMsgTime = newMessage.createdAt || new Date().toISOString();
 
-            const index = state.otherUsers.findIndex(u => u._id === otherUserId);
+            const index = state.otherUsers.findIndex(u => u._id?.toString() === otherUserId);
             if (index !== -1) {
                 const user = state.otherUsers[index];
                 const updatedUser = { 
@@ -68,7 +81,7 @@ const userSlice = createSlice({
                     lastMessageTime: lastMsgTime
                 };
                 
-                if (senderId !== myId && currentChatId !== otherUserId) {
+                if (senderId !== myIdStr && currentChatIdStr !== otherUserId) {
                     updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
                 }
                 
@@ -79,7 +92,7 @@ const userSlice = createSlice({
                     ...newMessage.sender,
                     lastMessage: lastMsgText,
                     lastMessageTime: lastMsgTime,
-                    unreadCount: (senderId !== myId && currentChatId !== otherUserId) ? 1 : 0
+                    unreadCount: (senderId !== myIdStr && currentChatIdStr !== otherUserId) ? 1 : 0
                 };
                 state.otherUsers.unshift(newSender);
             }
@@ -109,6 +122,8 @@ export const {
     setSelectedUser,
     
     updateOtherUser,
+
+    clearUnreadCount,
     
     updateSidebarOnMessage,
 

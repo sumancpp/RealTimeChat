@@ -43,7 +43,104 @@ import axios from "axios";
 
 import EmojiPicker from "emoji-picker-react";
 
-import defaultProfile from "../assets/profile.png";
+const ViewOnceCanvasViewer = ({ media, onClose, userData }) => {
+  const canvasRef = useRef(null);
+  const [isCaptured, setIsCaptured] = useState(false);
+
+  useEffect(() => {
+    const handleHide = () => {
+      setIsCaptured(true);
+    };
+
+    window.addEventListener("blur", handleHide);
+    const handleVis = () => {
+      if (document.visibilityState === "hidden") {
+        setIsCaptured(true);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVis);
+
+    return () => {
+      window.removeEventListener("blur", handleHide);
+      document.removeEventListener("visibilitychange", handleVis);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canvasRef.current || !media?.image) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = media.image;
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      ctx.save();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = `bold ${Math.max(16, Math.floor(img.width / 20))}px sans-serif`;
+      ctx.rotate((-25 * Math.PI) / 180);
+      const text = `CONFIDENTIAL VIEW ONCE - ${userData?.name || userData?.userName || 'BaatCheet'}`;
+      for (let y = -img.height; y < img.height * 2; y += 100) {
+        for (let x = -img.width; x < img.width * 2; x += 280) {
+          ctx.fillText(text, x, y);
+        }
+      }
+      ctx.restore();
+    };
+  }, [media?.image, userData]);
+
+  return (
+    <div 
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      className="fixed inset-0 z-[9999] bg-black/98 backdrop-blur-2xl flex items-center justify-center p-4 select-none touch-none"
+    >
+      <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-4 max-w-lg w-full text-white shadow-2xl flex flex-col items-center relative">
+        <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+          <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+            <span className="w-6 h-6 rounded-full border-2 border-emerald-400 flex items-center justify-center text-[11px] font-extrabold bg-emerald-500/20">1</span>
+            <span>View Once Photo 🔒</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md"
+          >
+            Close & Disintegrate ✕
+          </button>
+        </div>
+
+        {isCaptured ? (
+          <div className="w-full h-64 bg-slate-950 border border-rose-500/40 rounded-2xl flex flex-col items-center justify-center p-6 text-center">
+            <span className="text-3xl mb-2">🔒</span>
+            <p className="text-sm font-bold text-rose-400">Screenshot Attempt Blocked</p>
+            <p className="text-xs text-slate-400 mt-1">Photo contents have been hidden for privacy.</p>
+          </div>
+        ) : (
+          <div className="relative max-h-[65vh] w-auto max-w-full overflow-hidden rounded-2xl border border-slate-800 bg-black flex items-center justify-center">
+            <canvas 
+              ref={canvasRef}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              className="max-h-[65vh] w-auto max-w-full rounded-2xl object-contain protected-media touch-none select-none pointer-events-none"
+            />
+            <div 
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              className="absolute inset-0 z-10 select-none touch-none cursor-not-allowed"
+            />
+          </div>
+        )}
+
+        <p className="text-[11px] text-amber-400/90 mt-3 font-semibold text-center bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full">
+          🛡️ Mobile Screenshot & Save Protected • Disintegrates when closed
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const IncognitoIcon = ({ size = 22, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -2048,60 +2145,24 @@ const MessageArea = () => {
             </div>
           )}
 
-          {/* VIEW ONCE MEDIA MODAL */}
+          {/* VIEW ONCE MEDIA MODAL (Mobile Screenshot-Proof Canvas Viewer) */}
           {viewOnceModalMedia && (
-            <div 
-              onContextMenu={(e) => e.preventDefault()}
-              onDragStart={(e) => e.preventDefault()}
-              className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none"
-            >
-              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-4 max-w-lg w-full text-white shadow-2xl flex flex-col items-center relative animate-in zoom-in-95">
-                <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-[11px] font-extrabold">1</span>
-                    <span>View Once Photo 🔒 (Right-Click & Download Protected)</span>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      const msgId = viewOnceModalMedia._id;
-                      setViewOnceModalMedia(null);
-                      if (msgId) {
-                        try {
-                          await axios.post(`${serverUrl}/message/open-view-once/${msgId}`, {}, { withCredentials: true });
-                          dispatch(updateViewOnceRedux({ messageId: msgId }));
-                        } catch (e) {
-                          console.error("Error opening view once message", e);
-                        }
-                      }
-                    }}
-                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md"
-                  >
-                    Close & Disintegrate ✕
-                  </button>
-                </div>
-
-                <div className="relative max-h-[70vh] w-auto max-w-full overflow-hidden rounded-2xl">
-                  <img
-                    src={viewOnceModalMedia.image}
-                    alt="View once photo"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                    draggable={false}
-                    className="max-h-[70vh] w-auto max-w-full rounded-2xl object-contain border border-slate-800 shadow-2xl protected-media"
-                  />
-                  {/* Invisible protective shield over View Once photo */}
-                  <div 
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                    className="absolute inset-0 z-10"
-                  />
-                </div>
-
-                <p className="text-xs text-slate-400 mt-3 italic text-center">
-                  ⚠️ This photo will disappear once closed and cannot be saved, downloaded, or right-clicked.
-                </p>
-              </div>
-            </div>
+            <ViewOnceCanvasViewer 
+              media={viewOnceModalMedia}
+              userData={userData}
+              onClose={async () => {
+                const msgId = viewOnceModalMedia._id;
+                setViewOnceModalMedia(null);
+                if (msgId) {
+                  try {
+                    await axios.post(`${serverUrl}/message/open-view-once/${msgId}`, {}, { withCredentials: true });
+                    dispatch(updateViewOnceRedux({ messageId: msgId }));
+                  } catch (e) {
+                    console.error("Error opening view once message", e);
+                  }
+                }
+              }}
+            />
           )}
 
           {showDrawingCanvas && selectedUser?.isGroup && (

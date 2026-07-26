@@ -40,7 +40,8 @@ import { socket, getSocket } from "../socket";
 import {
     setOtherUsers,
     setUserData,
-    setSelectedUser
+    setSelectedUser,
+    clearUnreadCount
 } from '../redux/userSlice';
 
 const formatLastSeen = (date) => {
@@ -84,6 +85,9 @@ const SideBar = () => {
     const handleUserClick = (user) => {
         if (navigator.vibrate) {
             navigator.vibrate(40);
+        }
+        if (user?._id) {
+            dispatch(clearUnreadCount(user._id));
         }
         dispatch(setSelectedUser(user));
     };
@@ -269,7 +273,7 @@ const SideBar = () => {
                                 <div
                                     key={user._id}
                                     className='flex flex-col items-center min-w-[56px] cursor-pointer group'
-                                    onClick={() => dispatch(setSelectedUser(user))}
+                                    onClick={() => handleUserClick(user)}
                                 >
                                     <div className='relative'>
                                         <img

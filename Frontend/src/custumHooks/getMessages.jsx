@@ -23,7 +23,8 @@ import {
 
 import {
     updateSidebarOnMessage,
-    setSelectedUser
+    setSelectedUser,
+    clearUnreadCount
 } from "../redux/userSlice";
 
 const getMessages = () => {
@@ -39,7 +40,7 @@ const getMessages = () => {
         (state) => state.user
     );
 
-    // FETCH MESSAGES
+    // FETCH MESSAGES & CLEAR UNREAD COUNT
     useEffect(() => {
 
         if (
@@ -53,6 +54,9 @@ const getMessages = () => {
             return;
 
         }
+
+        // Instantly reset unread badge in Redux for this user
+        dispatch(clearUnreadCount(selectedUser._id));
 
         const fetchMessages =
             async () => {
