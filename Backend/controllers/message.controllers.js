@@ -1309,24 +1309,31 @@ export const getChatSentiment = async (req, res) => {
 // 2. AI CODE REVIEWER & BUG DETECTOR
 export const reviewCodeSnippet = async (req, res) => {
     try {
-        const { code, language = "JavaScript" } = req.body;
+        const { code, language } = req.body;
         if (!code) {
             return res.status(400).json({ message: "Code snippet is required" });
         }
 
-        const prompt = `Review the following ${language} code snippet. 
-Check for bugs, syntax errors, security vulnerabilities, or performance issues.
-Provide:
-1. 🔍 Overall Quality & Bug Summary
-2. 🐛 Bugs Detected (if any)
-3. ⚡ Optimized / Fixed Code Solution
+        const langHeader = language && language !== "Auto-Detect" ? `Language: ${language}` : "Auto-detect programming language (e.g. Python, JavaScript, C++, Java, PHP, Go, Rust, SQL)";
 
-Code to review:
-\`\`\`${language}
+        const prompt = `Perform a comprehensive code review on the following code snippet (${langHeader}).
+
+Provide a clear, structured review:
+1. 🔍 Overall Quality & Bug Summary
+2. 🐛 Bugs / Syntax Errors Detected (explain missing quotes, undefined variables, function typos, etc.)
+3. ⚡ Corrected & Optimized Code Solution
+
+Code snippet:
+\`\`\`
 ${code}
 \`\`\``;
 
-        const review = await generateGeminiReply(prompt, undefined, 2, "You are a Senior Principal Software Engineer and Code Reviewer. Be thorough, constructive, and concise.");
+        const review = await generateGeminiReply(
+            prompt, 
+            undefined, 
+            2, 
+            "You are a Senior Principal Software Engineer and Code Reviewer. Identify the exact programming language used (or intended, e.g. Python vs JavaScript). Be constructive, precise, and format code clearly with proper syntax highlighting."
+        );
         return res.status(200).json({ review });
     } catch (error) {
         return res.status(500).json({ message: error.message });

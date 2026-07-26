@@ -444,6 +444,7 @@ const MessageArea = () => {
 
   const [showCodeReviewModal, setShowCodeReviewModal] = useState(false);
   const [codeSnippetText, setCodeSnippetText] = useState("");
+  const [codeReviewLang, setCodeReviewLang] = useState("Auto-Detect");
   const [codeReviewResult, setCodeReviewResult] = useState("");
   const [loadingCodeReview, setLoadingCodeReview] = useState(false);
 
@@ -471,7 +472,10 @@ const MessageArea = () => {
       setLoadingCodeReview(true);
       setCodeReviewResult("");
       try {
-          const res = await axios.post(`${serverUrl}/message/ai-code-review`, { code: codeSnippetText }, { withCredentials: true });
+          const res = await axios.post(`${serverUrl}/message/ai-code-review`, { 
+            code: codeSnippetText,
+            language: codeReviewLang 
+          }, { withCredentials: true });
           setCodeReviewResult(res.data.review || "Code review completed.");
       } catch (err) {
           console.error("Code review error", err);
@@ -2068,10 +2072,31 @@ const MessageArea = () => {
                 </div>
 
                 <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-2 bg-slate-950/70 p-2 rounded-xl border border-slate-800">
+                    <span className="text-xs text-slate-400 font-semibold px-1">Language:</span>
+                    <select
+                      value={codeReviewLang}
+                      onChange={(e) => setCodeReviewLang(e.target.value)}
+                      className="bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-1 text-xs text-blue-300 font-semibold outline-none focus:border-blue-400 cursor-pointer"
+                    >
+                      <option value="Auto-Detect">✨ Auto-Detect Language</option>
+                      <option value="Python">🐍 Python</option>
+                      <option value="JavaScript">🟨 JavaScript</option>
+                      <option value="TypeScript">🟦 TypeScript</option>
+                      <option value="C++">⚡ C++</option>
+                      <option value="Java">☕ Java</option>
+                      <option value="HTML/CSS">🌐 HTML/CSS</option>
+                      <option value="PHP">🐘 PHP</option>
+                      <option value="SQL">🗄️ SQL</option>
+                      <option value="Go">🐹 Go</option>
+                      <option value="Rust">🦀 Rust</option>
+                    </select>
+                  </div>
+
                   <textarea
                     value={codeSnippetText}
                     onChange={(e) => setCodeSnippetText(e.target.value)}
-                    placeholder="Paste your code snippet here (JavaScript, Python, C++, etc.)..."
+                    placeholder="Paste your code snippet here (e.g. print(Hello), console.log(x), etc.)..."
                     className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-blue-200 font-mono outline-none focus:border-blue-500 resize-none"
                   />
 
