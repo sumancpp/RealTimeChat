@@ -5,35 +5,40 @@ const messageSlice = createSlice({
     name: "message",
 
     initialState: {
-
-        messages: []
-
+        messages: [],
+        chatCache: {},
+        loadingChat: false
     },
 
     reducers: {
-
-        setMessages: (
-            state,
-            action
-        ) => {
-
-            state.messages =
-                action.payload;
-
+        setMessages: (state, action) => {
+            if (action.payload && typeof action.payload === "object" && action.payload.chatId) {
+                const { chatId, messages } = action.payload;
+                state.chatCache[chatId] = messages || [];
+                state.messages = messages || [];
+            } else {
+                state.messages = Array.isArray(action.payload) ? action.payload : [];
+            }
+            state.loadingChat = false;
         },
 
-        addMessage: (
-            state,
-            action
-        ) => {
-
-            const exists = state.messages.find(msg => msg._id === action.payload._id);
-            if (!exists) {
-                state.messages.push(
-                    action.payload
-                );
+        switchChat: (state, action) => {
+            const chatId = action.payload;
+            if (chatId && state.chatCache[chatId]) {
+                state.messages = state.chatCache[chatId];
+                state.loadingChat = false;
+            } else {
+                state.messages = [];
+                state.loadingChat = true;
             }
+        },
 
+        addMessage: (state, action) => {
+            const newMsg = action.payload;
+            const exists = state.messages.find(msg => msg._id === newMsg._id);
+            if (!exists) {
+                state.messages.push(newMsg);
+            }
         },
 
         updateSeenMessages: (
@@ -233,6 +238,8 @@ const messageSlice = createSlice({
 export const {
 
     setMessages,
+
+    switchChat,
 
     addMessage,
 

@@ -11,6 +11,7 @@ import {
 
 import {
     setMessages,
+    switchChat,
     addMessage,
     updateSeenMessages,
     clearMessages,
@@ -58,6 +59,9 @@ const getMessages = () => {
         // Instantly reset unread badge in Redux for this user
         dispatch(clearUnreadCount(selectedUser._id));
 
+        // Immediately switch chat (load from cache or clear previous user messages)
+        dispatch(switchChat(selectedUser._id));
+
         const fetchMessages =
             async () => {
 
@@ -76,9 +80,10 @@ const getMessages = () => {
                         );
 
                     dispatch(
-                        setMessages(
-                            result.data
-                        )
+                        setMessages({
+                            chatId: selectedUser._id,
+                            messages: result.data
+                        })
                     );
 
                 } catch (error) {

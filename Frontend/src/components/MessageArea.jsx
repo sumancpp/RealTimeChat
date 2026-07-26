@@ -330,7 +330,7 @@ const MessageArea = () => {
     (state) => state.user
   );
 
-  const { messages } = useSelector(
+  const { messages, loadingChat } = useSelector(
     (state) => state.message
   );
 
@@ -2451,7 +2451,15 @@ const MessageArea = () => {
           >
 
 
-            {Array.isArray(messages) && messages.map(
+            {loadingChat ? (
+              <div className="flex flex-col gap-4 p-4 animate-pulse">
+                <div className="w-48 h-10 bg-slate-800/40 rounded-2xl self-start border border-slate-700/30"></div>
+                <div className="w-64 h-12 bg-cyan-900/30 rounded-2xl self-end border border-cyan-500/20"></div>
+                <div className="w-40 h-10 bg-slate-800/40 rounded-2xl self-start border border-slate-700/30"></div>
+                <div className="w-56 h-12 bg-cyan-900/30 rounded-2xl self-end border border-cyan-500/20"></div>
+              </div>
+            ) : (
+              Array.isArray(messages) && messages.map(
               (msg, index) => {
                   if (msg.message === "@game") {
                       return (
@@ -2891,7 +2899,7 @@ ${msg.sender?.toString() ===
                 </div>
 
               );
-            })}
+            }))}
 
             {aiTypingTargetId && aiTypingTargetId === selectedUser?._id && (
               <div className="flex mb-4 justify-start">
