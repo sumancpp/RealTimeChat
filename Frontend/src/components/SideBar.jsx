@@ -41,7 +41,8 @@ import {
     setOtherUsers,
     setUserData,
     setSelectedUser,
-    clearUnreadCount
+    clearUnreadCount,
+    updateSidebarOnMessage
 } from '../redux/userSlice';
 
 const formatLastSeen = (date) => {
@@ -49,16 +50,12 @@ const formatLastSeen = (date) => {
     const now = new Date();
     const lastSeen = new Date(date);
     const diff = Math.floor((now - lastSeen) / 60000);
+    
     if (diff < 1) return "Just now";
     if (diff < 60) return `${diff}m ago`;
-    const timeString = lastSeen.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    
-    if (now.toDateString() === lastSeen.toDateString()) {
-        return `Today at ${timeString}`;
-    }
-    
-    const dateString = lastSeen.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    return `${dateString} at ${timeString}`;
+    const hours = Math.floor(diff / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
 };
 
 const SideBar = () => {
@@ -104,8 +101,17 @@ const SideBar = () => {
     }, []);
 
     useEffect(() => {
-        const activeSocket = getSocket();
+        const activeSocket = getSocket() || socket;
         if (!activeSocket) return;
+
+        const handleDirectMessage = (newMessage) => {
+            const myId = userData?._id;
+            dispatch(updateSidebarOnMessage({
+                newMessage,
+                myId,
+                currentChatId: selectedUser?._id
+            }));
+        };
 
         const handleRealtimeGroupMessage = (newMessage) => {
             const groupId = newMessage.groupId || newMessage.conversationId;
@@ -135,11 +141,13 @@ const SideBar = () => {
             });
         };
 
+        activeSocket.on("newMessage", handleDirectMessage);
         activeSocket.on("newGroupMessage", handleRealtimeGroupMessage);
         return () => {
+            activeSocket.off("newMessage", handleDirectMessage);
             activeSocket.off("newGroupMessage", handleRealtimeGroupMessage);
         };
-    }, []);
+    }, [userData?._id, selectedUser?._id, dispatch]);
 
     useEffect(() => {
         if (activeTab === "groups") {
