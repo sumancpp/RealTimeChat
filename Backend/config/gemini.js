@@ -28,10 +28,9 @@ const getAvailableClient = () => {
     
     const now = Date.now();
     for (let i = 0; i < keyPool.length; i++) {
-        const index = (currentKeyIndex + i) % keyPool.length;
-        if (now > keyPool[index].exhaustedUntil) {
-            currentKeyIndex = index;
-            return keyPool[index].client;
+        currentKeyIndex = (currentKeyIndex + 1) % keyPool.length;
+        if (now > keyPool[currentKeyIndex].exhaustedUntil) {
+            return keyPool[currentKeyIndex].client;
         }
     }
     
@@ -47,7 +46,7 @@ const getAvailableClient = () => {
     return keyPool[bestIndex].client;
 };
 
-export const GEMINI_MODEL = "gemini-2.5-flash";
+export const GEMINI_MODEL = "gemini-1.5-flash";
 
 // Helper function to pause execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -167,7 +166,7 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5,
                 String(error.message || '').includes('RESOURCE_EXHAUSTED') || error.status === 429 || error.message?.includes("429");
 
             if (isQuotaExceeded) {
-                let waitTime = 60000;
+                let waitTime = 10000;
                 const messageStr = String(error.message || '');
                 
                 const retryMatch = messageStr.match(/retry in ([0-9.]+)s/i);
@@ -181,7 +180,7 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5,
                             if (parsed.error && Array.isArray(parsed.error.details)) {
                                 const retryInfo = parsed.error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'));
                                 if (retryInfo && retryInfo.retryDelay) {
-                                    waitTime = parseRetryDelayMs(retryInfo.retryDelay) ?? 60000;
+                                    waitTime = parseRetryDelayMs(retryInfo.retryDelay) ?? 10000;
                                 }
                             }
                         }

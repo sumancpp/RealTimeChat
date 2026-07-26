@@ -344,7 +344,7 @@ const MessageArea = () => {
     useState(null);
 
   const [editingMessageId, setEditingMessageId] = useState(null);
-  const [isAITypingAnimation, setIsAITypingAnimation] = useState(false);
+  const [aiTypingTargetId, setAiTypingTargetId] = useState(null);
   const [deleteModalTarget, setDeleteModalTarget] = useState(null);
 
   useEffect(() => {
@@ -1194,7 +1194,7 @@ const MessageArea = () => {
                             selectedUser?.isAI;
       
       if (isAiTriggered) {
-          setIsAITypingAnimation(true);
+          setAiTypingTargetId(selectedUser._id);
           // Scroll slightly down to make sure animation is visible
           setTimeout(() => {
               bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1241,7 +1241,7 @@ const MessageArea = () => {
     finally {
 
       setSending(false);
-      setIsAITypingAnimation(false);
+      setAiTypingTargetId(null);
 
     }
 
@@ -2821,11 +2821,11 @@ ${msg.sender?.toString() ===
               );
             })}
 
-            {isAITypingAnimation && (
+            {aiTypingTargetId && aiTypingTargetId === selectedUser?._id && (
               <div className="flex mb-4 justify-start">
                 <div className="relative py-2 px-4 max-w-[80%] sm:max-w-[70%] bg-transparent">
-                  <div className="flex items-center text-gray-500 text-sm font-medium animate-pulse">
-                    <span className="mr-2 text-lg">✨</span> Thinking...
+                  <div className="flex items-center text-cyan-400 text-sm font-semibold animate-pulse gap-1.5">
+                    <span className="text-base">✨</span> BaatCheet AI Thinking...
                   </div>
                 </div>
               </div>
