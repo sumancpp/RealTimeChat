@@ -15,8 +15,8 @@ import Profile from "./pages/Profile";
 import About from "./pages/About";
 import ForgotPassword from "./pages/ForgotPassword";
 
-import getOtherUsers from "./custumHooks/getOtherUsers";
-import { setUserData, setOnlineUsers, setSocketConnected } from "./redux/userSlice";
+import useGetOtherUsers from "./custumHooks/getOtherUsers";
+import { setUserData, setOtherUsers, setOnlineUsers, setSocketConnected } from "./redux/userSlice";
 import { connectSocket, disconnectSocket, getSocket } from "./socket";
 
 function urlBase64ToUint8Array(base64String) {
@@ -40,30 +40,43 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const { userData } = useSelector(state => state.user);
 
-  getOtherUsers();
+  useGetOtherUsers();
 
-  // Unified Initial Authentication & Single Centered Splash Screen
+  // Instant Auth Check & Parallel Contact Pre-fetching
   useEffect(() => {
     let isMounted = true;
-    const initAuth = async () => {
+    const initAuthAndContacts = async () => {
       const startTime = Date.now();
       try {
-        const result = await axios.get(`${serverUrl}/user/current`, { withCredentials: true });
-        if (result.data && isMounted) {
-          dispatch(setUserData(result.data));
+        const userRes = await axios.get(`${serverUrl}/user/current`, { withCredentials: true });
+        if (userRes.data && isMounted) {
+          dispatch(setUserData(userRes.data));
+          
+          // Pre-fetch contacts instantly in parallel
+          try {
+            const usersRes = await axios.get(`${serverUrl}/message/sorted-users?t=${Date.now()}`, {
+              withCredentials: true,
+              timeout: 8000
+            });
+            if (usersRes.data && isMounted) {
+              dispatch(setOtherUsers(usersRes.data));
+            }
+          } catch (err) {
+            console.log("Pre-fetch users error:", err);
+          }
         }
       } catch (error) {
         console.log("No active user session");
       } finally {
         const elapsedTime = Date.now() - startTime;
-        const remainingSplashTime = Math.max(0, 1400 - elapsedTime);
+        const remainingSplashTime = Math.max(0, 400 - elapsedTime);
         setTimeout(() => {
           if (isMounted) setLoading(false);
         }, remainingSplashTime);
       }
     };
 
-    initAuth();
+    initAuthAndContacts();
     return () => { isMounted = false; };
   }, [dispatch]);
 
