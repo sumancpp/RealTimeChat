@@ -16,7 +16,21 @@ import { editProfile } from "../controllers/auth.controllers.js";
 import { upload } from "../middlewares/multer.js";
 
 
+import { getAIMetrics } from "../config/gemini.js";
+
 const userRouter = express.Router();
+
+// AI USAGE METRICS ROUTE
+userRouter.get(
+    "/ai-metrics",
+    isAuth,
+    (req, res) => {
+        return res.json({
+            success: true,
+            metrics: getAIMetrics()
+        });
+    }
+);
 
 // CURRENT USER
 userRouter.get(

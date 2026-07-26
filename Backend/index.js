@@ -130,13 +130,27 @@ const startServer = async () => {
 
             port,
 
-            () => {
+            async () => {
 
                 console.log(
 
                     `server is started at ${port}`
 
                 );
+
+                const { getAIMetrics } = await import("./config/gemini.js");
+                const metrics = getAIMetrics();
+                console.log(`
+============================================================
+🤖 [BaatCheet AI Quota & Metrics Engine Initialized]
+------------------------------------------------------------
+✦ Active API Keys Pool : ${metrics.activeKeys} Key(s)
+✦ Daily Request Limit  : ${metrics.dailyLimitRPD} RPD (Requests/Day)
+✦ Requests Used Today  : ${metrics.requestsUsedToday} RPD
+✦ Requests Remaining   : ${metrics.requestsRemainingToday} RPD
+✦ Tokens Used Today    : ~${metrics.tokensUsedTodayEst} Tokens
+============================================================
+`);
 
             }
 

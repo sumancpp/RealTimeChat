@@ -52,18 +52,78 @@ export const GEMINI_MODEL = "gemini-2.5-flash";
 // Helper function to pause execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// AI Usage & Token Metrics Tracker
+let lastResetDate = new Date().toDateString();
+let dailyRequestsToday = 0;
+let dailyTokensToday = 0;
+const aiUsersToday = new Set();
+
+const checkDailyReset = () => {
+    const today = new Date().toDateString();
+    if (today !== lastResetDate) {
+        lastResetDate = today;
+        dailyRequestsToday = 0;
+        dailyTokensToday = 0;
+        aiUsersToday.clear();
+        console.log(`[AI Tracker] Reset daily AI counters for ${today}`);
+    }
+};
+
+export const getAIMetrics = () => {
+    checkDailyReset();
+    const totalCapacity = Math.max(1, keyPool.length) * 1500;
+    const remainingRequests = Math.max(0, totalCapacity - dailyRequestsToday);
+    return {
+        date: lastResetDate,
+        activeKeys: keyPool.length,
+        dailyLimitRPD: totalCapacity,
+        requestsUsedToday: dailyRequestsToday,
+        requestsRemainingToday: remainingRequests,
+        tokensUsedTodayEst: dailyTokensToday,
+        uniqueUsersToday: aiUsersToday.size
+    };
+};
+
+export const logAIUsage = (featureName = "AI Feature", userId = "Anonymous", promptText = "", responseText = "") => {
+    checkDailyReset();
+    dailyRequestsToday += 1;
+    if (userId && userId !== "Anonymous") aiUsersToday.add(userId.toString());
+
+    // Approximate token count (~4 characters per token)
+    const promptTokens = Math.ceil((promptText?.length || 0) / 4);
+    const responseTokens = Math.ceil((responseText?.length || 0) / 4);
+    const tokensUsed = promptTokens + responseTokens;
+    dailyTokensToday += tokensUsed;
+
+    const totalCapacity = Math.max(1, keyPool.length) * 1500;
+    const remainingRequests = Math.max(0, totalCapacity - dailyRequestsToday);
+
+    console.log(`
+============================================================
+🤖 [BaatCheet AI Metrics Logger]
+------------------------------------------------------------
+✦ Feature Used     : ${featureName}
+✦ User ID          : ${userId}
+✦ API Keys Pool    : ${keyPool.length} Active Key(s)
+✦ Requests Today   : ${dailyRequestsToday} / ${totalCapacity} RPD
+✦ Requests LEFT    : ${remainingRequests} RPD
+✦ Tokens This Call : ~${tokensUsed} Tokens
+✦ Tokens Today (Est): ~${dailyTokensToday} Tokens
+✦ Unique AI Users  : ${aiUsersToday.size} User(s) Today
+============================================================
+`);
+};
+
 // Parse retry delay values like "59s", "10000ms", or an object { seconds, nanos }
 const parseRetryDelayMs = (retryInfo) => {
     if (!retryInfo) return null;
 
-    // If it's an object with seconds/nanos
     if (typeof retryInfo === "object") {
         const seconds = Number(retryInfo.seconds ?? retryInfo.seconds?.value ?? 0);
         const nanos = Number(retryInfo.nanos ?? 0);
         return Math.round(seconds * 1000 + nanos / 1e6);
     }
 
-    // If it's a string like "59s" or "10000ms"
     if (typeof retryInfo === "string") {
         const sMatch = retryInfo.match(/([0-9.]+)s$/);
         if (sMatch) return Math.round(parseFloat(sMatch[1]) * 1000);
@@ -76,7 +136,7 @@ const parseRetryDelayMs = (retryInfo) => {
     return null;
 };
 
-const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5, customSystemInstruction = null) => {
+const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5, customSystemInstruction = null, featureName = "AI Request", userId = "Anonymous") => {
     const trimmedPrompt = prompt?.toString().trim();
     if (!trimmedPrompt) return "Sorry, I couldn't generate a response.";
     if (keyPool.length === 0) return "AI replies use fallback text (Missing Key).";
@@ -96,7 +156,9 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5,
                 }
             });
 
-            return response.text?.trim() || "Sorry, I couldn't generate a response.";
+            const textOutput = response.text?.trim() || "Sorry, I couldn't generate a response.";
+            logAIUsage(featureName, userId, trimmedPrompt, textOutput);
+            return textOutput;
 
         } catch (error) {
             attempt++;
@@ -108,12 +170,10 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5,
                 let waitTime = 60000;
                 const messageStr = String(error.message || '');
                 
-                // First try to extract from human readable message
                 const retryMatch = messageStr.match(/retry in ([0-9.]+)s/i);
                 if (retryMatch) {
                     waitTime = Math.round(parseFloat(retryMatch[1]) * 1000);
                 } else {
-                    // Then try to extract from JSON details dumped in the error message
                     try {
                         const errorJsonMatch = messageStr.match(/\{"error":.*\}/);
                         if (errorJsonMatch) {
