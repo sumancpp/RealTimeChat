@@ -1300,7 +1300,7 @@ const MessageArea = () => {
 
   return (
 
-    <div className={`w-full h-full h-[100dvh] flex flex-col overflow-hidden ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
+    <div className={`w-full h-full min-h-0 flex flex-col overflow-hidden relative ${THEMES[chatTheme].bg} ${THEMES[chatTheme].font} transition-all duration-500`}>
 
       {selectedUser ? (
 
