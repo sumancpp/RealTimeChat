@@ -46,7 +46,8 @@ const getAvailableClient = () => {
     return keyPool[bestIndex].client;
 };
 
-export const GEMINI_MODEL = "gemini-1.5-flash";
+export const GEMINI_MODEL = "gemini-flash-latest";
+export const MODEL_FALLBACKS = ["gemini-flash-latest", "gemini-2.0-flash-lite", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
 
 // Helper function to pause execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -88,7 +89,6 @@ export const logAIUsage = (featureName = "AI Feature", userId = "Anonymous", pro
     dailyRequestsToday += 1;
     if (userId && userId !== "Anonymous") aiUsersToday.add(userId.toString());
 
-    // Approximate token count (~4 characters per token)
     const promptTokens = Math.ceil((promptText?.length || 0) / 4);
     const responseTokens = Math.ceil((responseText?.length || 0) / 4);
     const tokensUsed = promptTokens + responseTokens;
@@ -113,7 +113,6 @@ export const logAIUsage = (featureName = "AI Feature", userId = "Anonymous", pro
 `);
 };
 
-// Parse retry delay values like "59s", "10000ms", or an object { seconds, nanos }
 const parseRetryDelayMs = (retryInfo) => {
     if (!retryInfo) return null;
 
@@ -140,89 +139,81 @@ const generateGeminiReply = async (prompt, model = GEMINI_MODEL, maxRetries = 5,
     if (!trimmedPrompt) return "Sorry, I couldn't generate a response.";
     if (keyPool.length === 0) return "AI replies use fallback text (Missing Key).";
 
-    let attempt = 0;
+    const candidateModels = MODEL_FALLBACKS.includes(model) 
+        ? [model, ...MODEL_FALLBACKS.filter(m => m !== model)] 
+        : [model, ...MODEL_FALLBACKS];
 
-    while (attempt < maxRetries) {
-        const activeClient = getAvailableClient();
-        const activeKeyIndex = currentKeyIndex;
-        
-        try {
-            const response = await activeClient.models.generateContent({
-                model: model,
-                contents: trimmedPrompt,
-                config: {
-                    systemInstruction: customSystemInstruction || "You are BaatCheet AI, a helpful chat assistant. Keep your responses extremely concise, conversational, and very short (maximum 1-2 sentences). Do not give long explanations.",
-                }
-            });
+    for (const currentModel of candidateModels) {
+        let attempt = 0;
 
-            const textOutput = response.text?.trim() || "Sorry, I couldn't generate a response.";
-            logAIUsage(featureName, userId, trimmedPrompt, textOutput);
-            return textOutput;
-
-        } catch (error) {
-            attempt++;
+        while (attempt < maxRetries) {
+            const activeClient = getAvailableClient();
+            const activeKeyIndex = currentKeyIndex;
             
-            const isQuotaExceeded = String(error.message || '').includes('Quota') || String(error.message || '').includes('quota') ||
-                String(error.message || '').includes('RESOURCE_EXHAUSTED') || error.status === 429 || error.message?.includes("429");
+            try {
+                const response = await activeClient.models.generateContent({
+                    model: currentModel,
+                    contents: trimmedPrompt,
+                    config: {
+                        systemInstruction: customSystemInstruction || "You are BaatCheet AI, a helpful chat assistant. Keep your responses extremely concise, conversational, and very short (maximum 1-2 sentences). Do not give long explanations.",
+                    }
+                });
 
-            if (isQuotaExceeded) {
-                let waitTime = 10000;
-                const messageStr = String(error.message || '');
+                const textOutput = response.text?.trim() || "Sorry, I couldn't generate a response.";
+                logAIUsage(featureName, userId, trimmedPrompt, textOutput);
+                return textOutput;
+
+            } catch (error) {
+                attempt++;
                 
-                const retryMatch = messageStr.match(/retry in ([0-9.]+)s/i);
-                if (retryMatch) {
-                    waitTime = Math.round(parseFloat(retryMatch[1]) * 1000);
-                } else {
-                    try {
-                        const errorJsonMatch = messageStr.match(/\{"error":.*\}/);
-                        if (errorJsonMatch) {
-                            const parsed = JSON.parse(errorJsonMatch[0]);
-                            if (parsed.error && Array.isArray(parsed.error.details)) {
-                                const retryInfo = parsed.error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'));
-                                if (retryInfo && retryInfo.retryDelay) {
-                                    waitTime = parseRetryDelayMs(retryInfo.retryDelay) ?? 10000;
+                const isNotFound = error.status === 404 || error.message?.includes("404") || error.message?.includes("not found");
+                if (isNotFound) {
+                    console.warn(`[Gemini API] Model ${currentModel} not found. Trying next fallback model...`);
+                    break; // break inner attempt loop to try next candidate model
+                }
+
+                const isQuotaExceeded = String(error.message || '').includes('Quota') || String(error.message || '').includes('quota') ||
+                    String(error.message || '').includes('RESOURCE_EXHAUSTED') || error.status === 429 || error.message?.includes("429");
+
+                if (isQuotaExceeded) {
+                    let waitTime = 10000;
+                    const messageStr = String(error.message || '');
+                    
+                    const retryMatch = messageStr.match(/retry in ([0-9.]+)s/i);
+                    if (retryMatch) {
+                        waitTime = Math.round(parseFloat(retryMatch[1]) * 1000);
+                    } else {
+                        try {
+                            const errorJsonMatch = messageStr.match(/\{"error":.*\}/);
+                            if (errorJsonMatch) {
+                                const parsed = JSON.parse(errorJsonMatch[0]);
+                                if (parsed.error && Array.isArray(parsed.error.details)) {
+                                    const retryInfo = parsed.error.details.find((d) => String(d['@type'] || '').includes('RetryInfo'));
+                                    if (retryInfo && retryInfo.retryDelay) {
+                                        waitTime = parseRetryDelayMs(retryInfo.retryDelay) ?? 10000;
+                                    }
                                 }
                             }
-                        }
-                    } catch(e) {}
-                }
-                
-                keyPool[activeKeyIndex].exhaustedUntil = Date.now() + waitTime;
-                console.warn(`[Gemini API] Key ${activeKeyIndex + 1} exhausted. Cooldown: ${waitTime}ms`);
+                        } catch(e) {}
+                    }
+                    
+                    keyPool[activeKeyIndex].exhaustedUntil = Date.now() + waitTime;
+                    console.warn(`[Gemini API] Key ${activeKeyIndex + 1} exhausted on ${currentModel}. Cooldown: ${waitTime}ms. Swapping model/key.`);
 
-                if (attempt < maxRetries) {
-                    let nextKey = null;
-                    let minWait = Infinity;
-                    const now = Date.now();
-                    
-                    for (const k of keyPool) {
-                        if (now > k.exhaustedUntil) {
-                            nextKey = k;
-                            break;
-                        }
-                        if (k.exhaustedUntil - now < minWait) {
-                            minWait = k.exhaustedUntil - now;
-                        }
+                    // Try next model immediately if available, or retry with next key
+                    if (attempt >= maxRetries) {
+                        break; // Move to next model
                     }
-                    
-                    if (!nextKey && minWait > 0 && minWait < 120000) {
-                        console.warn(`[Gemini API] All keys exhausted. Waiting ${minWait}ms before next attempt.`);
-                        await delay(minWait + 1000); 
-                    } else if (!nextKey) {
-                        break; 
-                    }
-                    
                     continue; 
                 }
 
-                console.error('[Gemini API] Quota exceeded on all available keys:', error.message || error);
-                return 'AI temporarily unavailable: quota or billing limits reached. Please try again later.';
+                console.error(`Gemini SDK Error on model ${currentModel}:`, error.message || error);
+                break; // Break inner loop on unknown non-quota error to try fallback model
             }
-
-            console.error('Gemini SDK Permanent Error:', error);
-            throw error;
         }
     }
+
+    return "AI is currently busy processing requests. Please try sending your message again in a moment.";
 };
 
 export default generateGeminiReply;
