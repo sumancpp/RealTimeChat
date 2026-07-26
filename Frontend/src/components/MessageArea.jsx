@@ -2051,35 +2051,44 @@ const MessageArea = () => {
 
           {/* AI CODE REVIEWER MODAL */}
           {showCodeReviewModal && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-              <div className="bg-slate-900 border border-blue-500/50 rounded-3xl p-4 sm:p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto text-white shadow-2xl animate-in zoom-in-95 flex flex-col">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl border border-blue-500/30">
-                      <Code2 size={20} />
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+              <div className="bg-slate-950 border border-cyan-500/30 rounded-3xl p-4 sm:p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto text-white shadow-2xl shadow-cyan-500/10 animate-in zoom-in-95 flex flex-col">
+                <div className="flex items-center justify-between border-b border-slate-800/80 pb-3.5 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-gradient-to-tr from-cyan-500/20 via-indigo-500/20 to-fuchsia-500/20 text-cyan-400 rounded-2xl border border-cyan-500/40 shadow-lg shadow-cyan-500/10">
+                      <Code2 size={22} className="animate-pulse" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-base sm:text-lg text-white">💻 AI Code Reviewer & Bug Detector</h3>
-                      <p className="text-[11px] text-blue-300">Paste code snippets to detect bugs & optimize logic</p>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400">
+                          💻 AI Code Reviewer & Bug Detector
+                        </h3>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                          PRO ⚡
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-medium">Detect bugs, fix syntax, and view expected execution output</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setShowCodeReviewModal(false)}
-                    className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                    className="p-2 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer border border-slate-800"
                   >
                     <X size={18} />
                   </button>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between gap-2 bg-slate-950/70 p-2 rounded-xl border border-slate-800">
-                    <span className="text-xs text-slate-400 font-semibold px-1">Language:</span>
+                <div className="flex flex-col gap-3.5">
+                  <div className="flex items-center justify-between gap-2 bg-slate-900/80 p-2.5 rounded-2xl border border-slate-800 shadow-inner">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-cyan-400 font-bold px-1">🌐 Target Language:</span>
+                    </div>
                     <select
                       value={codeReviewLang}
                       onChange={(e) => setCodeReviewLang(e.target.value)}
-                      className="bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-1 text-xs text-blue-300 font-semibold outline-none focus:border-blue-400 cursor-pointer"
+                      className="bg-slate-950 border border-cyan-500/40 rounded-xl px-3 py-1.5 text-xs text-cyan-300 font-bold outline-none focus:border-cyan-400 cursor-pointer shadow-md"
                     >
-                      <option value="Auto-Detect">✨ Auto-Detect Language</option>
+                      <option value="Auto-Detect">✨ ✨ Auto-Detect Language</option>
                       <option value="Python">🐍 Python</option>
                       <option value="JavaScript">🟨 JavaScript</option>
                       <option value="TypeScript">🟦 TypeScript</option>
@@ -2093,50 +2102,88 @@ const MessageArea = () => {
                     </select>
                   </div>
 
-                  <textarea
-                    value={codeSnippetText}
-                    onChange={(e) => setCodeSnippetText(e.target.value)}
-                    placeholder="Paste your code snippet here (e.g. print(Hello), console.log(x), etc.)..."
-                    className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-blue-200 font-mono outline-none focus:border-blue-500 resize-none"
-                  />
+                  <div className="relative group">
+                    <textarea
+                      value={codeSnippetText}
+                      onChange={(e) => setCodeSnippetText(e.target.value)}
+                      placeholder="Paste your code snippet here (e.g. print(Hello), console.log(x), etc.)..."
+                      className="w-full h-32 bg-[#060a14] border border-slate-800/90 focus:border-cyan-500/60 rounded-2xl p-3.5 text-xs text-cyan-200 font-mono outline-none resize-none transition-colors shadow-inner"
+                    />
+                    {codeSnippetText && (
+                      <span className="absolute bottom-3 right-3 text-[10px] text-slate-500 font-mono">
+                        {codeSnippetText.length} chars
+                      </span>
+                    )}
+                  </div>
 
                   <button
                     onClick={() => handleReviewCode()}
                     disabled={loadingCodeReview || !codeSnippetText.trim()}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50 shadow-md"
+                    className="w-full py-2.5 bg-gradient-to-r from-cyan-500 via-indigo-600 to-fuchsia-600 hover:from-cyan-400 hover:via-indigo-500 hover:to-fuchsia-500 text-white font-extrabold text-xs rounded-2xl transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-cyan-500/20 active:scale-[0.99] flex items-center justify-center gap-2"
                   >
-                    {loadingCodeReview ? "Analyzing Code with Gemini AI..." : "⚡ Analyze & Review Code"}
+                    {loadingCodeReview ? (
+                      <>
+                        <Code2 size={16} className="animate-spin text-cyan-300" />
+                        <span>Analyzing Syntax & Detecting Bugs with Gemini AI...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-base">⚡</span>
+                        <span>Analyze & Review Code Now</span>
+                      </>
+                    )}
                   </button>
 
-                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs min-h-[120px] max-h-[220px] overflow-y-auto text-slate-200 font-sans">
+                  {/* RESULT OUTPUT CONTAINER */}
+                  <div className="bg-[#050811] p-4 rounded-2xl border border-slate-800 text-xs min-h-[140px] max-h-[260px] overflow-y-auto text-slate-200 font-sans shadow-inner scrollbar-hide">
                     {loadingCodeReview ? (
-                      <div className="flex items-center justify-center h-20 text-blue-400 gap-2">
-                        <Code2 size={20} className="animate-spin text-blue-500" />
-                        <span className="text-xs">Reviewing syntax, security, & bug risks...</span>
+                      <div className="flex flex-col items-center justify-center h-28 text-cyan-400 gap-3">
+                        <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin flex items-center justify-center">
+                          <Code2 size={18} className="text-cyan-300" />
+                        </div>
+                        <p className="text-xs font-semibold animate-pulse text-cyan-300">Auditing logic, syntax errors, and preparing execution output...</p>
                       </div>
                     ) : codeReviewResult ? (
-                      <div className="whitespace-pre-wrap font-mono text-[11px] text-slate-300">{codeReviewResult}</div>
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-1">
+                          <span className="text-[11px] font-extrabold text-cyan-400 flex items-center gap-1.5">
+                            <span>🚀 Review Results & Output</span>
+                          </span>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(codeReviewResult)}
+                            className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-[10px] font-bold border border-slate-800 transition cursor-pointer flex items-center gap-1"
+                          >
+                            <span>📋</span> Copy Report
+                          </button>
+                        </div>
+                        <div className="whitespace-pre-wrap font-mono text-[11px] text-slate-200 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
+                          {codeReviewResult}
+                        </div>
+                      </div>
                     ) : (
-                      <p className="text-slate-500 text-xs italic">Paste a code snippet above and click "Analyze & Review Code".</p>
+                      <div className="flex flex-col items-center justify-center h-28 text-slate-500 gap-2 text-center p-4">
+                        <span className="text-2xl">👨‍💻</span>
+                        <p className="text-xs font-medium">Paste your code snippet above and click <span className="text-cyan-400 font-bold">"Analyze & Review Code"</span>.</p>
+                      </div>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-2.5 justify-end">
+                <div className="mt-4 flex gap-2.5 justify-end border-t border-slate-800/80 pt-3">
                   {codeReviewResult && (
                     <button
                       onClick={() => {
                         setMessage(codeReviewResult);
                         setShowCodeReviewModal(false);
                       }}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-md"
+                      className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-md shadow-cyan-500/10 flex items-center gap-1.5"
                     >
-                      Share Review in Chat
+                      <span>💬</span> Share Review in Chat
                     </button>
                   )}
                   <button
                     onClick={() => setShowCodeReviewModal(false)}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer border border-slate-800"
                   >
                     Close
                   </button>
