@@ -356,7 +356,10 @@ const StatusSection = () => {
     }, [activeGroup, activeGroupIndex, showViewers, showReplySheet]);
 
     const handleReplySubmit = async (e) => {
-        e.stopPropagation();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         if (!replyText.trim() || replying) return;
         setReplying(true);
         const formData = new FormData();
