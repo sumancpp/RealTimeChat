@@ -96,7 +96,7 @@ const About = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#05070e] text-slate-100 overflow-y-auto pb-20 relative font-sans">
+        <div className="h-screen h-[100dvh] w-full bg-[#05070e] text-slate-100 overflow-y-auto pb-20 relative font-sans">
             {/* Cyber Ambient Glowing Blobs */}
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl animate-glow pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2.5s' }} />

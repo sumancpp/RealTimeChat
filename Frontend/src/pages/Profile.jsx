@@ -71,7 +71,7 @@ const Profile = () => {
     };
 
     return (
-        <div className="w-full min-h-screen bg-[#05070e] flex items-center justify-center px-4 py-10 relative overflow-hidden text-slate-100">
+        <div className="w-full h-screen h-[100dvh] bg-[#05070e] flex items-center justify-center px-4 py-10 relative overflow-y-auto text-slate-100">
             {/* Cyber Ambient Glowing Blobs */}
             <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl animate-glow pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2.5s' }} />
