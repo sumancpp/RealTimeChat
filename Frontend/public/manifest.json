@@ -1,0 +1,23 @@
+{
+  "short_name": "BaatCheet",
+  "name": "BaatCheet - Real-Time Chat Engine",
+  "icons": [
+    {
+      "src": "/logo.jpeg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#05070e",
+  "theme_color": "#05070e",
+  "display": "standalone",
+  "orientation": "portrait"
+}
