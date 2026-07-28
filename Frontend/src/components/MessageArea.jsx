@@ -1088,7 +1088,7 @@ const MessageArea = () => {
     if (
       (!message.trim() &&
         !backendImage) ||
-      sending
+      (backendImage && sending)
     ) {
       return;
     }
@@ -1099,7 +1099,9 @@ const MessageArea = () => {
 
     try {
 
-      setSending(true);
+      if (backendImage) {
+        setSending(true);
+      }
 
       if (editingMessageId) {
           const res = await axios.put(`${serverUrl}/message/edit/${editingMessageId}`, { newContent: message }, { withCredentials: true });
@@ -1108,6 +1110,9 @@ const MessageArea = () => {
           }
           setMessage("");
           setEditingMessageId(null);
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+          }
           return;
       }
 
@@ -1155,6 +1160,7 @@ const MessageArea = () => {
       }
       if (textareaRef.current) {
         textareaRef.current.style.height = "44px";
+        textareaRef.current.focus();
       }
 
       // 2. PREPARE FORM DATA FOR SERVER
@@ -3122,6 +3128,9 @@ ${msg.sender?.toString() ===
                   />
                   <button
                     type="submit"
+                    onMouseDown={(e) => {
+                      if (message.trim()) e.preventDefault();
+                    }}
                     disabled={!message.trim() || sending}
                     className="bg-blue-500 text-white p-2 rounded-full cursor-pointer hover:bg-blue-600 disabled:opacity-50"
                   >
@@ -3247,7 +3256,10 @@ ${msg.sender?.toString() ===
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage(e);
-                    if (textareaRef.current) textareaRef.current.style.height = "44px";
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = "44px";
+                      textareaRef.current.focus();
+                    }
                   }
                 }}
                 placeholder={isGhostMode ? "Ghost Ink Mode 👻 (Disintegrates 5s after reading)" : "Type a message..."}
@@ -3281,6 +3293,11 @@ transition-[height] duration-100
               {/* SEND */}
               <button
                 type={(!message.trim() && !backendImage) ? "button" : "submit"}
+                onMouseDown={(e) => {
+                  if (message.trim() || backendImage) {
+                    e.preventDefault();
+                  }
+                }}
                 onClick={(e) => {
                   if (!message.trim() && !backendImage) {
                     e.preventDefault();
@@ -3291,7 +3308,7 @@ transition-[height] duration-100
                     }
                   }
                 }}
-                disabled={sending}
+                disabled={sending && Boolean(backendImage)}
                 className={`
     flex-shrink-0
     w-11
@@ -3305,7 +3322,7 @@ transition-[height] duration-100
     text-white
     transition-all
     cursor-pointer
-    ${sending
+    ${sending && backendImage
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-orange-500 hover:bg-orange-600"
                   }
