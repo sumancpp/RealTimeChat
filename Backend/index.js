@@ -20,12 +20,19 @@ import callRouter from "./routes/call.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 import { app, server } from "./socket/socket.js";
 
 import User from "./models/user.model.js";
 
 const port = process.env.PORT || 5000;
+
+// Security Headers
+app.use(helmet({
+    contentSecurityPolicy: false // Disabled default CSP to allow custom socket/WebRTC/CDNs used by the app
+}));
 
 // CORS
 const allowedOrigins = [
@@ -35,7 +42,7 @@ const allowedOrigins = [
 
 app.use(
     cors({
-        origin: allowedOrigins,
+        origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL, ...allowedOrigins] : allowedOrigins,
         credentials: true
     })
 );
@@ -45,22 +52,18 @@ app.use(compression());
 app.use(cookieParser());
 app.use("/public", express.static(path.join(path.resolve(), "public")));
 
-// TEST ROUTE
-app.get(
-    "/test-cors",
-    (req, res) => {
+// Rate limiting for Auth Endpoints
+const authRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 15, // Limit each IP to 15 requests per windowMs
+    message: { message: "Too many authentication attempts. Please try again after 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
-        res.json({
-
-            success: true,
-
-            origin:
-                req.headers.origin
-
-        });
-
-    }
-);
+app.use("/login", authRateLimiter);
+app.use("/signup", authRateLimiter);
+app.use("/reset-password-question", authRateLimiter);
 
 // ROUTES
 app.use(

@@ -37,30 +37,34 @@ export const signUp = async (req, res) => {
              }
         }
 
-        const hashedPassword = await bcrypt.hash(password,5)
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
             name: name.trim(),
             userName: generatedUserName,
             email,
-            password:hashedPassword,
+            password: hashedPassword,
             securityQuestion,
             securityAnswer: securityAnswer.toLowerCase().trim()
-        })
+        });
 
-        const token = await genToken(user._id)
-        res.cookie("token",token,{
-            httpOnly:true,
-            maxAge:7*24*60*60*1000,
-            sameSite:"None",
-            secure:true
-        })
+        const token = await genToken(user._id);
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: "None",
+            secure: true
+        });
 
-    return res.status(201).json(user)
+        const userResponse = user.toObject();
+        delete userResponse.password;
+        delete userResponse.securityAnswer;
+
+        return res.status(201).json(userResponse);
 
      } catch (error) {
-        console.log(error);
-        return res.status(500).json({message:`signup error ${error}`})
+        console.error("Signup Error:", error.message);
+        return res.status(500).json({ message: "Error occurred during signup" });
      }
 }
 
@@ -91,10 +95,15 @@ export const login = async (req, res) => {
             secure:true
         })
 
-    return res.status(200).json(user)
+        const userResponse = user.toObject();
+        delete userResponse.password;
+        delete userResponse.securityAnswer;
+
+        return res.status(200).json(userResponse);
 
      } catch (error) {
-        return res.status(500).json({message:`login error ${error}`})
+        console.error("Login Error:", error.message);
+        return res.status(500).json({message:"Error occurred during login"});
      }
 }
 

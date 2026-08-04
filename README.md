@@ -242,6 +242,13 @@ Open your browser and navigate to `http://localhost:5173`.
 
 ---
 
+## 🔒 Security Advisory & Secret Rotation
+
+> [!WARNING]
+> If any environment variables or API keys were previously committed in git history or stored as plaintext strings prior to the secret safety audit, rotate all API keys, database connection strings, and JWT signing secrets immediately before deploying to a public environment.
+
+---
+
 ## 📝 License & Author
 
 Distributed under the **MIT License**.

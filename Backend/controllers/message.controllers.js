@@ -14,14 +14,7 @@ import {
 // SEND MESSAGE
 export const sendMessage = async (req, res) => {
 
-    console.log("SEND MESSAGE API HIT");
-
     try {
-
-        console.log(
-            "REQ BODY:",
-            req.body
-        );
 
         const sender =
             req.userId;
@@ -43,16 +36,6 @@ export const sendMessage = async (req, res) => {
             message,
             replyTo
         } = req.body;
-
-        console.log(
-            "MESSAGE:",
-            message
-        );
-
-        console.log(
-            "REPLY TO:",
-            replyTo
-        );
 
         let image = "";
 

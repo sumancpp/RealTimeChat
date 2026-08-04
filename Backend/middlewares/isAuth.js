@@ -12,7 +12,7 @@ const isAuth = async (req,res,next) => {
         next()
         
     } catch (error) {
-          return res.status(500).json({message:"token is not found",error})
+          return res.status(401).json({ message: "Invalid or expired token" });
     }
 }
 
