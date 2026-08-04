@@ -209,9 +209,33 @@ export const subscribeToNotifications = async (req, res) => {
         const { subscription } = req.body;
         if (!subscription) return res.status(400).json({ message: "Subscription is required" });
         
+        // Prevent duplicate endpoint entries
+        if (subscription.endpoint) {
+            await User.findByIdAndUpdate(
+                req.userId,
+                { $pull: { pushSubscriptions: { endpoint: subscription.endpoint } } }
+            );
+        }
+
         await User.findByIdAndUpdate(
             req.userId,
             { $addToSet: { pushSubscriptions: subscription } }
+        );
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// UNSUBSCRIBE FROM NOTIFICATIONS
+export const unsubscribeFromNotifications = async (req, res) => {
+    try {
+        const { endpoint } = req.body;
+        if (!endpoint) return res.status(400).json({ message: "Endpoint is required" });
+
+        await User.findByIdAndUpdate(
+            req.userId,
+            { $pull: { pushSubscriptions: { endpoint: endpoint } } }
         );
         return res.status(200).json({ success: true });
     } catch (error) {

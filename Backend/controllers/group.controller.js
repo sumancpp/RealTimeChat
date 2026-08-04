@@ -3,6 +3,7 @@ import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import uploadOnCloudinary from "../config/cloudinary.js";
 import { io, getReceiverSocketId } from "../socket/socket.js";
+import { sendPushNotificationToUser } from "../config/webpush.js";
 
 // CREATE GROUP
 export const createGroup = async (req, res) => {
@@ -168,11 +169,21 @@ export const sendGroupMessage = async (req, res) => {
             .populate("sender", "name userName profileImage");
 
         // emit to all participants EXCEPT the sender
+        const senderName = populatedMessage?.sender?.name || populatedMessage?.sender?.userName || "Someone";
+        const groupName = group.groupName || "Group";
+        const groupNotificationPayload = {
+            title: `${groupName}: Message from ${senderName}`,
+            body: message || "Sent an attachment",
+            icon: populatedMessage?.sender?.profileImage || "/vite.svg"
+        };
+
         group.participants.forEach(participantId => {
             if (participantId.toString() !== sender.toString()) {
                 const socketId = getReceiverSocketId(participantId.toString());
-                if(socketId) {
+                if (socketId) {
                     io.to(socketId).emit("newGroupMessage", { ...populatedMessage.toObject(), groupId });
+                } else {
+                    sendPushNotificationToUser(participantId, groupNotificationPayload);
                 }
             }
         });

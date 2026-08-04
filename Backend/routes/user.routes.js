@@ -5,6 +5,7 @@ import {
     getOtherUser,
     searchUsers,
     subscribeToNotifications,
+    unsubscribeFromNotifications,
     blockUser,
     unblockUser
 } from "../controllers/user.controller.js";
@@ -66,6 +67,13 @@ userRouter.post(
     "/subscribe",
     isAuth,
     subscribeToNotifications
+);
+
+// UNSUBSCRIBE FROM NOTIFICATIONS
+userRouter.post(
+    "/unsubscribe",
+    isAuth,
+    unsubscribeFromNotifications
 );
 
 // BLOCK USER
