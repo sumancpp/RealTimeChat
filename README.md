@@ -247,8 +247,11 @@ Open your browser and navigate to `http://localhost:5173`.
 Distributed under the **MIT License**.
 
 Designed & Developed with ❤️ by **Suman**  
-- **Email**: officialsuman666@gmail.com / suumaan@zohomail.in  
+- **Email**: suumaan@zohomail.in  
 - **GitHub**: [@sumancpp](https://github.com/sumancpp)
 
 - 
+
+
+
 
