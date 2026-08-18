@@ -2,8 +2,8 @@
   "name": "realtimechat",
   "version": "1.0.0",
   "scripts": {
-    "install-all": "npm install --prefix Backend && npm install --prefix Frontend",
-    "postinstall": "npm install --prefix Backend && npm install --prefix Frontend",
+    "install-all": "npm install --prefix Backend && npm install --prefix Frontend --include=dev",
+    "postinstall": "npm install --prefix Backend && npm install --prefix Frontend --include=dev",
     "build": "npm run build --prefix Frontend",
     "start": "npm start --prefix Backend"
   },
