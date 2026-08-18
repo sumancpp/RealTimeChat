@@ -120,19 +120,12 @@ const frontendDistPath = path.join(__dirname, "../Frontend/dist");
 if (process.env.NODE_ENV === "production" || fs.existsSync(frontendDistPath)) {
     app.use(express.static(frontendDistPath));
 
-    app.get("*", (req, res, next) => {
-        // Skip API routes if any were missed
-        if (
-            req.path.startsWith("/user") ||
-            req.path.startsWith("/message") ||
-            req.path.startsWith("/group") ||
-            req.path.startsWith("/call") ||
-            req.path.startsWith("/status") ||
-            req.path.startsWith("/public")
-        ) {
-            return next();
+    app.use((req, res, next) => {
+        // Serve index.html for all client-side GET routes (SPA routing)
+        if (req.method === "GET") {
+            return res.sendFile(path.join(frontendDistPath, "index.html"));
         }
-        res.sendFile(path.join(frontendDistPath, "index.html"));
+        next();
     });
 }
 
