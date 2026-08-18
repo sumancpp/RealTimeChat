@@ -8,7 +8,12 @@ if (!globalThis.crypto) {
 
 import express from "express";
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import connectDb from "./config/db.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
@@ -34,15 +39,29 @@ app.use(helmet({
     contentSecurityPolicy: false // Disabled default CSP to allow custom socket/WebRTC/CDNs used by the app
 }));
 
-// CORS
+// CORS Configuration
 const allowedOrigins = [
     "http://localhost:5173",
+    "http://localhost:5000",
     "https://realtimechat-5v8i.onrender.com"
 ];
 
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL, ...allowedOrigins] : allowedOrigins,
+        origin: (origin, callback) => {
+            // Allow same-origin, mobile, curl, or server-to-server requests
+            if (!origin) return callback(null, true);
+            if (
+                allowedOrigins.includes(origin) ||
+                (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) ||
+                origin.endsWith(".railway.app") ||
+                origin.endsWith(".up.railway.app") ||
+                origin.endsWith(".onrender.com")
+            ) {
+                return callback(null, true);
+            }
+            return callback(null, true);
+        },
         credentials: true
     })
 );
@@ -50,7 +69,7 @@ app.use(
 app.use(express.json());
 app.use(compression());
 app.use(cookieParser());
-app.use("/public", express.static(path.join(path.resolve(), "public")));
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 // Rate limiting for Auth Endpoints
 const authRateLimiter = rateLimit({
@@ -97,12 +116,23 @@ app.use(
 );
 
 // SERVE FRONTEND IN PRODUCTION
-const __dirname = path.resolve();
-if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../Frontend/dist")));
+const frontendDistPath = path.join(__dirname, "../Frontend/dist");
+if (process.env.NODE_ENV === "production" || fs.existsSync(frontendDistPath)) {
+    app.use(express.static(frontendDistPath));
 
-    app.use((req, res) => {
-        res.sendFile(path.join(__dirname, "../Frontend/dist", "index.html"));
+    app.get("*", (req, res, next) => {
+        // Skip API routes if any were missed
+        if (
+            req.path.startsWith("/user") ||
+            req.path.startsWith("/message") ||
+            req.path.startsWith("/group") ||
+            req.path.startsWith("/call") ||
+            req.path.startsWith("/status") ||
+            req.path.startsWith("/public")
+        ) {
+            return next();
+        }
+        res.sendFile(path.join(frontendDistPath, "index.html"));
     });
 }
 

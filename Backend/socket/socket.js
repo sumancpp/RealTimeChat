@@ -11,21 +11,13 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-
     cors: {
-
-        origin: [
-
-            "http://localhost:5173",
-
-            "https://realtimechat-5v8i.onrender.com"
-
-        ],
-
+        origin: (origin, callback) => {
+            // Dynamic origin callback allows localhost, Railway domains, and mobile clients
+            callback(null, true);
+        },
         credentials: true
-
     }
-
 });
 
 // ONLINE USERS & GROUP CACHE
