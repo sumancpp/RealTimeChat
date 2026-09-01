@@ -13,9 +13,41 @@ const messageSlice = createSlice({
     reducers: {
         setMessages: (state, action) => {
             if (action.payload && typeof action.payload === "object" && action.payload.chatId) {
-                const { chatId, messages } = action.payload;
-                state.chatCache[chatId] = messages || [];
-                state.messages = messages || [];
+                const { chatId, messages: serverMsgs } = action.payload;
+                
+                // Retrieve existing local messages from cache and localStorage
+                let localMsgs = state.chatCache[chatId] || [];
+                if (!localMsgs || localMsgs.length === 0) {
+                    try {
+                        const raw = localStorage.getItem(`chat_cache_${chatId}`);
+                        if (raw) localMsgs = JSON.parse(raw);
+                    } catch (e) {}
+                }
+
+                // Preserve all offline-generated messages so they are never wiped out
+                const offlineMsgs = (localMsgs || []).filter(m => 
+                    m && m._id && (String(m._id).startsWith("offline-") || m.isOfflineGenerated)
+                );
+
+                const mergedMap = new Map();
+                (serverMsgs || []).forEach(m => {
+                    if (m && m._id) mergedMap.set(m._id, m);
+                });
+                offlineMsgs.forEach(m => {
+                    if (m && m._id && !mergedMap.has(m._id)) {
+                        mergedMap.set(m._id, m);
+                    }
+                });
+
+                const finalMessages = Array.from(mergedMap.values()).sort((a, b) => 
+                    new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
+                );
+
+                state.chatCache[chatId] = finalMessages;
+                state.messages = finalMessages;
+                try {
+                    localStorage.setItem(`chat_cache_${chatId}`, JSON.stringify(finalMessages));
+                } catch (e) {}
             } else {
                 state.messages = Array.isArray(action.payload) ? action.payload : [];
             }
@@ -27,6 +59,19 @@ const messageSlice = createSlice({
             if (chatId && state.chatCache[chatId]) {
                 state.messages = state.chatCache[chatId];
                 state.loadingChat = false;
+            } else if (chatId) {
+                try {
+                    const localCached = localStorage.getItem(`chat_cache_${chatId}`);
+                    if (localCached) {
+                        const parsed = JSON.parse(localCached);
+                        state.chatCache[chatId] = parsed;
+                        state.messages = parsed;
+                        state.loadingChat = false;
+                        return;
+                    }
+                } catch (e) {}
+                state.messages = [];
+                state.loadingChat = true;
             } else {
                 state.messages = [];
                 state.loadingChat = true;
@@ -38,6 +83,16 @@ const messageSlice = createSlice({
             const exists = state.messages.find(msg => msg._id === newMsg._id);
             if (!exists) {
                 state.messages.push(newMsg);
+                // Also update chatCache for the relevant chat
+                const receiverId = typeof newMsg.receiver === "object" ? newMsg.receiver?._id : newMsg.receiver;
+                const senderId = typeof newMsg.sender === "object" ? newMsg.sender?._id : newMsg.sender;
+                const chatId = newMsg.groupId || receiverId || senderId;
+                if (chatId) {
+                    state.chatCache[chatId] = [...(state.chatCache[chatId] || []), newMsg];
+                    try {
+                        localStorage.setItem(`chat_cache_${chatId}`, JSON.stringify(state.chatCache[chatId]));
+                    } catch (e) {}
+                }
             }
         },
 

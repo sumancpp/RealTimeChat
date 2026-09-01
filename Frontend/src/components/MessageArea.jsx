@@ -34,10 +34,14 @@ import {
   BarChart2,
   Code2,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Wifi,
+  WifiOff,
+  Activity
 } from "lucide-react";
 
-
+import { generateOfflineAiReply } from "../services/offlineAiEngine";
+import DiagnosticsModal from "./DiagnosticsModal";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
@@ -346,6 +350,7 @@ const MessageArea = () => {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [aiTypingTargetId, setAiTypingTargetId] = useState(null);
   const [deleteModalTarget, setDeleteModalTarget] = useState(null);
+  const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
 
   useEffect(() => {
 
@@ -418,6 +423,18 @@ const MessageArea = () => {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [isAnonymousMode, setIsAnonymousMode] = useState(false);
   const [showDrawingCanvas, setShowDrawingCanvas] = useState(false);
+  const [isNetworkOffline, setIsNetworkOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsNetworkOffline(false);
+    const handleOffline = () => setIsNetworkOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // VIEW ONCE & IMAGE STATES
   const [isViewOnceMode, setIsViewOnceMode] = useState(false);
@@ -1198,10 +1215,11 @@ const MessageArea = () => {
         formData.append("isViewOnce", "true");
       }
 
+      const isTargetAI = Boolean(selectedUser?.isAI || selectedUser?.userName === "ai");
       const isAiTriggered = messageTextToSend?.trim().toLowerCase().startsWith("@ai") ||
                             messageTextToSend?.trim().toLowerCase() === "@roast" ||
                             messageTextToSend?.trim().toLowerCase() === "@music" ||
-                            selectedUser?.isAI;
+                            isTargetAI;
       
       if (isAiTriggered) {
           setAiTypingTargetId(selectedUser._id);
@@ -1211,48 +1229,108 @@ const MessageArea = () => {
           }, 50);
       }
 
-      // 3. SEND TO SERVER
-      const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
-      const res = await axios.post(
-        endpoint,
-        formData,
-        {
-          withCredentials: true
-        }
-      );
+      // OFFLINE AI LLM EXECUTION FOR BAATCHEET AI
+      if ((!navigator.onLine || isNetworkOffline) && isTargetAI) {
+          try {
+              const offlinePrompt = messageTextToSend.replace(/^@ai\s*/i, "").trim();
+              const offlineReply = await generateOfflineAiReply(offlinePrompt, messages || []);
+              
+              // Simulate realistic on-device neural processing delay
+              await new Promise(r => setTimeout(r, 600));
 
-      if (res.data) {
-        if (res.data.aiMessage) {
-          dispatch(replaceMessageRedux({ tempId, realMessage: res.data.message }));
-          dispatch(addMessage(res.data.aiMessage));
-          dispatch(updateSidebarOnMessage({
-            newMessage: res.data.aiMessage,
-            myId: userData?._id,
-            currentChatId: selectedUser?._id
-          }));
-        } else if (res.data._id) {
-          dispatch(replaceMessageRedux({ tempId, realMessage: res.data }));
-          dispatch(updateSidebarOnMessage({
-            newMessage: res.data,
-            myId: userData?._id,
-            currentChatId: selectedUser?._id
-          }));
-        }
+              const offlineAiMessage = {
+                  _id: "offline-ai-" + Date.now(),
+                  sender: selectedUser._id,
+                  receiver: userData?._id,
+                  message: offlineReply,
+                  isAIMessage: true,
+                  isOfflineGenerated: true,
+                  createdAt: new Date().toISOString(),
+                  isSeen: true,
+                  reactions: []
+              };
+
+              dispatch(addMessage(offlineAiMessage));
+              dispatch(updateSidebarOnMessage({
+                  newMessage: offlineAiMessage,
+                  myId: userData?._id,
+                  currentChatId: selectedUser?._id
+              }));
+          } catch (offlineErr) {
+              console.error("Offline AI Generation Error:", offlineErr);
+          }
+          return;
       }
 
-    }
+      // 3. SEND TO SERVER (ONLINE GEMINI WORKFLOW)
+      const endpoint = selectedUser.isGroup ? `${serverUrl}/group/send/${selectedUser._id}` : `${serverUrl}/message/send/${selectedUser._id}`;
+      try {
+        const res = await axios.post(
+          endpoint,
+          formData,
+          {
+            withCredentials: true
+          }
+        );
 
-    catch (error) {
+        if (res.data) {
+          if (res.data.aiMessage) {
+            dispatch(replaceMessageRedux({ tempId, realMessage: res.data.message }));
+            dispatch(addMessage(res.data.aiMessage));
+            dispatch(updateSidebarOnMessage({
+              newMessage: res.data.aiMessage,
+              myId: userData?._id,
+              currentChatId: selectedUser?._id
+            }));
+          } else if (res.data._id) {
+            dispatch(replaceMessageRedux({ tempId, realMessage: res.data }));
+            dispatch(updateSidebarOnMessage({
+              newMessage: res.data,
+              myId: userData?._id,
+              currentChatId: selectedUser?._id
+            }));
+          }
+        }
+      } catch (postErr) {
+        // If network request failed and chatting with BaatCheet AI, fallback to Offline AI LLM
+        if (isTargetAI) {
+            console.warn("[BaatCheet AI] Server unavailable, activating Offline AI LLM fallback...");
+            try {
+                const offlinePrompt = messageTextToSend.replace(/^@ai\s*/i, "").trim();
+                const offlineReply = await generateOfflineAiReply(offlinePrompt, messages || []);
+                
+                await new Promise(r => setTimeout(r, 500));
 
+                const offlineAiMessage = {
+                    _id: "offline-ai-" + Date.now(),
+                    sender: selectedUser._id,
+                    receiver: userData?._id,
+                    message: offlineReply,
+                    isAIMessage: true,
+                    isOfflineGenerated: true,
+                    createdAt: new Date().toISOString(),
+                    isSeen: true,
+                    reactions: []
+                };
+
+                dispatch(addMessage(offlineAiMessage));
+                dispatch(updateSidebarOnMessage({
+                    newMessage: offlineAiMessage,
+                    myId: userData?._id,
+                    currentChatId: selectedUser?._id
+                }));
+            } catch (offlineErr) {
+                console.error("Offline AI Fallback Error:", offlineErr);
+            }
+        } else {
+            console.log("Send message error:", postErr);
+        }
+      }
+    } catch (error) {
       console.log(error);
-
-    }
-
-    finally {
-
+    } finally {
       setSending(false);
       setAiTypingTargetId(null);
-
     }
 
   };
@@ -1537,11 +1615,13 @@ const MessageArea = () => {
                   {
                     selectedUser?.isGroup 
                       ? `${selectedUser.participants?.length || 0} participants`
-                      : (onlineUsers.includes(selectedUser._id) || selectedUser.isAI || selectedUser.userName === "ai")
-                        ? isTyping
-                          ? "Typing..."
-                          : "Online"
-                        : formatLastSeen(selectedUser.lastSeen)
+                      : (isTyping || aiTypingTargetId === selectedUser?._id)
+                        ? "Typing..."
+                        : isNetworkOffline
+                          ? "Offline"
+                          : (onlineUsers.includes(selectedUser._id) || selectedUser.isAI || selectedUser.userName === "ai")
+                            ? "Online"
+                            : formatLastSeen(selectedUser.lastSeen)
                   }
                 </p>
               </div>
@@ -1617,6 +1697,15 @@ const MessageArea = () => {
                 </div>
               ) : (
                 <>
+                  {Boolean(selectedUser?.isAI || selectedUser?.userName === "ai") && (
+                    <button 
+                      onClick={() => setShowDiagnosticsModal(true)}
+                      className="hover:text-emerald-400 hover:bg-emerald-500/10 p-1.5 sm:p-2 rounded-full transition-colors text-emerald-500 cursor-pointer"
+                      title="AI Developer Diagnostics"
+                    >
+                      <Activity size={20} />
+                    </button>
+                  )}
                   {!selectedUser?.isAI && (
                     <>
                       <button 
@@ -2445,7 +2534,6 @@ const MessageArea = () => {
               />
           ) : (
           <>
-          {/* MESSAGES */}
           <div
             ref={messageContainerRef}
             className="flex-1 min-h-0 overflow-y-auto px-4 py-5 font-sans"
@@ -2455,6 +2543,16 @@ const MessageArea = () => {
               )
             }
           >
+
+            {/* WHATSAPP-STYLE CENTERED OFFLINE AI NOTICE */}
+            {isNetworkOffline && (selectedUser?.isAI || selectedUser?.userName === "ai") && (
+              <div className="flex justify-center my-3 w-full shrink-0 select-none animate-in fade-in duration-200">
+                <div className="text-[11px] font-medium bg-[#131b2e]/90 text-cyan-300 border border-cyan-500/25 px-4 py-1.5 rounded-full text-center shadow-md flex items-center gap-1.5 backdrop-blur-md">
+                  <span>⚡</span>
+                  <span>Offline AI is ready now</span>
+                </div>
+              </div>
+            )}
 
 
             {loadingChat ? (
@@ -3441,6 +3539,11 @@ transition-[height] duration-100
           </div>
         )}
       </AnimatePresence>
+
+      <DiagnosticsModal 
+        isOpen={showDiagnosticsModal} 
+        onClose={() => setShowDiagnosticsModal(false)} 
+      />
 
     </div>
 

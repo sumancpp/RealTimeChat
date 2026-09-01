@@ -18,6 +18,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import useGetOtherUsers from "./custumHooks/getOtherUsers";
 import { setUserData, setOtherUsers, setOnlineUsers, setSocketConnected } from "./redux/userSlice";
 import { connectSocket, disconnectSocket, getSocket } from "./socket";
+import { initOfflineLLM } from "./services/offlineAiEngine";
 
 function urlBase64ToUint8Array(base64String) {
   if (!base64String) return new Uint8Array();
@@ -79,6 +80,21 @@ const App = () => {
     initAuthAndContacts();
     return () => { isMounted = false; };
   }, [dispatch]);
+
+  // Auto-download 350MB On-Device Neural AI Model in background when online
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.onLine) {
+      const timer = setTimeout(() => {
+        initOfflineLLM((progress) => {
+          if (progress?.status === "progress" && progress.total) {
+            const pct = Math.round((progress.loaded / progress.total) * 100);
+            console.log(`[BaatCheet AI] Auto-downloading neural model: ${pct}%`);
+          }
+        }).catch(() => {});
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Push Notifications Setup
   useEffect(() => {

@@ -89,8 +89,23 @@ const getMessages = () => {
                 } catch (error) {
 
                     console.log(
+                        "Fetch messages failed, falling back to local cache:",
                         error
                     );
+
+                    // Offline Fallback from localStorage
+                    try {
+                        const localCached = localStorage.getItem(`chat_cache_${selectedUser._id}`);
+                        if (localCached) {
+                            const parsed = JSON.parse(localCached);
+                            dispatch(
+                                setMessages({
+                                    chatId: selectedUser._id,
+                                    messages: parsed
+                                })
+                            );
+                        }
+                    } catch (e) {}
 
                 }
 
